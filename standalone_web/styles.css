@@ -53,6 +53,7 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.025em; }
 .wizard-note { margin: 8px 0 0; color: var(--muted); font-size: 11px; }
 .wizard-filters { display: flex; gap: 7px; overflow-x: auto; padding: 12px 0 10px; }
 .wizard-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.wizard-filter-row { display: flex; gap: 7px; overflow-x: auto; padding: 0 0 10px; scrollbar-width: thin; }
 .character-card { margin-top: 10px; padding: 12px; border: 1px solid #3b3b53; border-radius: 12px; background: rgba(255,255,255,.025); }
 .character-card-head { display: flex; align-items: center; gap: 9px; }
 .character-card-head b { margin-right: auto; }

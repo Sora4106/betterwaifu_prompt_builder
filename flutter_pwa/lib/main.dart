@@ -441,6 +441,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   final Map<int, String> _personTagQueries = <int, String>{};
+  final Map<String, String> _personActiveGroups = <String, String>{};
   final List<TagItem> _customTags = <TagItem>[];
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
   final List<PersonSlot> _personSlots = <PersonSlot>[PersonSlot()];
@@ -758,7 +759,52 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
-  List<String> _characterTokensForSlot(PersonSlot slot) {
+  Set<String> _traitOverrideGroups(String en) {
+    final value = en.trim().toLowerCase();
+    final groups = <String>{};
+    if (RegExp(
+            r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow)\s+hair\b')
+        .hasMatch(value)) {
+      groups.add('hair_color');
+    }
+    if (RegExp(r'\b(very\s+long|long|medium|short)\s+hair\b').hasMatch(value)) {
+      groups.add('hair_length');
+    }
+    if (RegExp(
+            r'\b(green|blue|red|purple|yellow|aqua|brown|pink|orange)\s+eyes\b')
+        .hasMatch(value)) {
+      groups.add('eye_color');
+    }
+    if (['slim', 'tall', 'curvy', 'muscular', 'petite'].contains(value)) {
+      groups.add('body_type');
+    }
+    if ([
+      'flat chest',
+      'small breasts',
+      'medium breasts',
+      'large breasts',
+      'huge breasts'
+    ].contains(value)) {
+      groups.add('breast_size');
+    }
+    return groups;
+  }
+
+  Set<String> _personOverrideGroups(int index) => _selectedTagsForPerson(index)
+      .expand((tag) => _traitOverrideGroups(tag.en))
+      .toSet();
+
+  List<CatalogTagData> _characterTraitsForSlot(PersonSlot slot, int index) {
+    final character = _characterForNew(slot);
+    if (character == null) return const <CatalogTagData>[];
+    final replaced = _personOverrideGroups(index);
+    return character.traits
+        .where((trait) =>
+            _traitOverrideGroups(trait.en).intersection(replaced).isEmpty)
+        .toList();
+  }
+
+  List<String> _characterTokensForSlot(PersonSlot slot, int index) {
     if (!slot.detailed) return [];
     if (slot.mode == '動漫角色') {
       final character = _characterForNew(slot);
@@ -766,7 +812,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return [
         character.animeTag,
         character.characterTag,
-        ...character.traits.map((item) => item.en),
+        ..._characterTraitsForSlot(slot, index).map((item) => item.en),
       ];
     }
     final own = <String>[];
@@ -780,14 +826,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return own.isEmpty ? ['original'] : own;
   }
 
-  List<String> _characterChineseForSlot(PersonSlot slot) {
+  List<String> _characterChineseForSlot(PersonSlot slot, int index) {
     if (!slot.detailed) return ['此角色不設定細節'];
     if (slot.mode == '動漫角色') {
       final character = _characterForNew(slot);
       if (character == null) return ['尚未選擇動漫角色'];
       return [
         '${character.animeZh}／${character.characterZh}',
-        ...character.traits.map((item) => item.zh),
+        ..._characterTraitsForSlot(slot, index).map((item) => item.zh),
       ];
     }
     return [
@@ -801,16 +847,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> _characterTokensNew() {
     final result = <String>[];
-    for (final slot in _personSlots) {
-      result.addAll(_characterTokensForSlot(slot));
+    for (var index = 0; index < _personSlots.length; index++) {
+      result.addAll(_characterTokensForSlot(_personSlots[index], index));
     }
     return result;
   }
 
   List<String> _characterChineseNew() {
     final result = <String>[];
-    for (final slot in _personSlots) {
-      result.addAll(_characterChineseForSlot(slot));
+    for (var index = 0; index < _personSlots.length; index++) {
+      result.addAll(_characterChineseForSlot(_personSlots[index], index));
     }
     return result;
   }
@@ -829,7 +875,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> get _positiveTokens {
     final tokens = <String>[..._peopleTokensNew()];
     for (var index = 0; index < _personSlots.length; index++) {
-      tokens.addAll(_characterTokensForSlot(_personSlots[index]));
+      tokens.addAll(_characterTokensForSlot(_personSlots[index], index));
       tokens.addAll(_selectedTagsForPerson(index).map((tag) => tag.en));
     }
     tokens.addAll(_selectedTags.map((tag) => tag.en));
@@ -845,7 +891,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tokens = <String>[_peopleZhNew()];
     for (var index = 0; index < _personSlots.length; index++) {
       final personal = [
-        ..._characterChineseForSlot(_personSlots[index]),
+        ..._characterChineseForSlot(_personSlots[index], index),
         ..._selectedTagsForPerson(index).map((tag) => tag.zh),
       ];
       tokens.add('人物 ${index + 1}：${personal.join('、')}');
@@ -905,6 +951,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _conflictGroup(TagItem tag) {
     if (tag.conflictGroup != null) return tag.conflictGroup;
+    final traitGroups = _traitOverrideGroups(tag.en);
+    if (traitGroups.isNotEmpty) return traitGroups.first;
+    if (tag.group == '服裝顏色') return 'clothing_color';
     if (['上衣', '胸罩'].contains(tag.group)) return 'top';
     if (['褲子', '裙子', '內褲'].contains(tag.group)) return 'bottom';
     if (tag.group == '服裝') return 'one_piece';
@@ -930,7 +979,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _tagsConflict(TagItem first, TagItem second) {
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
-    if (firstGroup != null && firstGroup == secondGroup) return true;
+    if (firstGroup != null && firstGroup == secondGroup) {
+      return firstGroup != 'clothing_color';
+    }
+    final clothingLayers = {'top', 'bottom', 'bra', 'underwear'};
+    if ((firstGroup == 'one_piece' && clothingLayers.contains(secondGroup)) ||
+        (secondGroup == 'one_piece' && clothingLayers.contains(firstGroup))) {
+      return true;
+    }
     final firstNude =
         first.en == 'nude' || first.en == 'topless' || first.en == 'bottomless';
     final secondNude = second.en == 'nude' ||
@@ -955,6 +1011,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         targetIds.remove(tag.id);
         _persist();
       });
+      return;
+    }
+    if (personIndex != null &&
+        !(await _confirmCharacterOverride(tag, personIndex))) {
       return;
     }
     final conflicts =
@@ -985,6 +1045,46 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       targetIds.add(tag.id);
       _persist();
     });
+  }
+
+  Future<bool> _confirmCharacterOverride(TagItem tag, int personIndex) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return true;
+    final slot = _personSlots[personIndex];
+    if (slot.mode != '動漫角色') return true;
+    final character = _characterForNew(slot);
+    final selectedGroups = _traitOverrideGroups(tag.en);
+    if (character == null || selectedGroups.isEmpty) return true;
+    if (_selectedTagsForPerson(personIndex).any((selected) =>
+        _traitOverrideGroups(selected.en)
+            .intersection(selectedGroups)
+            .isNotEmpty)) {
+      return true;
+    }
+    final replaced = character.traits
+        .where((trait) => _traitOverrideGroups(trait.en)
+            .intersection(selectedGroups)
+            .isNotEmpty)
+        .toList();
+    if (replaced.isEmpty) return true;
+    final original = replaced.map((item) => '${item.zh}（${item.en}）').join('、');
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('這會覆寫角色原始特徵'),
+        content: Text('角色「${character.characterZh}」原本包含：$original。\n\n'
+            '新增「${tag.zh}（${tag.en}）」會替換同類特徵，輸出時移除原本的標籤。\n\n'
+            '例如改變髮色或長短會改變角色原本的形象設定。要套用嗎？'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('保留原特徵')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('套用並替換')),
+        ],
+      ),
+    );
+    return apply == true;
   }
 
   Future<void> _copy(String value, String label) async {
@@ -1115,6 +1215,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       while (_personSlots.length < count) _personSlots.add(PersonSlot());
       while (_personSlots.length > count) _personSlots.removeLast();
       _personSelectedIds.removeWhere((index, _) => index >= count);
+      _personTagQueries.removeWhere((index, _) => index >= count);
+      _personActiveGroups.removeWhere((key, _) =>
+          int.tryParse(key.split(':').first) != null &&
+          int.parse(key.split(':').first) >= count);
       _peopleCount = count;
       _persist();
     });
@@ -1402,12 +1506,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '上衣',
                     '褲子',
                     '裙子',
+                    '內衣',
                     '胸罩',
                     '內褲',
                     '襪子',
                     '鞋子',
                     '服裝',
                     '配件',
+                    '服裝顏色',
+                    '服裝細節',
+                    '服裝材質',
+                    '穿脫狀態',
                     '表情',
                     '姿勢',
                     '場景',
@@ -1471,12 +1580,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '上衣',
                     '褲子',
                     '裙子',
+                    '內衣',
                     '胸罩',
                     '內褲',
                     '襪子',
                     '鞋子',
                     '服裝',
                     '配件',
+                    '服裝顏色',
+                    '服裝細節',
+                    '服裝材質',
+                    '穿脫狀態',
                     '表情',
                     '姿勢',
                   };
@@ -1500,7 +1614,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Color _groupColor(String group, BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (group.contains('服裝') ||
-        ['上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '配件'].contains(group)) {
+        ['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件']
+            .contains(group)) {
       return scheme.tertiaryContainer;
     }
     if (group.contains('性') || group == '裸露' || group == '胸部')
@@ -1536,10 +1651,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  List<TagItem> _stepVisibleTags(List<String> groups, {String? queryText}) {
+  String _wizardGroupLabel(String group) {
+    if (group == '褲子') return '下身／褲子';
+    if (group == '服裝') return '連身裙／整套服裝';
+    return group;
+  }
+
+  List<TagItem> _stepVisibleTags(List<String> groups,
+      {String? queryText, String? activeGroup}) {
     final query = (queryText ?? _search.text).trim().toLowerCase();
     return _allTags.where((tag) {
-      final inGroup = groups.contains(tag.group);
+      final inGroup = groups.contains(tag.group) &&
+          (activeGroup == null || tag.group == activeGroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -1550,12 +1673,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _stepTagPicker(List<String> groups,
       {required String nextLabel, int? personIndex, bool showNext = true}) {
+    final groupKey =
+        personIndex == null ? null : '$personIndex:${groups.join('|')}';
+    final storedGroup = personIndex == null
+        ? _activeGroup
+        : (_personActiveGroups[groupKey!] ?? groups.first);
     final currentGroup =
-        groups.contains(_activeGroup) ? _activeGroup : groups.first;
+        groups.contains(storedGroup) ? storedGroup : groups.first;
     final tagQuery = personIndex == null
         ? _search.text
         : (_personTagQueries[personIndex] ?? '');
-    final visible = _stepVisibleTags(groups, queryText: tagQuery);
+    final visible = _stepVisibleTags(groups,
+        queryText: tagQuery, activeGroup: currentGroup);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1591,9 +1720,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             itemBuilder: (_, index) {
               final group = groups[index];
               return ChoiceChip(
-                  label: Text(group),
+                  label: Text(_wizardGroupLabel(group)),
                   selected: group == currentGroup,
-                  onSelected: (_) => setState(() => _activeGroup = group));
+                  onSelected: (_) => setState(() {
+                        if (personIndex == null) {
+                          _activeGroup = group;
+                        } else {
+                          _personActiveGroups[groupKey!] = group;
+                        }
+                      }));
             },
           ),
         ),
@@ -1630,7 +1765,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
           final slot = entry.value;
-          final characterNames = _characterChineseForSlot(slot);
+          final characterNames = _characterChineseForSlot(slot, index);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
           if (!slot.detailed) {
@@ -1680,6 +1815,96 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             onPressed: _advanceStep,
             icon: const Icon(Icons.arrow_forward),
             label: Text(nextLabel),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _stepClothing() {
+    const styles = [
+      '上衣',
+      '褲子',
+      '裙子',
+      '內衣',
+      '胸罩',
+      '內褲',
+      '襪子',
+      '鞋子',
+      '服裝',
+      '配件',
+    ];
+    const details = [
+      '服裝顏色',
+      '服裝細節',
+      '服裝材質',
+      '穿脫狀態',
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('先選服裝大項目與樣式，再用服裝細節選擇顏色、花邊、蕾絲與材質。每位人物的服裝會分開保存。'),
+        const SizedBox(height: 12),
+        ..._personSlots.asMap().entries.map((entry) {
+          final index = entry.key;
+          final slot = entry.value;
+          final characterNames = _characterChineseForSlot(slot, index);
+          final title =
+              characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
+          if (!slot.detailed) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(child: Text('${index + 1}')),
+                title: Text('人物 ${index + 1}'),
+                subtitle: const Text('此人物設定為不需細節，不加入服裝標籤。'),
+              ),
+            );
+          }
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            color:
+                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(child: Text('${index + 1}')),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('人物 ${index + 1} · $title',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('服裝類型與樣式',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  _stepTagPicker(styles,
+                      nextLabel: '下一步', personIndex: index, showNext: false),
+                  const Divider(height: 26),
+                  const Text('顏色與服裝細節（可多選）',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  _stepTagPicker(details,
+                      nextLabel: '下一步', personIndex: index, showNext: false),
+                ],
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: _advanceStep,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('下一步：表情'),
           ),
         ),
       ],
@@ -2101,21 +2326,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _progressiveBuilder() {
-    final clothing = [
-      '上衣',
-      '褲子',
-      '裙子',
-      '胸罩',
-      '內褲',
-      '襪子',
-      '鞋子',
-      '服裝',
-      '配件',
-      '服裝顏色',
-      '服裝細節',
-      '服裝材質',
-      '穿脫狀態'
-    ];
     return Column(children: [
       _stepCard(0, '人物數量與模型', '${_peopleTokensNew().join('、')} · $_model',
           Icons.groups_outlined, _stepPeople()),
@@ -2157,13 +2367,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           '服裝與穿脫狀態',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) => clothing.contains(tag.group))
+              .where((tag) => [
+                    '上衣',
+                    '褲子',
+                    '裙子',
+                    '內衣',
+                    '胸罩',
+                    '內褲',
+                    '襪子',
+                    '鞋子',
+                    '服裝',
+                    '配件',
+                    '服裝顏色',
+                    '服裝細節',
+                    '服裝材質',
+                    '穿脫狀態'
+                  ].contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.checkroom_outlined,
-          _stepPersonTagPicker(clothing,
-              nextLabel: '下一步：表情', instruction: '請分別設定每位人物的服裝、顏色、材質與穿脫狀態。')),
+          _stepClothing()),
       _stepCard(
           5,
           '表情',

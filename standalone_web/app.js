@@ -108,6 +108,9 @@ const seedTags = [
   tag('sports_bra', '胸罩', '運動胸罩', 'sports bra', 2, false, 'bra'),
   tag('lace_bra', '胸罩', '蕾絲胸罩', 'lace bra', 2, true, 'bra'),
   tag('strapless_bra', '胸罩', '無肩帶胸罩', 'strapless bra', 2, true, 'bra'),
+  tag('underwear_camisole', '內衣', '吊帶內衣', 'camisole underwear', 2, true, 'underwear'),
+  tag('underwear_chemise', '內衣', '睡衣式內衣', 'chemise', 2, true, 'underwear'),
+  tag('underwear_bandeau', '內衣', '無肩帶內衣', 'bandeau underwear', 2, true, 'underwear'),
   tag('panties', '內褲', '內褲', 'panties', 2, true, 'underwear'),
   tag('highleg_panties', '內褲', '高腰高叉內褲', 'highleg panties', 2, true, 'underwear'),
   tag('thong', '內褲', '丁字褲', 'thong', 2, true, 'underwear'),
@@ -258,7 +261,7 @@ const catalogCharacters = [
 
 const defaultNegative = 'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, multiple views, fewer digits, extra limbs, missing fingers, deformed, text, error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
 const newSlot = () => ({ gender: '女性', detailed: true, mode: '原創', characterId: '', animeQuery: '', animeTag: '', query: '', originalAnimeZh: '', originalAnimeEn: '', originalAnimeTag: '', originalCharacterZh: '', originalCharacterEn: '', originalCharacterTag: '', originalTraitsZh: '', originalTraitsEn: '' });
-const state = { selected: new Set(), personSelected: {}, personQueries: {}, customTags: [], customCharacters: [], recentCharacterIds: [], presets: [], group: '全部', query: '', step: 0, peopleSlots: [newSlot()], gender: '女性', count: 1, model: 'Amanatsu 1.1', sampler: 'Euler a', steps: 28, cfg: '5.0', clipSkip: '2', showAdult: false, preprompt: 'masterpiece, best quality, newest, absurdres, highres', extra: '', negative: defaultNegative };
+const state = { selected: new Set(), personSelected: {}, personQueries: {}, wizardGroups: {}, customTags: [], customCharacters: [], recentCharacterIds: [], presets: [], group: '全部', query: '', step: 0, peopleSlots: [newSlot()], gender: '女性', count: 1, model: 'Amanatsu 1.1', sampler: 'Euler a', steps: 28, cfg: '5.0', clipSkip: '2', showAdult: false, preprompt: 'masterpiece, best quality, newest, absurdres, highres', extra: '', negative: defaultNegative };
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
@@ -281,35 +284,50 @@ function peopleTokens() {
 }
 function peopleChinese() { return state.peopleSlots.map(slot => slot.gender).reduce((result, item) => { result[item] = (result[item] || 0) + 1; return result; }, {}); }
 function personSummary() { return Object.entries(peopleChinese()).map(([gender, count]) => `${count} 名${gender}`).join('、'); }
-function traitsFromSlot(slot) {
+function traitOverrideGroups(en) {
+  const value = String(en || '').trim().toLowerCase();
+  const groups = new Set();
+  if (/\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow)\s+hair\b/.test(value)) groups.add('hair_color');
+  if (/\b(very\s+long|long|medium|short)\s+hair\b/.test(value)) groups.add('hair_length');
+  if (/\b(green|blue|red|purple|yellow|aqua|brown|pink|orange)\s+eyes\b/.test(value)) groups.add('eye_color');
+  if (['slim', 'tall', 'curvy', 'muscular', 'petite'].includes(value)) groups.add('body_type');
+  if (['flat chest', 'small breasts', 'medium breasts', 'large breasts', 'huge breasts'].includes(value)) groups.add('breast_size');
+  return groups;
+}
+function personOverrideGroups(index) { return new Set(selectedTags(index).flatMap(item => [...traitOverrideGroups(item.en)])); }
+function traitsFromSlot(slot, index = null) {
   const c = characterForSlot(slot);
   if (!slot.detailed) return { en: [], zh: [] };
-  if (slot.mode === '動漫角色' && c) return { en: c.traits.map(item => item.en), zh: c.traits.map(item => item.zh) };
+  if (slot.mode === '動漫角色' && c) {
+    const replaced = index === null ? new Set() : personOverrideGroups(index);
+    const traits = c.traits.filter(item => [...traitOverrideGroups(item.en)].every(group => !replaced.has(group)));
+    return { en: traits.map(item => item.en), zh: traits.map(item => item.zh) };
+  }
   return { en: splitTags(slot.originalTraitsEn), zh: splitTags(slot.originalTraitsZh) };
 }
-function characterChineseForSlot(slot) {
+function characterChineseForSlot(slot, index = null) {
   if (!slot.detailed) return ['此角色不設定細節'];
   const c = characterForSlot(slot);
-  if (slot.mode === '動漫角色' && c) return [`${c.animeZh}（${c.animeEn}）`, `${c.characterZh}（${c.characterEn}）`, ...c.traits.map(item => item.zh)];
+  if (slot.mode === '動漫角色' && c) return [`${c.animeZh}（${c.animeEn}）`, `${c.characterZh}（${c.characterEn}）`, ...traitsFromSlot(slot, index).zh];
   const names = [];
   if (slot.originalAnimeZh.trim() || slot.originalAnimeEn.trim()) names.push(`${slot.originalAnimeZh || slot.originalAnimeEn}（${slot.originalAnimeEn || slot.originalAnimeZh}）`);
   if (slot.originalCharacterZh.trim() || slot.originalCharacterEn.trim()) names.push(`${slot.originalCharacterZh || slot.originalCharacterEn}（${slot.originalCharacterEn || slot.originalCharacterZh}）`);
-  return [...names, ...traitsFromSlot(slot).zh];
+  return [...names, ...traitsFromSlot(slot, index).zh];
 }
-function characterEnglishForSlot(slot) {
+function characterEnglishForSlot(slot, index = null) {
   if (!slot.detailed) return [];
   const c = characterForSlot(slot);
-  if (slot.mode === '動漫角色' && c) return [c.animeTag, c.characterTag, ...c.traits.map(item => item.en)];
+  if (slot.mode === '動漫角色' && c) return [c.animeTag, c.characterTag, ...traitsFromSlot(slot, index).en];
   const names = [];
   if (slot.originalAnimeTag.trim()) names.push(clean(slot.originalAnimeTag));
   if (slot.originalCharacterTag.trim()) names.push(clean(slot.originalCharacterTag));
-  return [...names, ...traitsFromSlot(slot).en].filter(Boolean);
+  return [...names, ...traitsFromSlot(slot, index).en].filter(Boolean);
 }
 function characterTokens() {
   const en = [], zh = [];
   state.peopleSlots.forEach(slot => {
-    en.push(...characterEnglishForSlot(slot));
-    zh.push(...characterChineseForSlot(slot));
+    en.push(...characterEnglishForSlot(slot, state.peopleSlots.indexOf(slot)));
+    zh.push(...characterChineseForSlot(slot, state.peopleSlots.indexOf(slot)));
   });
   return { en: unique(en.filter(Boolean)), zh: unique(zh.filter(Boolean)) };
 }
@@ -317,19 +335,19 @@ function personTagSet(index) { if (!state.personSelected[index]) state.personSel
 function savePersonTagSet(index, ids) { state.personSelected[index] = [...ids]; }
 function selectedTags(personIndex = null) { const ids = personIndex === null ? state.selected : personTagSet(personIndex); return allTags().filter(item => ids.has(item.id)).sort((a, b) => a.order - b.order || a.en.localeCompare(b.en)); }
 function personSelectedCount() { return Object.values(state.personSelected).reduce((total, ids) => total + ids.length, 0); }
-function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
+function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
 function positiveText() { return tokens().map(item => `${item}.`).join(' '); }
-function chineseText() { const list = [personSummary()]; state.peopleSlots.forEach((slot, index) => { if (!slot.detailed) return; list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot), ...selectedTags(index).map(item => item.zh)].join('、')}`); }); list.push(...selectedTags().map(item => item.zh)); if (state.extra.trim()) list.push(`額外正向標籤：${state.extra.trim()}`); if (state.preprompt.trim()) list.push(`Amanatsu 品質前綴：${state.preprompt.trim()}`); return list.join('。'); }
-const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', 'duplicate': '重複內容' };
+function chineseText() { const list = [personSummary()]; state.peopleSlots.forEach((slot, index) => { if (!slot.detailed) return; list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...selectedTags(index).map(item => item.zh)].join('、')}`); }); list.push(...selectedTags().map(item => item.zh)); if (state.extra.trim()) list.push(`額外正向標籤：${state.extra.trim()}`); if (state.preprompt.trim()) list.push(`Amanatsu 品質前綴：${state.preprompt.trim()}`); return list.join('。'); }
+const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', duplicate: '重複內容' };
 function negativeText() { return splitTags(state.negative).map(item => `${item}.`).join(' '); }
-function negativeChinese() { return splitTags(state.negative).map(item => negativeTranslations[item.toLowerCase()] || item).map(item => `${item}。`).join(' '); }
+function negativeChinese() { return splitTags(state.negative).map(item => negativeTranslations[item.toLowerCase()] || `未翻譯：${item}`).map(item => `${item}。`).join(' '); }
 
 function snapshot() { return { ...state, selected: [...state.selected], personSelected: state.personSelected, peopleSlots: state.peopleSlots.map(slot => ({ ...slot })) }; }
 function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot())); }
 function toast(message) { const element = $('#toast'); if (!element) return; element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 1900); }
 function renderVersionInfo() { const label = $('#app-version'); if (label) label.textContent = `v${APP_VERSION.label}`; const history = $('#version-history'); if (history) history.innerHTML = (APP_VERSION.history || []).map(item => `<article class="version-entry"><b>${esc(item.label)} · ${esc(item.date)}</b><p>${esc(item.notes)}</p></article>`).join(''); }
 function checkForVersionUpdate() { const previous = localStorage.getItem(VERSION_STORAGE_KEY); localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION.label); if (previous && previous !== APP_VERSION.label) { setTimeout(() => { toast(`已更新至 ${APP_VERSION.label}`); $('#version-dialog')?.showModal(); }, 350); } }
-function migrateLegacyPersonalTags(saved) { if (saved.personSelected) return; const personalGroups = new Set(['外觀特徵', '臉部特徵', '胸部', '裸露', '上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢', '性行為', '性姿勢']); const ids = allTags().filter(item => state.selected.has(item.id) && personalGroups.has(item.group)).map(item => item.id); if (ids.length) { state.personSelected[0] = ids; ids.forEach(id => state.selected.delete(id)); } }
+function migrateLegacyPersonalTags(saved) { if (saved.personSelected) return; const personalGroups = new Set(['外觀特徵', '臉部特徵', '胸部', '裸露', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢', '性行為', '性姿勢']); const ids = allTags().filter(item => state.selected.has(item.id) && personalGroups.has(item.group)).map(item => item.id); if (ids.length) { state.personSelected[0] = ids; ids.forEach(id => state.selected.delete(id)); } }
 function restore() { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (!saved) return; Object.assign(state, saved); state.selected = new Set(saved.selected || []); state.personSelected = saved.personSelected || {}; migrateLegacyPersonalTags(saved); state.personQueries = {}; state.peopleSlots = (saved.peopleSlots || []).map(slot => ({ ...newSlot(), ...slot })); if (!state.peopleSlots.length) state.peopleSlots = [newSlot()]; state.customTags = saved.customTags || []; state.customCharacters = saved.customCharacters || []; state.recentCharacterIds = saved.recentCharacterIds || []; state.presets = saved.presets || []; state.count = state.peopleSlots.length; state.gender = state.peopleSlots[0].gender; } catch { toast('記憶資料無法讀取，已使用預設值。'); } }
 
 function setPeopleCount(value) { const count = Math.max(1, Math.min(6, Number(value) || 1)); while (state.peopleSlots.length < count) state.peopleSlots.push(newSlot()); while (state.peopleSlots.length > count) state.peopleSlots.pop(); Object.keys(state.personSelected).forEach(key => { if (Number(key) >= count) delete state.personSelected[key]; }); state.count = count; state.gender = state.peopleSlots[0].gender; }
@@ -341,7 +359,7 @@ function chooseCharacter(index, id) { const slot = state.peopleSlots[index]; con
 function characterComplete() { return state.peopleSlots.every(slot => !slot.detailed || (slot.mode === '動漫角色' ? Boolean(characterForSlot(slot)) : Boolean(slot.originalCharacterEn.trim() && slot.originalCharacterTag.trim()))); }
 function slug(value) { return clean(value).toLowerCase().replace(/[^a-z0-9_ -]/g, '').replace(/\s+/g, '_'); }
 
-function conflictGroup(item) { return item.conflictGroup || ''; }
+function conflictGroup(item) { return item.conflictGroup || [...traitOverrideGroups(item.en)][0] || ''; }
 function conflictingTags(candidate, personIndex = null) {
   const group = conflictGroup(candidate); if (!group) return [];
   return selectedTags(personIndex).filter(item => {
@@ -351,12 +369,25 @@ function conflictingTags(candidate, personIndex = null) {
     if (group === 'bottomless' && ['bottom', 'underwear'].includes(other)) return true;
     if (['top', 'bra'].includes(group) && other === 'topless') return true;
     if (['bottom', 'underwear'].includes(group) && other === 'bottomless') return true;
+    if (group === 'one_piece' && ['top', 'bottom', 'bra', 'underwear'].includes(other)) return true;
+    if (other === 'one_piece' && ['top', 'bottom', 'bra', 'underwear'].includes(group)) return true;
     if (group === 'nudity' && ['top', 'bra', 'bottom', 'underwear', 'one_piece'].includes(other)) return true;
     if (other === 'nudity' && ['top', 'bra', 'bottom', 'underwear', 'one_piece'].includes(group)) return true;
-    return group === other && ['scene', 'time', 'framing', 'camera', 'clothing_color', 'hair_color', 'body_type', 'breast_size', 'expression_eyes', 'expression_mouth', 'expression_mood', 'wear_state', 'legwear', 'footwear', 'sex_position'].includes(group);
+    return group === other && ['scene', 'time', 'framing', 'camera', 'hair_color', 'hair_length', 'body_type', 'breast_size', 'expression_eyes', 'expression_mouth', 'expression_mood', 'wear_state', 'legwear', 'footwear', 'sex_position'].includes(group);
   });
 }
-function toggleTag(id, personIndex = null) { const item = allTags().find(candidate => candidate.id === id); if (!item) return; const ids = personIndex === null ? state.selected : personTagSet(personIndex); if (ids.has(id)) { ids.delete(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); return; } const conflicts = conflictingTags(item, personIndex); if (conflicts.length) { const names = conflicts.map(candidate => `${candidate.zh} (${candidate.en})`).join('、'); if (!window.confirm(`新增「${item.zh}」會與已選標籤衝突：${names}\n\n按「確定」移除原標籤並換成新標籤；按「取消」保留原選擇。`)) return; conflicts.forEach(candidate => ids.delete(candidate.id)); } ids.add(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); }
+function characterOverrideMessage(item, personIndex) {
+  if (personIndex === null) return '';
+  const slot = state.peopleSlots[personIndex];
+  const character = slot && slot.mode === '動漫角色' ? characterForSlot(slot) : null;
+  const groups = traitOverrideGroups(item.en);
+  if (!character || !groups.size) return '';
+  if (selectedTags(personIndex).some(selected => [...traitOverrideGroups(selected.en)].some(group => groups.has(group)))) return '';
+  const replaced = character.traits.filter(trait => [...traitOverrideGroups(trait.en)].some(group => groups.has(group)));
+  if (!replaced.length) return '';
+  return `角色「${character.characterZh}」原本包含：${replaced.map(trait => `${trait.zh}（${trait.en}）`).join('、')}。\n\n新增「${item.zh}（${item.en}）」會替換同類特徵，輸出時移除原本的標籤。要套用嗎？`;
+}
+function toggleTag(id, personIndex = null) { const item = allTags().find(candidate => candidate.id === id); if (!item) return; const ids = personIndex === null ? state.selected : personTagSet(personIndex); if (ids.has(id)) { ids.delete(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); return; } const overrideMessage = characterOverrideMessage(item, personIndex); if (overrideMessage && !window.confirm(overrideMessage)) return; const conflicts = conflictingTags(item, personIndex); if (conflicts.length) { const names = conflicts.map(candidate => `${candidate.zh} (${candidate.en})`).join('、'); if (!window.confirm(`新增「${item.zh}」會與已選標籤衝突：${names}\n\n按「確定」移除原標籤並換成新標籤；按「取消」保留原選擇。`)) return; conflicts.forEach(candidate => ids.delete(candidate.id)); } ids.add(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); }
 
 function tagButton(item, personIndex = null) { const selected = personIndex === null ? state.selected.has(item.id) : personTagSet(personIndex).has(item.id); return `<button class="tag ${selected ? 'selected' : ''} ${item.adult ? 'adult' : ''}" data-tag="${esc(item.id)}" data-person-tag="${personIndex === null ? '' : personIndex}"><span>${item.adult ? '<i class="adult-dot">18+</i> ' : ''}${esc(item.zh)}</span><em>${esc(item.en)}</em></button>`; }
 function renderTagPicker(groups, filterKey, personIndex = null) { const query = personIndex === null ? (state.wizardQuery || '') : (state.personQueries[personIndex] || ''); const filtered = allTags().filter(item => groups.includes(item.group) && (state.showAdult || !item.adult) && (!query || `${item.zh} ${item.en}`.toLowerCase().includes(query.toLowerCase()))); return `<div class="search-line"><span>⌕</span><input data-wizard-search="${filterKey}" data-person-search="${personIndex === null ? '' : personIndex}" value="${esc(query)}" placeholder="搜尋中文或英文標籤…"></div><div class="wizard-tags">${filtered.length ? filtered.map(item => tagButton(item, personIndex)).join('') : '<div class="empty">沒有符合的標籤，可使用新增自訂標籤。</div>'}</div>`; }
@@ -373,9 +404,12 @@ function finalStep() { return `<div class="wizard-fields"><label>Amanatsu 品質
 function renderWizard() { $('#wizard').innerHTML = [stepCard(0, '人物數量與模型', '先選人物數量、性別比例與 Amanatsu 設定', '①', peopleStep()), stepCard(1, '場景與畫面', '背景、時間、鏡頭與構圖', '⌂', tagsStep(['場景', '畫面'])), stepCard(2, '人物與角色資料', '每位人物可選動漫角色、原創角色或不需詳細', '♙', charactersStep()), stepCard(3, '外觀、臉部與身體', '髮色、眼睛、虎牙、胸部與裸露狀態', '✦', tagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'])), stepCard(4, '服裝與細節', '上衣、下身、內衣、顏色、蕾絲、材質與穿脫狀態', '◇', tagsStep(['上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'])), stepCard(5, '表情', '表情、眼睛與嘴部狀態', '☺', tagsStep(['表情'])), stepCard(6, '姿勢與 18+ 姿勢', '基本姿勢、性行為與性姿勢；單人基本姿勢會互斥', '♧', tagsStep(['姿勢', '性行為', '性姿勢'])), stepCard(7, '品質與負面標籤', '調整前綴、額外標籤與負面標籤', '✓', finalStep())].join(''); }
 
 function personTagsStep(groups, instruction) { return `<p class="wizard-note">${instruction}</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span></div>${slot.detailed ? renderTagPicker(groups, `person-${index}`, index) : '<p class="wizard-note">此人物設定為不需細節，不加入這一類標籤。</p>'}</article>`; }).join('')}${nextButton()}`; }
-function renderWizard() { $('#wizard').innerHTML = [stepCard(0, '人物數量與模型', '先選人物數量、性別比例與 Amanatsu 設定', '①', peopleStep()), stepCard(1, '場景與畫面', '背景、時間、鏡頭與構圖（全圖共用）', '⌂', tagsStep(['場景', '畫面'])), stepCard(2, '人物與角色資料', '先選動漫作品，再選該作品的角色', '♙', charactersStep()), stepCard(3, '角色特徵', '每位人物各自設定外觀、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')), stepCard(4, '服裝與穿脫狀態', '每位人物各自設定服裝、顏色、蕾絲、材質與穿脫狀態', '◇', personTagsStep(['上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'], '請在每位人物的區塊內設定自己的服裝。')), stepCard(5, '表情', '每位人物各自設定表情', '☺', personTagsStep(['表情'], '請分別設定每位人物的表情。')), stepCard(6, '姿勢與 18+ 姿勢', '每位人物各自設定姿勢；不同人物可以使用不同姿勢', '♧', personTagsStep(['姿勢', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、性行為與性姿勢。')), stepCard(7, '品質與負面標籤', '全圖共用的品質、額外與負面標籤', '✓', finalStep())].join(''); }
+function renderWizard() { $('#wizard').innerHTML = [stepCard(0, '人物數量與模型', '先選人物數量、性別比例與 Amanatsu 設定', '①', peopleStep()), stepCard(1, '場景與畫面', '背景、時間、鏡頭與構圖（全圖共用）', '⌂', tagsStep(['場景', '畫面'])), stepCard(2, '人物與角色資料', '先選動漫作品，再選該作品的角色', '♙', charactersStep()), stepCard(3, '角色特徵', '每位人物各自設定外觀、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')), stepCard(4, '服裝與穿脫狀態', '先選服裝類型，再分開選顏色、蕾絲、材質與穿脫狀態', '◇', clothingStep()), stepCard(5, '表情', '每位人物各自設定表情', '☺', personTagsStep(['表情'], '請分別設定每位人物的表情。')), stepCard(6, '姿勢與 18+ 姿勢', '每位人物各自設定姿勢；不同人物可以使用不同姿勢', '♧', personTagsStep(['姿勢', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、性行為與性姿勢。')), stepCard(7, '品質與負面標籤', '全圖共用的品質、額外與負面標籤', '✓', finalStep())].join(''); }
+function wizardGroupLabel(group) { if (group === '褲子') return '下身／褲子'; if (group === '服裝') return '連身裙／整套服裝'; return group; }
+function renderTagPicker(groups, filterKey, personIndex = null) { const query = personIndex === null ? (state.wizardQuery || '') : (state.personQueries[personIndex] || ''); const currentGroup = groups.includes(state.wizardGroups[filterKey]) ? state.wizardGroups[filterKey] : groups[0]; state.wizardGroups[filterKey] = currentGroup; const filtered = allTags().filter(item => item.group === currentGroup && (state.showAdult || !item.adult) && (!query || `${item.zh} ${item.en}`.toLowerCase().includes(query.toLowerCase()))); const filters = `<div class="wizard-filter-row">${groups.map(group => `<button type="button" class="filter ${group === currentGroup ? 'active' : ''}" data-wizard-group="${esc(filterKey)}|${esc(group)}">${esc(wizardGroupLabel(group))}</button>`).join('')}</div>`; return `${filters}<div class="search-line"><span>⌕</span><input data-wizard-search="${filterKey}" data-person-search="${personIndex === null ? '' : personIndex}" value="${esc(query)}" placeholder="搜尋目前分類的中文或英文標籤…"></div><div class="wizard-tags">${filtered.length ? filtered.map(item => tagButton(item, personIndex)).join('') : '<div class="empty">目前分類沒有符合的標籤，可新增自訂標籤。</div>'}</div>`; }
+function clothingStep() { const styles = ['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件']; const details = ['服裝顏色', '服裝細節', '服裝材質', '穿脫狀態']; return `<p class="wizard-note">服裝類型與顏色／細節分開選擇：例如先選長裙，再選粉紅色、白色、蕾絲。每位人物各自保存服裝設定。</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span></div>${slot.detailed ? `<b>服裝類型與樣式</b>${renderTagPicker(styles, `clothing-style-${index}`, index)}<hr><b>顏色與服裝細節（可多選）</b>${renderTagPicker(details, `clothing-detail-${index}`, index)}` : '<p class="wizard-note">此人物設定為不需細節，不加入服裝標籤。</p>'}</article>`; }).join('')}${nextButton('下一步：表情')}`; }
 function renderFilters() { const groups = ['全部', ...new Set(allTags().map(item => item.group))]; $('#group-filters').innerHTML = groups.map(group => `<button class="filter ${state.group === group ? 'active' : ''}" data-group="${esc(group)}">${esc(group)}</button>`).join(''); }
-function renderTags() { const query = state.query.toLowerCase(); const items = allTags().filter(item => (state.group === '全部' || item.group === state.group) && (state.showAdult || !item.adult) && (!query || `${item.zh} ${item.en}`.toLowerCase().includes(query))); $('#tag-list').innerHTML = items.length ? items.map(tagButton).join('') : '<div class="empty">沒有符合的標籤，可使用搜尋或新增自訂標籤。</div>'; }
+function renderTags() { const query = state.query.toLowerCase(); const items = allTags().filter(item => (state.group === '全部' || item.group === state.group) && (state.showAdult || !item.adult) && (!query || `${item.zh} ${item.en}`.toLowerCase().includes(query))); $('#tag-list').innerHTML = items.length ? items.map(item => tagButton(item)).join('') : '<div class="empty">沒有符合的標籤，可使用搜尋或新增自訂標籤。</div>'; }
 function renderPresets() { $('#preset-list').innerHTML = state.presets.length ? state.presets.map((preset, index) => `<div class="preset"><span class="preset-number">${index + 1}</span><span class="preset-info"><b>${esc(preset.name)}</b><small>${(preset.payload.selected || []).length} 個標籤 · ${esc(preset.payload.gender || '')} ${preset.payload.count || ''} 人</small></span><span class="preset-actions"><button class="icon-button" data-load="${index}">載入</button><button class="icon-button" data-delete="${index}">刪除</button></span></div>`).join('') : '<div class="preset-empty">尚未儲存組合；完成後可使用輸出區的儲存按鈕。</div>'; }
 function renderOutput() { $('#positive-output').value = positiveText(); $('#chinese-output').value = chineseText(); $('#negative-output').value = negativeText(); $('#negative-chinese').value = negativeChinese(); $('#selected-summary').textContent = `已選 ${selectedTags().length + personSelectedCount()} 個資料庫標籤 · 英文每個標籤以句點結尾`; $('#order-summary').textContent = `${personSummary()} → 每位人物的角色特徵／服裝／表情／姿勢 → 場景／畫面 · ${state.sampler} · ${state.steps} steps · CFG ${state.cfg} · Clip skip ${state.clipSkip}`; }
 function syncControls() { const controls = { '#model': state.model, '#gender': state.gender, '#people-count': String(state.peopleSlots.length), '#sampler': state.sampler, '#steps': String(state.steps), '#cfg': state.cfg, '#clip-skip': state.clipSkip, '#preprompt': state.preprompt, '#extra-positive': state.extra, '#negative': state.negative, '#search': state.query }; Object.entries(controls).forEach(([selector, value]) => { const element = $(selector); if (element) element.value = value; }); const adult = $('#show-adult'); if (adult) adult.checked = state.showAdult; }
@@ -384,10 +418,11 @@ function render() { renderWizard(); renderFilters(); renderTags(); renderPresets
 async function copyText(value, label) { try { await navigator.clipboard.writeText(value); } catch { const area = document.createElement('textarea'); area.value = value; document.body.append(area); area.select(); document.execCommand('copy'); area.remove(); } toast(`${label}已複製`); }
 function downloadBackup() { const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'betterwaifu-prompt-backup.json'; link.click(); URL.revokeObjectURL(link.href); toast('備份已匯出'); }
 function importBackup(file) { const reader = new FileReader(); reader.onload = () => { try { localStorage.setItem(STORAGE_KEY, reader.result); location.reload(); } catch { toast('JSON 備份格式無法讀取'); } }; reader.readAsText(file); }
-function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
+function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
 
 document.addEventListener('click', event => {
   const tagButton = event.target.closest('[data-tag]'); if (tagButton) { const rawPerson = tagButton.dataset.personTag; toggleTag(tagButton.dataset.tag, rawPerson === '' ? null : Number(rawPerson)); return; }
+  const wizardGroupButton = event.target.closest('[data-wizard-group]'); if (wizardGroupButton) { const value = wizardGroupButton.dataset.wizardGroup || ''; const separator = value.indexOf('|'); if (separator >= 0) { state.wizardGroups[value.slice(0, separator)] = value.slice(separator + 1); render(); } return; }
   const stepButton = event.target.closest('[data-step]'); if (stepButton) { state.step = Number(stepButton.dataset.step); render(); return; }
   const next = event.target.closest('[data-next]'); if (next) { if (state.step === 2 && !characterComplete()) { toast('請完成每位需要詳細設定人物的角色資料，或關閉詳細角色資料。'); return; } state.step = Math.min(7, state.step + 1); render(); return; }
   const groupButton = event.target.closest('[data-group]'); if (groupButton) { state.group = groupButton.dataset.group; render(); return; }
@@ -436,7 +471,7 @@ $('#export-btn').addEventListener('click', downloadBackup);
 $('#import-btn').addEventListener('click', () => $('#import-file').click());
 $('#import-file').addEventListener('change', event => { if (event.target.files?.[0]) importBackup(event.target.files[0]); event.target.value = ''; });
 $('#add-tag-btn').addEventListener('click', () => { $('#custom-zh').value = ''; $('#custom-en').value = ''; $('#custom-group').value = '自訂特徵'; $('#custom-dialog').showModal(); });
-$('#custom-form').addEventListener('submit', event => { event.preventDefault(); const zh = $('#custom-zh').value.trim(); const en = clean($('#custom-en').value); if (!zh || !en) return; const group = $('#custom-group').value; const item = { id: `custom_${Date.now()}`, group, zh, en, order: groupOrder(group), adult: false, conflictGroup: '', builtIn: false }; state.customTags.push(item); const personalGroup = ['自訂角色', '自訂特徵', '上衣', '褲子', '裙子', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '表情', '姿勢'].includes(group); if (personalGroup) { const ids = personTagSet(0); ids.add(item.id); savePersonTagSet(0, ids); } else state.selected.add(item.id); $('#custom-dialog').close(); render(); toast('自訂標籤已加入'); });
+$('#custom-form').addEventListener('submit', event => { event.preventDefault(); const zh = $('#custom-zh').value.trim(); const en = clean($('#custom-en').value); if (!zh || !en) return; const group = $('#custom-group').value; const item = { id: `custom_${Date.now()}`, group, zh, en, order: groupOrder(group), adult: false, conflictGroup: '', builtIn: false }; state.customTags.push(item); const personalGroup = ['自訂角色', '自訂特徵', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢'].includes(group); if (personalGroup) { const ids = personTagSet(0); ids.add(item.id); savePersonTagSet(0, ids); } else state.selected.add(item.id); $('#custom-dialog').close(); render(); toast('自訂標籤已加入'); });
 $('#character-form').addEventListener('submit', event => { event.preventDefault(); const animeZh = $('#character-anime-zh').value.trim(), animeEn = $('#character-anime-en').value.trim(), characterZh = $('#character-zh').value.trim(), characterEn = $('#character-en').value.trim(); if (!animeZh || !animeEn || !characterZh || !characterEn) return; const c = { id: `custom_character_${Date.now()}`, animeZh, animeEn, animeTag: clean($('#character-anime-tag').value) || slug(animeEn), characterZh, characterEn, characterTag: clean($('#character-tag').value) || slug(characterEn), traits: splitTags($('#character-traits-en').value).map((en, index) => ({ en, zh: splitTags($('#character-traits-zh').value)[index] || en })) }; state.customCharacters.push(c); const emptySlot = state.peopleSlots.find(slot => slot.mode === '動漫角色' && !slot.characterId); if (emptySlot) { emptySlot.animeTag = c.animeTag; emptySlot.animeQuery = ''; emptySlot.characterId = c.id; } state.recentCharacterIds = [c.id, ...state.recentCharacterIds].slice(0, 10); $('#character-dialog').close(); render(); toast('角色資料已儲存'); });
 
 restore(); render();
