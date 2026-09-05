@@ -1233,10 +1233,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
       );
       _customCharacters.addAll(
-        (data['customCharacters'] as List? ?? []).map(
-          (item) =>
-              CatalogCharacter.fromJson(Map<String, dynamic>.from(item as Map)),
-        ),
+        (data['customCharacters'] as List? ?? [])
+            .map(
+              (item) => CatalogCharacter.fromJson(
+                  Map<String, dynamic>.from(item as Map)),
+            )
+            .map(_normalizeImportedAnime),
       );
       _personSlots
         ..clear()
@@ -1251,9 +1253,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // value. A non-empty characterId that points to the catalog is always
       // an anime-character slot, so repair it when restoring local memory.
       for (final slot in _personSlots) {
-        if (slot.characterId.isNotEmpty &&
-            _allCharacters.any((item) => item.id == slot.characterId)) {
+        if (slot.characterId.isEmpty) continue;
+        for (final character in _allCharacters) {
+          if (character.id != slot.characterId) continue;
           slot.mode = '動漫角色';
+          slot.animeTag = character.animeTag;
+          break;
         }
       }
       _recentCharacterIds.addAll(
@@ -2386,16 +2391,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<CatalogCharacter> _matchingAnime(PersonSlot slot) {
     final lower = slot.animeQuery.trim().toLowerCase();
     final seen = <String>{};
-    return _allCharacters
-        .where((item) {
-          if (!seen.add(item.animeTag)) return false;
-          if (lower.isEmpty) return true;
-          return '${item.animeZh} ${item.animeEn} ${item.animeTag}'
-              .toLowerCase()
-              .contains(lower);
-        })
-        .take(18)
-        .toList();
+    final matches = _allCharacters.where((item) {
+      if (!seen.add(item.animeTag)) return false;
+      if (lower.isEmpty) return true;
+      return '${item.animeZh} ${item.animeEn} ${item.animeTag}'
+          .toLowerCase()
+          .contains(lower);
+    }).toList();
+    if (slot.animeTag.isNotEmpty) {
+      matches.sort((a, b) {
+        final aSelected = a.animeTag == slot.animeTag;
+        final bSelected = b.animeTag == slot.animeTag;
+        if (aSelected == bSelected) return 0;
+        return aSelected ? -1 : 1;
+      });
+    }
+    return matches.take(18).toList();
   }
 
   List<CatalogCharacter> _matchingCharacters(PersonSlot slot) {
@@ -2721,10 +2732,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   CatalogCharacter _remoteCatalogCharacter(
       _RemoteAnime anime, _RemoteCharacter remote) {
+    final animeTag = _resolvedAnimeTag(anime);
     CatalogCharacter? local;
     final normalized =
         remote.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     for (final item in _allCharacters) {
+      if (item.animeTag != animeTag) continue;
       final itemName =
           item.characterEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       if (itemName == normalized ||
@@ -2737,12 +2750,52 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       id: 'jikan_character_${remote.id}',
       animeZh: anime.titleJapanese.isEmpty ? anime.title : anime.titleJapanese,
       animeEn: anime.title,
-      animeTag: anime.tag,
+      animeTag: animeTag,
       characterZh: remote.nameKanji.isEmpty ? remote.name : remote.nameKanji,
       characterEn: remote.name,
       characterTag: _slug(remote.name),
       traits: local?.traits ?? _remoteTraits(remote),
     );
+  }
+
+  String _animeKey(String value) =>
+      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u4e00-\u9fff]'), '');
+
+  String _resolvedAnimeTag(_RemoteAnime anime) {
+    final names = [anime.title, anime.titleJapanese]
+        .where((value) => value.trim().isNotEmpty)
+        .map(_animeKey)
+        .toSet();
+    for (final item in catalogCharacters) {
+      if (names.contains(_animeKey(item.animeEn)) ||
+          names.contains(_animeKey(item.animeZh)) ||
+          names.contains(_animeKey(item.animeTag))) {
+        return item.animeTag;
+      }
+    }
+    return anime.tag;
+  }
+
+  CatalogCharacter _normalizeImportedAnime(CatalogCharacter character) {
+    final names = {_animeKey(character.animeEn), _animeKey(character.animeZh)};
+    for (final item in catalogCharacters) {
+      if (names.contains(_animeKey(item.animeEn)) ||
+          names.contains(_animeKey(item.animeZh)) ||
+          names.contains(_animeKey(item.animeTag))) {
+        if (item.animeTag == character.animeTag) return character;
+        return CatalogCharacter(
+          id: character.id,
+          animeZh: character.animeZh,
+          animeEn: character.animeEn,
+          animeTag: item.animeTag,
+          characterZh: character.characterZh,
+          characterEn: character.characterEn,
+          characterTag: character.characterTag,
+          traits: character.traits,
+        );
+      }
+    }
+    return character;
   }
 
   Future<void> _importRemoteCharacters(int slotIndex,
@@ -2794,7 +2847,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 8),
-        const Text('自動查詢結果', style: TextStyle(fontWeight: FontWeight.w700)),
+        Row(
+          children: [
+            const Expanded(
+              child:
+                  Text('自動查詢結果', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            TextButton.icon(
+              onPressed: () => _clearRemoteLookup(index),
+              icon: const Icon(Icons.close, size: 16),
+              label: const Text('清除查詢結果'),
+            ),
+          ],
+        ),
         if (error != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),
@@ -2824,8 +2889,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        Text('${anime.title}：自動查詢到 ${characters.length} 名角色',
-            style: const TextStyle(fontWeight: FontWeight.w700)),
+        Row(
+          children: [
+            Expanded(
+              child: Text('${anime.title}：自動查詢到 ${characters.length} 名角色',
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            TextButton.icon(
+              onPressed: () => _clearRemoteLookup(index),
+              icon: const Icon(Icons.close, size: 16),
+              label: const Text('關閉'),
+            ),
+          ],
+        ),
         const SizedBox(height: 5),
         OutlinedButton.icon(
           onPressed: _remoteLookupLoading.contains(index)
@@ -2859,6 +2935,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
       ],
     );
+  }
+
+  void _clearRemoteLookup(int index) {
+    setState(() {
+      _remoteAnimeResults.remove(index);
+      _remoteAnimeSelection.remove(index);
+      _remoteCharacters.remove(index);
+      _remoteLookupErrors.remove(index);
+      _remoteLookupLoading.remove(index);
+    });
   }
 
   void _selectAnime(int slotIndex, CatalogCharacter anime) {
@@ -3874,7 +3960,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
-                                  '已帶入：${_characterForNew(slot)!.animeEn} · ${_characterForNew(slot)!.characterEn} · ${_characterForNew(slot)!.traits.map((item) => item.en).join(', ')}',
+                                  '已帶入：${_characterForNew(slot)!.animeEn} · 動漫 tag：${_characterForNew(slot)!.animeTag} · ${_characterForNew(slot)!.characterEn} · ${_characterForNew(slot)!.traits.map((item) => item.en).join(', ')}',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: Theme.of(context)

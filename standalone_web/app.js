@@ -754,7 +754,12 @@ const unique = list => [...new Map(list.map(item => [item.toLowerCase(), item]))
 const normalizedSeedTags = () => seedTags.map(item =>
   mergedHairTagIds.has(item.id) ? { ...item, group: '髮型' } : item);
 const allTags = () => [...normalizedSeedTags(), ...state.customTags];
-const allCharacters = () => [...catalogCharacters, ...state.customCharacters];
+const normalizeImportedCharacter = item => {
+  const names = [item.animeEn, item.animeZh].filter(Boolean).map(animeKey);
+  const local = catalogCharacters.find(candidate => names.includes(animeKey(candidate.animeEn)) || names.includes(animeKey(candidate.animeZh)) || names.includes(animeKey(candidate.animeTag)));
+  return local && local.animeTag !== item.animeTag ? { ...item, animeTag: local.animeTag } : item;
+};
+const allCharacters = () => [...catalogCharacters, ...state.customCharacters.map(normalizeImportedCharacter)];
 const findCharacter = id => allCharacters().find(item => item.id === id);
 const characterForSlot = slot => findCharacter(slot.characterId);
 
@@ -917,7 +922,7 @@ function migrateLegacyPersonalTags(saved) { if (saved.personSelected) return; co
 function restore() { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (!saved) return; Object.assign(state, saved); state.negativeTranslations = saved.negativeTranslations || {}; state.selected = new Set(saved.selected || []); state.personSelected = saved.personSelected || {}; migrateLegacyPersonalTags(saved); state.personQueries = {}; state.peopleSlots = (saved.peopleSlots || []).map(slot => ({ ...newSlot(), ...slot })); if (!state.peopleSlots.length) state.peopleSlots = [newSlot()]; state.customTags = saved.customTags || []; state.customCharacters = saved.customCharacters || []; state.recentCharacterIds = saved.recentCharacterIds || []; state.presets = saved.presets || []; state.count = state.peopleSlots.length; state.gender = state.peopleSlots[0].gender; } catch { toast('記憶資料無法讀取，已使用預設值。'); } }
 
 function setPeopleCount(value) { const count = Math.max(1, Math.min(10, Number(value) || 1)); while (state.peopleSlots.length < count) state.peopleSlots.push(newSlot()); while (state.peopleSlots.length > count) state.peopleSlots.pop(); Object.keys(state.personSelected).forEach(key => { if (Number(key) >= count) delete state.personSelected[key]; }); state.count = count; state.gender = state.peopleSlots[0].gender; lookupState.target = Math.min(lookupState.target, count - 1); }
-function searchAnime(slot) { const q = slot.animeQuery.toLowerCase().trim(); const seen = new Set(); return allCharacters().filter(item => { if (seen.has(item.animeTag)) return false; seen.add(item.animeTag); return !q || `${item.animeZh} ${item.animeEn} ${item.animeTag}`.toLowerCase().includes(q); }).slice(0, 12); }
+function searchAnime(slot) { const q = slot.animeQuery.toLowerCase().trim(); const seen = new Set(); const matches = allCharacters().filter(item => { if (seen.has(item.animeTag)) return false; seen.add(item.animeTag); return !q || `${item.animeZh} ${item.animeEn} ${item.animeTag}`.toLowerCase().includes(q); }); if (slot.animeTag) matches.sort((a, b) => Number(b.animeTag === slot.animeTag) - Number(a.animeTag === slot.animeTag)); return matches.slice(0, 12); }
 function searchCharacters(slot) { const q = slot.query.toLowerCase().trim(); return allCharacters().filter(item => (slot.animeTag ? item.animeTag === slot.animeTag : false) && (!q || `${item.characterZh} ${item.characterEn} ${item.characterTag}`.toLowerCase().includes(q))).slice(0, 12); }
 function recentCharacters() { return state.recentCharacterIds.map(findCharacter).filter(Boolean); }
 function chooseAnime(index, animeTag) { const slot = state.peopleSlots[index]; slot.animeTag = animeTag; slot.animeQuery = ''; slot.query = ''; slot.characterId = ''; persist(); render(); }
@@ -974,9 +979,17 @@ function remoteTraits(about) {
   [['very long hair', '超長髮', 'very long hair'], ['long hair', '長髮', 'long hair'], ['medium hair', '中長髮', 'medium hair'], ['short hair', '短髮', 'short hair'], ['very short hair', '極短髮', 'very short hair'], ['bob cut', '鮑伯頭', 'bob cut'], ['pixie cut', '精靈短髮', 'pixie cut'], ['straight hair', '直髮', 'straight hair'], ['wavy hair', '波浪髮', 'wavy hair'], ['curly hair', '捲髮', 'curly hair'], ['twin tails', '雙馬尾', 'twintails'], ['twintails', '雙馬尾', 'twintails'], ['ponytail', '馬尾', 'ponytail'], ['braid', '辮子', 'braid'], ['bun', '髮髻', 'hair bun'], ['ahoge', '呆毛', 'ahoge'], ['glasses', '眼鏡', 'glasses'], ['horns', '角', 'horns'], ['elf ears', '精靈耳', 'elf ears'], ['pointed ears', '尖耳朵', 'pointed ears'], ['tail', '尾巴', 'tail'], ['slim', '纖細身材', 'slim'], ['medium breasts', '中等胸部', 'medium breasts'], ['large breasts', '豐滿胸部', 'large breasts']].forEach(([needle, zh, en]) => { if (text.includes(needle) && !(needle === 'long hair' && text.includes('very long hair')) && !(needle === 'short hair' && text.includes('very short hair'))) add(zh, en); });
   return traits;
 }
+function animeKey(value) { return String(value ?? '').toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, ''); }
+function resolvedAnimeTag(anime) {
+  const names = [anime.title, anime.titleJapanese].filter(Boolean).map(animeKey);
+  const local = catalogCharacters.find(item => names.includes(animeKey(item.animeEn)) || names.includes(animeKey(item.animeZh)) || names.includes(animeKey(item.animeTag)));
+  return local?.animeTag || slug(anime.title);
+}
 function remoteCatalogCharacter(anime, remote) {
-  const normalized = remote.name.toLowerCase().replace(/[^a-z0-9]/g, ''); const local = allCharacters().find(item => item.characterEn.toLowerCase().replace(/[^a-z0-9]/g, '') === normalized || item.characterTag === slug(remote.name));
-  return { id: `jikan_character_${remote.id}`, animeZh: anime.titleJapanese || anime.title, animeEn: anime.title, animeTag: slug(anime.title), characterZh: remote.nameKanji || remote.name, characterEn: remote.name, characterTag: slug(remote.name), traits: local?.traits || remoteTraits(remote.about) };
+  const animeTag = resolvedAnimeTag(anime);
+  const normalized = remote.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const local = allCharacters().find(item => item.animeTag === animeTag && (item.characterEn.toLowerCase().replace(/[^a-z0-9]/g, '') === normalized || item.characterTag === slug(remote.name)));
+  return { id: `jikan_character_${remote.id}`, animeZh: anime.titleJapanese || anime.title, animeEn: anime.title, animeTag, characterZh: remote.nameKanji || remote.name, characterEn: remote.name, characterTag: slug(remote.name), traits: local?.traits || remoteTraits(remote.about) };
 }
 async function importRemoteCharacters() {
   const anime = lookupState.selectedAnime; if (!anime || !lookupState.characters.length) return;
@@ -992,9 +1005,17 @@ async function importRemoteCharacters() {
   if (slot && additions.length) { slot.mode = '動漫角色'; slot.characterId = additions[0].id; slot.animeTag = additions[0].animeTag; state.recentCharacterIds = [additions[0].id, ...state.recentCharacterIds.filter(id => id !== additions[0].id)].slice(0, 10); }
   lookupState.loading = false; persist(); render(); toast(`已匯入 ${additions.length} 個角色；前 18 個會嘗試從公開簡介補抓外觀特徵`);
 }
+function clearRemoteLookup() {
+  lookupState.anime = [];
+  lookupState.characters = [];
+  lookupState.selectedAnime = null;
+  lookupState.error = '';
+  lookupState.loading = false;
+  render();
+}
 function remoteLookupStep() {
   const characters = lookupState.characters; const anime = lookupState.selectedAnime;
-  return `<article class="lookup-panel"><div class="lookup-row"><label>自動查詢動漫（公開資料）<input data-auto-anime-query value="${esc(lookupState.query)}" placeholder="例如：To LOVE-Ru、Re:ZERO"></label><label>加入第幾位人物<select data-auto-target>${state.peopleSlots.map((_, index) => `<option value="${index}" ${lookupState.target === index ? 'selected' : ''}>人物 ${index + 1}</option>`).join('')}</select></label><button type="button" class="primary" data-auto-search-anime ${lookupState.loading ? 'disabled' : ''}>🌐 自動查詢</button></div>${lookupState.error ? `<p class="wizard-note">${esc(lookupState.error)}</p>` : ''}${lookupState.anime.length ? `<div class="lookup-box"><b>動漫搜尋結果</b>${lookupState.anime.map(item => `<button class="character-result" data-auto-anime="${item.id}">${esc(item.title)}${item.titleJapanese ? ` · ${esc(item.titleJapanese)}` : ''}<small>查詢此作品的角色</small></button>`).join('')}</div>` : ''}${anime ? `<div class="lookup-box"><b>${esc(anime.title)}：已查到 ${characters.length} 名角色</b><button type="button" class="ghost" data-auto-import-all ${lookupState.loading ? 'disabled' : ''}>匯入角色與可辨識特徵</button>${characters.map(item => `<span class="remote-character-chip">${esc(item.name)}${item.nameKanji ? ` · ${esc(item.nameKanji)}` : ''}</span>`).join('')}</div>` : ''}<p class="wizard-note">資料來源：AniList；若該來源無法回應會顯示錯誤，匯入後仍可手動新增與修正角色特徵。</p></article>`;
+  return `<article class="lookup-panel"><div class="lookup-row"><label>自動查詢動漫（公開資料）<input data-auto-anime-query value="${esc(lookupState.query)}" placeholder="例如：To LOVE-Ru、Re:ZERO"></label><label>加入第幾位人物<select data-auto-target>${state.peopleSlots.map((_, index) => `<option value="${index}" ${lookupState.target === index ? 'selected' : ''}>人物 ${index + 1}</option>`).join('')}</select></label><button type="button" class="primary" data-auto-search-anime ${lookupState.loading ? 'disabled' : ''}>🌐 自動查詢</button><button type="button" class="ghost" data-auto-clear ${lookupState.loading ? 'disabled' : ''}>清除查詢結果</button></div>${lookupState.error ? `<p class="wizard-note">${esc(lookupState.error)}</p>` : ''}${lookupState.anime.length ? `<div class="lookup-box"><b>動漫搜尋結果</b>${lookupState.anime.map(item => `<button class="character-result" data-auto-anime="${item.id}">${esc(item.title)}${item.titleJapanese ? ` · ${esc(item.titleJapanese)}` : ''}<small>查詢此作品的角色</small></button>`).join('')}</div>` : ''}${anime ? `<div class="lookup-box"><b>${esc(anime.title)}：已查到 ${characters.length} 名角色</b><button type="button" class="ghost" data-auto-import-all ${lookupState.loading ? 'disabled' : ''}>匯入角色與可辨識特徵</button>${characters.map(item => `<span class="remote-character-chip">${esc(item.name)}${item.nameKanji ? ` · ${esc(item.nameKanji)}` : ''}</span>`).join('')}</div>` : ''}<p class="wizard-note">資料來源：AniList；若該來源無法回應會顯示錯誤，匯入後仍可手動新增與修正角色特徵。</p></article>`;
 }
 
 function conflictGroup(item) { if (item.conflictGroup) return item.conflictGroup; const traitGroup = [...traitOverrideGroups(item.en)][0]; if (traitGroup) return traitGroup; if (item.group === '上衣風格') return 'top_style'; if (item.group === '下身風格') return 'bottom_style'; if (item.group === '上衣顏色') return 'top_color'; if (item.group === '下身顏色') return 'bottom_color'; if (item.group === '服裝顏色') return 'clothing_color'; if (item.group === '配件顏色') return 'accessory_color'; if (item.group === '上衣') return 'top'; if (['褲子', '裙子'].includes(item.group)) return 'bottom'; if (item.group === '胸罩') return 'bra'; if (['內衣', '內褲'].includes(item.group)) return 'underwear'; if (['服裝', '服裝風格'].includes(item.group)) return 'one_piece'; return ''; }
@@ -1172,6 +1193,7 @@ function groupOrder(group) { if (group === '場景') return 6; if (group === '�
 
 document.addEventListener('click', event => {
   if (event.target.closest('[data-auto-search-anime]')) { searchRemoteAnime(); return; }
+  if (event.target.closest('[data-auto-clear]')) { clearRemoteLookup(); return; }
   const autoAnime = event.target.closest('[data-auto-anime]'); if (autoAnime) { const anime = lookupState.anime.find(item => String(item.id) === autoAnime.dataset.autoAnime); if (anime) loadRemoteCharacters(anime); return; }
   if (event.target.closest('[data-auto-import-all]')) { importRemoteCharacters(); return; }
   const negativeTag = event.target.closest('[data-negative-tag]'); if (negativeTag) { toggleNegativeTag(negativeTag.dataset.negativeTag, negativeTag.dataset.negativeZh || negativeTag.dataset.negativeTag); return; }
@@ -1254,7 +1276,15 @@ document.addEventListener('click', event => {
   scrollToStep(1);
 });
 
-restore(); state.step = Math.min(6, Math.max(0, Number(state.step) || 0)); render();
+function repairImportedSlots() {
+  state.peopleSlots.forEach(slot => {
+    const character = findCharacter(slot.characterId);
+    if (!character) return;
+    slot.mode = '動漫角色';
+    slot.animeTag = character.animeTag;
+  });
+}
+restore(); repairImportedSlots(); persist(); state.step = Math.min(6, Math.max(0, Number(state.step) || 0)); render();
 renderVersionInfo();
 checkForVersionUpdate();
 $('#version-btn').addEventListener('click', () => $('#version-dialog').showModal());
