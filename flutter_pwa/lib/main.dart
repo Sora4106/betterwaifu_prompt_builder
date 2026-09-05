@@ -1011,6 +1011,66 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .where((item) => item.isNotEmpty)
       .toList();
 
+  String? _hairLengthTag(String value) {
+    final normalized = _cleanTag(value).toLowerCase();
+    final match = RegExp(r'^(very long|long|medium|short) hair$')
+        .firstMatch(normalized);
+    return match?.group(0);
+  }
+
+  String? _effectiveHairLength(PersonSlot slot, int index) {
+    if (!slot.detailed) return null;
+    for (final tag in _selectedTagsForPerson(index)) {
+      final selectedLength = _hairLengthTag(tag.en);
+      if (selectedLength != null) return selectedLength;
+    }
+    if (slot.mode == '動漫角色') {
+      final character = _characterForNew(slot);
+      if (character != null) {
+        for (final trait in character.traits) {
+          final originalLength = _hairLengthTag(trait.en);
+          if (originalLength != null) return originalLength;
+        }
+      }
+    }
+    for (final trait in _extraTags(slot.originalTraits)) {
+      final originalLength = _hairLengthTag(trait);
+      if (originalLength != null) return originalLength;
+    }
+    return null;
+  }
+
+  List<String> get _hairGuardNegativeTags {
+    final lengths = <String>{};
+    for (var index = 0; index < _personSlots.length; index++) {
+      final length = _effectiveHairLength(_personSlots[index], index);
+      if (length != null) lengths.add(length);
+    }
+    if (lengths.length != 1) return const <String>[];
+    final result = <String>[];
+    switch (lengths.first) {
+      case 'short hair':
+        result.add('long hair');
+        break;
+      case 'long hair':
+      case 'very long hair':
+        result.add('short hair');
+        break;
+      case 'medium hair':
+        result.addAll(['short hair', 'long hair']);
+        break;
+    }
+    final seen = <String>{};
+    return result.where((tag) => seen.add(tag)).toList();
+  }
+
+  List<String> get _negativeTokens {
+    final seen = <String>{};
+    return [..._extraTags(_negative.text), ..._hairGuardNegativeTags]
+        .where((tag) => seen.add(tag.toLowerCase()))
+        .toList();
+  }
+
   List<String> get _positiveTokens {
     final tokens = <String>[..._peopleTokensNew()];
     for (var index = 0; index < _personSlots.length; index++) {
@@ -1078,17 +1138,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'early': '早期風格',
       'chromatic aberration': '色差',
       'artistic error': '藝術錯誤',
+      'short hair': '短髮',
+      'long hair': '長髮',
+      'very long hair': '超長髮',
+      'medium hair': '中長髮',
     };
     return translations[tag.toLowerCase()] ??
         (RegExp(r'[\u4e00-\u9fff]').hasMatch(tag) ? tag : '未內建翻譯：$tag');
   }
 
-  String get _negativeZh => _extraTags(_negative.text)
+  String get _negativeZh => _negativeTokens
       .map((tag) => '${_negativeTranslation(tag)}。')
       .join(' ');
 
   String get _negativeText =>
-      _extraTags(_negative.text).map((tag) => '$tag.').join(' ');
+      _negativeTokens.map((tag) => '$tag.').join(' ');
 
   void _toggleNegativeTag(String english, String chinese) {
     final tags = _extraTags(_negative.text);
@@ -3095,6 +3159,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           child: Text('負面標籤中文翻譯：\n$_negativeZh')),
       const SizedBox(height: 12),
       _negativeTagPicker(),
+      const SizedBox(height: 12),
+      Text(
+          '自動髮長防衝突：角色為長髮時會在負面輸出加入 short hair；改選短髮後則加入 long hair。這些自動詞不會改寫上方可編輯欄位。',
+          style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant)),
       const SizedBox(height: 12),
       SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,

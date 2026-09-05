@@ -477,9 +477,35 @@ function personSelectedCount() { return Object.values(state.personSelected).redu
 function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
 function positiveText() { return tokens().map(item => `${item}.`).join(' '); }
 function chineseText() { const list = [personSummary()]; state.peopleSlots.forEach((slot, index) => { if (!slot.detailed) return; list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...selectedTags(index).map(item => item.zh)].join('、')}`); }); list.push(...selectedTags().map(item => item.zh)); if (state.extra.trim()) list.push(`額外正向標籤：${state.extra.trim()}`); if (state.preprompt.trim()) list.push(`Amanatsu 品質前綴：${state.preprompt.trim()}`); return list.join('。'); }
-const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', duplicate: '重複內容' };
-function negativeText() { return splitTags(state.negative).map(item => `${item}.`).join(' '); }
-function negativeChinese() { return splitTags(state.negative).map(item => state.negativeTranslations?.[item.toLowerCase()] || negativeTranslations[item.toLowerCase()] || `未翻譯：${item}`).map(item => `${item}。`).join(' '); }
+const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', duplicate: '重複內容', 'short hair': '短髮', 'long hair': '長髮', 'very long hair': '超長髮', 'medium hair': '中長髮' };
+function hairLengthTag(value) { const match = /^\s*(very long|long|medium|short) hair\s*$/i.exec(String(value || '')); return match ? match[0].toLowerCase() : ''; }
+function effectiveHairLength(slot, index) {
+  if (!slot.detailed) return '';
+  const selected = selectedTags(index).map(item => hairLengthTag(item.en)).find(Boolean);
+  if (selected) return selected;
+  const character = characterForSlot(slot);
+  if (slot.mode === '動漫角色' && character) {
+    const original = character.traits.map(item => hairLengthTag(item.en)).find(Boolean);
+    if (original) return original;
+  }
+  return splitTags(slot.originalTraitsEn).map(hairLengthTag).find(Boolean) || '';
+}
+function hairGuardNegativeTags() {
+  const lengths = [];
+  state.peopleSlots.forEach((slot, index) => {
+    const length = effectiveHairLength(slot, index);
+    if (length && !lengths.includes(length)) lengths.push(length);
+  });
+  if (lengths.length !== 1) return [];
+  const result = [];
+  if (lengths[0] === 'short hair') result.push('long hair');
+  else if (lengths[0] === 'long hair' || lengths[0] === 'very long hair') result.push('short hair');
+  else if (lengths[0] === 'medium hair') result.push('short hair', 'long hair');
+  return unique(result);
+}
+function negativeTokens() { return unique([...splitTags(state.negative), ...hairGuardNegativeTags()]); }
+function negativeText() { return negativeTokens().map(item => `${item}.`).join(' '); }
+function negativeChinese() { return negativeTokens().map(item => state.negativeTranslations?.[item.toLowerCase()] || negativeTranslations[item.toLowerCase()] || `未翻譯：${item}`).map(item => `${item}。`).join(' '); }
 
 function negativeToolsMarkup() {
   const selected = new Set(splitTags(state.negative).map(item => item.toLowerCase()));
@@ -629,7 +655,7 @@ function peopleStep() { return `<div class="wizard-controls"><label>人物數量
 function charactersStep() { return `${remoteLookupStep()}${state.peopleSlots.map((slot, index) => peopleCharacterCard(slot, index)).join('')}${nextButton('完成角色設定')}`; }
 function charactersStep() { return `${remoteLookupStep()}${state.peopleSlots.map((slot, index) => peopleCharacterCard(slot, index)).join('')}${nextButton('完成角色設定')}`; }
 function tagsStep(groups) { return `${renderTagPicker(groups, 'wizard')}${nextButton()}`; }
-function finalStep() { return `<div class="wizard-fields"><label>Amanatsu 品質前綴<textarea data-setting="preprompt" rows="2">${esc(state.preprompt)}</textarea></label><label>額外正向標籤<textarea data-setting="extra" rows="2" placeholder="可用中文或英文，以逗號或換行分隔">${esc(state.extra)}</textarea></label></div><label style="margin-top:12px">負面標籤（英文或中文）<textarea data-setting="negative" rows="4">${esc(state.negative)}</textarea></label>${negativeToolsMarkup()}<label class="switch-row"><input type="checkbox" data-setting="showAdult" ${state.showAdult ? 'checked' : ''}><span class="switch"></span><span><b>顯示 18+ 標籤分類</b><small>只建立成年角色內容，開啟後可在前面分類選取成人向標籤。</small></span></label><p class="wizard-note">所有英文輸出標籤會以英文句點結尾；負面標籤也會同步顯示中文翻譯。</p>`; }
+function finalStep() { return `<div class="wizard-fields"><label>Amanatsu 品質前綴<textarea data-setting="preprompt" rows="2">${esc(state.preprompt)}</textarea></label><label>額外正向標籤<textarea data-setting="extra" rows="2" placeholder="可用中文或英文，以逗號或換行分隔">${esc(state.extra)}</textarea></label></div><label style="margin-top:12px">負面標籤（英文或中文）<textarea data-setting="negative" rows="4">${esc(state.negative)}</textarea></label>${negativeToolsMarkup()}<p class="wizard-note">自動髮長防衝突：長髮會在負面輸出加入 short hair；改選短髮後則加入 long hair。自動詞不會改寫上方可編輯欄位。</p><label class="switch-row"><input type="checkbox" data-setting="showAdult" ${state.showAdult ? 'checked' : ''}><span class="switch"></span><span><b>顯示 18+ 標籤分類</b><small>只建立成年角色內容，開啟後可在前面分類選取成人向標籤。</small></span></label><p class="wizard-note">所有英文輸出標籤會以英文句點結尾；負面標籤也會同步顯示中文翻譯。</p>`; }
 function renderWizard() { $('#wizard').innerHTML = [stepCard(0, '人物數量', '先選人物數量與性別比例；模型參數請在 AI 生成網站設定', '①', peopleStep()), stepCard(1, '場景與畫面', '背景、時間、鏡頭與構圖', '⌂', tagsStep(['場景', '畫面'])), stepCard(2, '人物與角色資料', '先選動漫作品，再選該作品的角色', '♙', charactersStep()), stepCard(3, '角色特徵', '每位人物各自設定外觀、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')), stepCard(4, '服裝與穿脫狀態', '先選服裝類型，再分開選顏色、蕾絲、材質與穿脫狀態', '◇', clothingStep()), stepCard(5, '表情', '每位人物各自設定表情', '☺', personTagsStep(['表情'], '請分別設定每位人物的表情。')), stepCard(6, '姿勢與 18+ 姿勢', '每位人物各自設定姿勢；不同人物可以使用不同姿勢', '♧', personTagsStep(['姿勢', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、性行為與性姿勢。')), stepCard(7, '品質與負面標籤', '全圖共用的品質、額外與負面標籤', '✓', finalStep())].join(''); }
 
 function personTagsStep(groups, instruction) { return `<p class="wizard-note">${instruction}</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span></div>${slot.detailed ? renderTagPicker(groups, `person-${index}`, index) : '<p class="wizard-note">此人物設定為不需細節，不加入這一類標籤。</p>'}</article>`; }).join('')}${nextButton()}`; }
