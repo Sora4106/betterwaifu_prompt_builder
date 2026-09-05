@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.14",
-  "build": 16,
-  "label": "1.1.14+16",
+  "version": "1.1.15",
+  "build": 17,
+  "label": "1.1.15+17",
   "history": [
+    {
+      "version": "1.1.15",
+      "build": 17,
+      "label": "1.1.15+17",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: improve button contrast and adaptive category widths"
+    },
     {
       "version": "1.1.14",
       "build": 16,

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.15+17 - 2026-09-05
+
+- 自動偵測：fix: improve button contrast and adaptive category widths
+
+
 ## 1.1.14+16 - 2026-09-05
 
 - 自動偵測：fix: support Chinese separators for extra tags
