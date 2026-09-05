@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.13",
-  "build": 15,
-  "label": "1.1.13+15",
+  "version": "1.1.14",
+  "build": 16,
+  "label": "1.1.14+16",
   "history": [
+    {
+      "version": "1.1.14",
+      "build": 16,
+      "label": "1.1.14+16",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: support Chinese separators for extra tags"
+    },
     {
       "version": "1.1.13",
       "build": 15,

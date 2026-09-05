@@ -1,7 +1,8 @@
-const appVersion = '1.1.13';
-const appBuildNumber = 15;
-const appVersionLabel = '1.1.13+15';
+const appVersion = '1.1.14';
+const appBuildNumber = 16;
+const appVersionLabel = '1.1.14+16';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: support Chinese separators for extra tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: translate extra positive tags and expand expression catalog'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: make tag controls responsive'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand pose detail skirt lengths and anime aliases'},

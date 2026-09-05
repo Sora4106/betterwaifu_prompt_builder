@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.14+16 - 2026-09-05
+
+- 自動偵測：fix: support Chinese separators for extra tags
+
+
 ## 1.1.13+15 - 2026-09-05
 
 - 自動偵測：feat: translate extra positive tags and expand expression catalog
