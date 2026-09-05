@@ -1,7 +1,8 @@
-const appVersion = '1.1.6';
-const appBuildNumber = 8;
-const appVersionLabel = '1.1.6+8';
+const appVersion = '1.1.7';
+const appBuildNumber = 9;
+const appVersionLabel = '1.1.7+9';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add editable negative tag library'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add scene catalog and random outfits'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add gothic styles and innerwear layering'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: split clothing colors and enforce outfit layers'},

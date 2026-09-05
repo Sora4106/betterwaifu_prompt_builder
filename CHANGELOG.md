@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.7+9 - 2026-09-05
+
+- 自動偵測：feat: add editable negative tag library
+
+
 ## 1.1.6+8 - 2026-09-05
 
 - 自動偵測：feat: add scene catalog and random outfits

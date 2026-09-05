@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.6",
-  "build": 8,
-  "label": "1.1.6+8",
+  "version": "1.1.7",
+  "build": 9,
+  "label": "1.1.7+9",
   "history": [
+    {
+      "version": "1.1.7",
+      "build": 9,
+      "label": "1.1.7+9",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add editable negative tag library"
+    },
     {
       "version": "1.1.6",
       "build": 8,
