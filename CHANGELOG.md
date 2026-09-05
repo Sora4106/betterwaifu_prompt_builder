@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.17+19 - 2026-09-05
+
+- 自動偵測：fix: map imported characters to anime tags and close lookup
+
+
 ## 1.1.16+18 - 2026-09-05
 
 - 自動偵測：fix: show imported anime characters in prompt content
