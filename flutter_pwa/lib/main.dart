@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:html' as html;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -954,6 +955,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.conflictGroup != null) return tag.conflictGroup;
     final traitGroups = _traitOverrideGroups(tag.en);
     if (traitGroups.isNotEmpty) return traitGroups.first;
+    if (tag.group == '上衣風格') return 'top_style';
+    if (tag.group == '下身風格') return 'bottom_style';
     if (tag.group == '上衣顏色') return 'top_color';
     if (tag.group == '下身顏色') return 'bottom_color';
     if (tag.group == '服裝顏色') return 'clothing_color';
@@ -987,7 +990,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (firstGroup != null && firstGroup == secondGroup) {
       return firstGroup != 'clothing_color';
     }
-    final clothingLayers = {'top', 'bottom', 'top_color', 'bottom_color'};
+    final clothingLayers = {
+      'top',
+      'bottom',
+      'top_color',
+      'bottom_color',
+      'top_style',
+      'bottom_style'
+    };
     if ((firstGroup == 'one_piece' && clothingLayers.contains(secondGroup)) ||
         (secondGroup == 'one_piece' && clothingLayers.contains(firstGroup))) {
       return true;
@@ -1003,12 +1013,97 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'bottom',
         'top_color',
         'bottom_color',
+        'top_style',
+        'bottom_style',
         'one_piece'
       };
       if ((firstNude && clothing.contains(secondGroup)) ||
           (secondNude && clothing.contains(firstGroup))) return true;
     }
     return false;
+  }
+
+  TagItem? _randomClothingTag(List<String> groups, Random random) {
+    final seen = <String>{};
+    final candidates = _allTags
+        .where((tag) =>
+            groups.contains(tag.group) &&
+            (_showAdult || !tag.adult) &&
+            seen.add('${tag.group}|${tag.en}'))
+        .toList()
+      ..shuffle(random);
+    return candidates.isEmpty ? null : candidates.first;
+  }
+
+  void _randomizeClothing(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final random = Random();
+    final clothingGroups = {
+      '上衣',
+      '褲子',
+      '裙子',
+      '內衣',
+      '胸罩',
+      '內褲',
+      '襪子',
+      '鞋子',
+      '服裝',
+      '配件',
+      '服裝風格',
+      '上衣風格',
+      '下身風格',
+      '上衣顏色',
+      '下身顏色',
+      '服裝顏色',
+      '服裝細節',
+      '服裝材質',
+      '穿脫狀態',
+    };
+    final target = _personTagIds(personIndex);
+    target.removeWhere((id) => _allTags
+        .any((tag) => tag.id == id && clothingGroups.contains(tag.group)));
+
+    void add(TagItem? tag) {
+      if (tag != null) target.add(tag.id);
+    }
+
+    if (random.nextBool()) {
+      add(_randomClothingTag(['服裝', '服裝風格'], random));
+      add(_randomClothingTag(['服裝顏色'], random));
+    } else {
+      add(_randomClothingTag(['上衣'], random));
+      add(_randomClothingTag(['褲子', '裙子'], random));
+      if (random.nextBool()) add(_randomClothingTag(['上衣風格'], random));
+      if (random.nextBool()) add(_randomClothingTag(['下身風格'], random));
+      if (random.nextBool()) add(_randomClothingTag(['上衣顏色'], random));
+      if (random.nextBool()) add(_randomClothingTag(['下身顏色'], random));
+    }
+    if (random.nextBool()) add(_randomClothingTag(['胸罩'], random));
+    if (random.nextBool()) add(_randomClothingTag(['內衣'], random));
+    if (random.nextBool()) add(_randomClothingTag(['內褲'], random));
+    if (random.nextBool()) add(_randomClothingTag(['襪子'], random));
+    if (random.nextBool()) add(_randomClothingTag(['鞋子'], random));
+    if (random.nextBool()) add(_randomClothingTag(['穿脫狀態'], random));
+    if (random.nextBool()) add(_randomClothingTag(['服裝材質'], random));
+
+    final detailCandidates = _allTags
+        .where((tag) => tag.group == '服裝細節' && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+    for (final tag in detailCandidates.take(1 + random.nextInt(3))) {
+      target.add(tag.id);
+    }
+    final accessoryCandidates = _allTags
+        .where((tag) => tag.group == '配件' && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+    for (final tag in accessoryCandidates.take(random.nextInt(3))) {
+      target.add(tag.id);
+    }
+
+    setState(() {
+      _persist();
+    });
   }
 
   Future<void> _toggle(TagItem tag, {int? personIndex}) async {
@@ -1572,6 +1667,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     '配件',
                     '服裝風格',
+                    '上衣風格',
+                    '下身風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
@@ -1649,6 +1746,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     '配件',
                     '服裝風格',
+                    '上衣風格',
+                    '下身風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
@@ -1861,6 +1960,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             style:
                                 const TextStyle(fontWeight: FontWeight.w700)),
                       ),
+                      IconButton(
+                        tooltip: '隨機服裝穿搭',
+                        onPressed: () => _randomizeClothing(index),
+                        icon: const Icon(Icons.shuffle),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -1901,6 +2005,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ];
     const details = [
       '服裝風格',
+      '上衣風格',
+      '下身風格',
       '上衣顏色',
       '下身顏色',
       '服裝顏色',
@@ -1956,7 +2062,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _stepTagPicker(styles,
                       nextLabel: '下一步', personIndex: index, showNext: false),
                   const Divider(height: 26),
-                  const Text('顏色與服裝細節（可多選）',
+                  const Text('風格、顏色與服裝細節（可多選）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   _stepTagPicker(details,
@@ -2470,6 +2576,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     '配件',
                     '服裝風格',
+                    '上衣風格',
+                    '下身風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
