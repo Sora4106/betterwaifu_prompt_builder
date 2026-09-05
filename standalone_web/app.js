@@ -7,6 +7,24 @@ const tag = (id, group, zh, en, order, adult = false, conflictGroup = '') => ({
   id, group, zh, en, order, adult, conflictGroup, builtIn: true
 });
 
+const clothingColors = [
+  ['black', '\u9ED1\u8272', 'black'], ['white', '\u767D\u8272', 'white'],
+  ['red', '\u7D05\u8272', 'red'], ['blue', '\u85CD\u8272', 'blue'],
+  ['pink', '\u7C89\u7D05\u8272', 'pink'], ['purple', '\u7D2B\u8272', 'purple'],
+  ['green', '\u7DA0\u8272', 'green'], ['yellow', '\u9EC3\u8272', 'yellow'],
+  ['brown', '\u68D5\u8272', 'brown'], ['gray', '\u7070\u8272', 'gray'],
+  ['gold', '\u91D1\u8272', 'gold'], ['silver', '\u9280\u8272', 'silver'],
+  ['multicolored', '\u591A\u5F69', 'multicolored']
+];
+const clothingColorTags = (prefix, group, zhSuffix, enSuffix, conflictGroup, adult = false) =>
+  clothingColors.map(([key, zh, en]) => tag(`${prefix}_${key}`, group, `${zh}${zhSuffix}`, `${en} ${enSuffix}`, 2, adult, conflictGroup));
+
+const mergedHairTagIds = new Set([
+  'trait_long_hair', 'trait_short_hair', 'trait_hair_between_eyes',
+  'trait_blonde', 'trait_black_hair', 'trait_silver', 'trait_blue_hair',
+  'trait_red_hair', 'trait_pink_hair'
+]);
+
 // Curated bilingual seed catalogue. Users can add any missing Danbooru-style tag.
 const seedTags = [
   tag('scene_bedroom', '場景', '臥室', 'bedroom', 6, false, 'scene'),
@@ -286,6 +304,46 @@ const seedTags = [
   tag('hat', '配件', '帽子', 'hat', 2),
   tag('backpack', '配件', '背包', 'backpack', 2),
 
+  // Additional underwear, sock and footwear styles.
+  tag('bra_underwire', '胸罩', '鋼圈胸罩', 'underwire bra', 2, true, 'bra'),
+  tag('bra_push_up', '胸罩', '集中型胸罩', 'push-up bra', 2, true, 'bra'),
+  tag('bra_bralette', '胸罩', '無鋼圈胸罩', 'bralette', 2, true, 'bra'),
+  tag('bra_triangle', '胸罩', '三角罩杯胸罩', 'triangle bra', 2, true, 'bra'),
+  tag('bra_racerback', '胸罩', '工字背胸罩', 'racerback bra', 2, true, 'bra'),
+  tag('bra_front_clasp', '胸罩', '前扣式胸罩', 'front-clasp bra', 2, true, 'bra'),
+  tag('underwear_slip', '內衣', '襯裙式內衣', 'slip', 2, true, 'underwear_top'),
+  tag('underwear_long', '內衣', '保暖內衣', 'long underwear', 2, false, 'underwear_top'),
+  tag('underwear_thermal', '內衣', '發熱內衣', 'thermal underwear', 2, false, 'underwear_top'),
+  tag('underwear_bodystocking', '內衣', '連身襪衣', 'bodystocking', 2, true, 'underwear_top'),
+  tag('lace_panties', '內褲', '蕾絲內褲', 'lace panties', 2, true, 'underwear_bottom'),
+  tag('cotton_panties', '內褲', '棉質內褲', 'cotton panties', 2, true, 'underwear_bottom'),
+  tag('highwaist_panties', '內褲', '高腰內褲', 'high-waisted panties', 2, true, 'underwear_bottom'),
+  tag('lowrise_panties', '內褲', '低腰內褲', 'low-rise panties', 2, true, 'underwear_bottom'),
+  tag('boyshorts', '內褲', '男孩褲式內褲', 'boyshorts', 2, true, 'underwear_bottom'),
+  tag('cheeky_panties', '內褲', '半露臀內褲', 'cheeky panties', 2, true, 'underwear_bottom'),
+  tag('side_tie_panties', '內褲', '側綁帶內褲', 'side-tie panties', 2, true, 'underwear_bottom'),
+  tag('leg_warmers', '襪子', '腿套', 'leg warmers', 2, false, 'legwear'),
+  tag('crew_socks', '襪子', '中筒襪', 'crew socks', 2, false, 'legwear'),
+  tag('over_knee_socks', '襪子', '過膝襪', 'over-knee socks', 2, false, 'legwear'),
+  tag('toe_socks', '襪子', '五趾襪', 'toe socks', 2, false, 'legwear'),
+  tag('tabi_socks', '襪子', '分趾襪', 'tabi socks', 2, false, 'legwear'),
+  tag('ankle_boots', '鞋子', '踝靴', 'ankle boots', 2, false, 'footwear'),
+  tag('knee_high_boots', '鞋子', '膝上靴', 'knee-high boots', 2, false, 'footwear'),
+  tag('mary_janes', '鞋子', '瑪莉珍鞋', 'mary janes', 2, false, 'footwear'),
+  tag('pumps', '鞋子', '淺口高跟鞋', 'pumps', 2, false, 'footwear'),
+  tag('platform_shoes', '鞋子', '厚底鞋', 'platform shoes', 2, false, 'footwear'),
+  tag('flip_flops', '鞋子', '夾腳拖鞋', 'flip-flops', 2, false, 'footwear'),
+  tag('slippers', '鞋子', '拖鞋', 'slippers', 2, false, 'footwear'),
+  tag('geta', '鞋子', '木屐', 'geta', 2, false, 'footwear'),
+  tag('roller_skates', '鞋子', '溜冰鞋', 'roller skates', 2, false, 'footwear'),
+
+  // Each wearable type has its own mutually exclusive color group.
+  ...clothingColorTags('underwear_color', '內衣顏色', '內衣', 'underwear', 'underwear_top_color', true),
+  ...clothingColorTags('bra_color', '胸罩顏色', '胸罩', 'bra', 'bra_color', true),
+  ...clothingColorTags('panties_color', '內褲顏色', '內褲', 'panties', 'underwear_bottom_color', true),
+  ...clothingColorTags('socks_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
+  ...clothingColorTags('shoes_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+
   // Accessories stay independent from clothing and can be colored separately.
   tag('accessory_color_black', '配件顏色', '黑色配件', 'black accessory', 2, false, 'accessory_color'),
   tag('accessory_color_white', '配件顏色', '白色配件', 'white accessory', 2, false, 'accessory_color'),
@@ -359,6 +417,40 @@ const seedTags = [
   tag('expr_angry', '表情', '生氣', 'angry', 3, false, 'expression_mood'),
   tag('expr_ahegao', '表情', '陶醉表情', 'ahegao', 3, true),
   tag('expr_orgasm', '表情', '高潮表情', 'orgasm', 3, true),
+
+  // More face and expression details commonly used with Amanatsu / Illustrious.
+  tag('expr_closed_mouth', '表情', '閉嘴', 'closed mouth', 3, false, 'expression_mouth'),
+  tag('expr_parted_lips', '表情', '微張嘴唇', 'parted lips', 3, false, 'expression_mouth'),
+  tag('expr_pout', '表情', '噘嘴', 'pout', 3, false, 'expression_mouth'),
+  tag('expr_puckered_lips', '表情', '嘟嘴', 'puckered lips', 3, false, 'expression_mouth'),
+  tag('expr_tongue_out', '表情', '吐舌', 'tongue out', 3, false, 'expression_mouth'),
+  tag('expr_biting_lip', '表情', '咬唇', 'biting lip', 3, false, 'expression_mouth'),
+  tag('expr_clenched_teeth', '表情', '咬緊牙關', 'clenched teeth', 3, false, 'expression_mouth'),
+  tag('expr_one_eye_closed', '表情', '單眼閉起', 'one eye closed', 3, false, 'expression_eyes'),
+  tag('expr_half_closed_eyes', '\u8868\u60C5', '\u534A\u9589\u773C', 'half-closed eyes', 3, false, 'expression_eyes'),
+  tag('expr_narrowed_eyes', '表情', '瞇眼', 'narrowed eyes', 3, false, 'expression_eyes'),
+  tag('expr_sleepy_eyes', '表情', '惺忪睡眼', 'sleepy eyes', 3, false, 'expression_eyes'),
+  tag('expr_looking_at_viewer', '\u8868\u60C5', '\u770B\u5411\u89C0\u770B\u8005', 'looking at viewer', 3, false, 'expression_eyes'),
+  tag('expr_looking_away', '表情', '移開視線', 'looking away', 3, false, 'expression_eyes'),
+  tag('expr_looking_up', '\u8868\u60C5', '\u62AC\u982D\u770B', 'looking up', 3, false, 'expression_eyes'),
+  tag('expr_looking_down', '\u8868\u60C5', '\u4F4E\u982D\u770B', 'looking down', 3, false, 'expression_eyes'),
+  tag('expr_sideways_glance', '\u8868\u60C5', '\u5074\u773C\u770B', 'sideways glance', 3, false, 'expression_eyes'),
+  tag('expr_sparkling_eyes', '表情', '閃亮眼睛', 'sparkling eyes', 3, false, 'expression_eyes'),
+  tag('expr_heart_shaped_pupils', '表情', '愛心瞳孔', 'heart-shaped pupils', 3, true, 'expression_eyes'),
+  tag('expr_nose_blush', '表情', '鼻頭泛紅', 'nose blush', 3, false, 'expression_face_detail'),
+  tag('expr_sweatdrop', '表情', '汗滴', 'sweatdrop', 3, false, 'expression_face_detail'),
+  tag('expr_steam_from_nose', '表情', '鼻子冒氣', 'steam from nose', 3, false, 'expression_face_detail'),
+  tag('expr_anger_vein', '表情', '青筋', 'anger vein', 3, false, 'expression_face_detail'),
+  tag('expr_facial_mark', '表情', '臉部符號', 'facial mark', 3, false, 'expression_face_detail'),
+  tag('expr_sad', '表情', '悲傷', 'sad', 3, false, 'expression_mood'),
+  tag('expr_crying', '表情', '哭泣', 'crying', 3, false, 'expression_mood'),
+  tag('expr_scared', '\u8868\u60C5', '\u5BB3\u6015', 'scared', 3, false, 'expression_mood'),
+  tag('expr_nervous', '表情', '緊張', 'nervous', 3, false, 'expression_mood'),
+  tag('expr_worried', '表情', '擔心', 'worried', 3, false, 'expression_mood'),
+  tag('expr_confident', '表情', '自信', 'confident', 3, false, 'expression_mood'),
+  tag('expr_smug', '表情', '得意', 'smug', 3, false, 'expression_mood'),
+  tag('expr_seductive', '表情', '誘惑表情', 'seductive expression', 3, true, 'expression_mood'),
+  tag('expr_seductive_smile', '表情', '誘惑微笑', 'seductive smile', 3, true, 'expression_mood'),
 
   tag('pose_standing', '姿勢', '站立', 'standing', 4, false, 'basic_pose'),
   tag('pose_sitting', '姿勢', '坐姿', 'sitting', 4, false, 'basic_pose'),
@@ -617,8 +709,51 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const clean = value => String(value ?? '').trim().replace(/^[,\s，、。]+|[,\s，、。]+$/g, '').replace(/\s+/g, ' ');
 const splitTags = value => String(value ?? '').split(/[,\n，、。]+/).map(clean).filter(Boolean);
+const extraTagWordTranslations = {
+  blue: '藍色', black: '黑色', white: '白色', red: '紅色', pink: '粉紅色', purple: '紫色',
+  green: '綠色', yellow: '黃色', brown: '棕色', gray: '灰色', silver: '銀色', gold: '金色',
+  long: '長', short: '短', very: '非常', hair: '髮', eyes: '眼睛', eye: '眼睛', mouth: '嘴巴',
+  face: '臉部', smile: '微笑', open: '張開', closed: '閉合', lips: '嘴唇', tongue: '舌頭',
+  jacket: '外套', shirt: '上衣', blouse: '女式上衣', sweater: '毛衣', dress: '洋裝', skirt: '裙子',
+  pants: '褲子', shorts: '短褲', bra: '胸罩', panties: '內褲', underwear: '內衣', socks: '襪子',
+  shoes: '鞋子', boots: '靴子', lace: '蕾絲',
+  sitting: '坐著', standing: '站立', lying: '躺著', looking: '看著', viewer: '觀看者',
+  blush: '臉紅', crying: '哭泣', angry: '生氣', surprised: '驚訝', cute: '可愛'
+};
+function autoTranslateTag(value) {
+  const cleaned = clean(value);
+  if (!cleaned || /[\u4e00-\u9fff]/.test(cleaned)) return cleaned;
+  const known = allTags().find(item => item.en.toLowerCase() === cleaned.toLowerCase());
+  if (known) return known.zh;
+  const translated = cleaned.replace(/[A-Za-z]+/g, word => extraTagWordTranslations[word.toLowerCase()] || word);
+  return translated === cleaned ? `待翻譯：${cleaned}` : translated;
+}
+const extraTagChineseToEnglish = {
+  藍色: 'blue', 黑色: 'black', 白色: 'white', 紅色: 'red', 粉紅色: 'pink', 紫色: 'purple',
+  綠色: 'green', 黃色: 'yellow', 棕色: 'brown', 灰色: 'gray', 銀色: 'silver', 金色: 'gold',
+  長髮: 'long hair', 短髮: 'short hair', 超長髮: 'very long hair', 極短髮: 'very short hair',
+  眼睛: 'eyes', 眼: 'eyes', 嘴巴: 'mouth', 嘴唇: 'lips', 臉部: 'face', 微笑: 'smile',
+  外套: 'jacket', 上衣: 'top', 女式上衣: 'blouse', 毛衣: 'sweater', 洋裝: 'dress', 裙子: 'skirt',
+  褲子: 'pants', 短褲: 'shorts', 胸罩: 'bra', 內褲: 'panties', 內衣: 'underwear', 襪子: 'socks',
+  鞋子: 'shoes', 靴子: 'boots', 蕾絲: 'lace', 花邊: 'frills', 哥德式: 'gothic', 晚禮服: 'evening gown',
+  長裙: 'long skirt', 短裙: 'short skirt', 迷你裙: 'miniskirt', 泳裝: 'swimsuit', 運動服: 'sportswear',
+  單肩: 'one shoulder', 連身: 'one-piece', 坐著: 'sitting', 站立: 'standing', 躺著: 'lying',
+  看著: 'looking', 臉紅: 'blush', 哭泣: 'crying', 生氣: 'angry', 驚訝: 'surprised', 可愛: 'cute'
+};
+function autoTranslatePositiveTag(value) {
+  const cleaned = clean(value);
+  if (!cleaned || !/[\u4e00-\u9fff]/.test(cleaned)) return cleaned;
+  const known = allTags().find(item => item.zh === cleaned);
+  if (known) return known.en;
+  const translated = Object.entries(extraTagChineseToEnglish)
+    .sort(([a], [b]) => b.length - a.length)
+    .reduce((result, [zh, en]) => result.replaceAll(zh, en), cleaned);
+  return translated === cleaned ? cleaned : translated;
+}
 const unique = list => [...new Map(list.map(item => [item.toLowerCase(), item])).values()];
-const allTags = () => [...seedTags, ...state.customTags];
+const normalizedSeedTags = () => seedTags.map(item =>
+  mergedHairTagIds.has(item.id) ? { ...item, group: '髮型' } : item);
+const allTags = () => [...normalizedSeedTags(), ...state.customTags];
 const allCharacters = () => [...catalogCharacters, ...state.customCharacters];
 const findCharacter = id => allCharacters().find(item => item.id === id);
 const characterForSlot = slot => findCharacter(slot.characterId);
@@ -684,7 +819,34 @@ function characterTokens() {
 }
 function personTagSet(index) { if (!state.personSelected[index]) state.personSelected[index] = []; return new Set(state.personSelected[index]); }
 function savePersonTagSet(index, ids) { state.personSelected[index] = [...ids]; }
+
+const extraWearableColorGroups = ['內衣顏色', '胸罩顏色', '內褲顏色', '襪子顏色', '鞋子顏色'];
+extraWearableColorGroups.forEach(group => {
+  const select = $('#custom-group');
+  if (select && ![...select.options].some(option => option.value === group)) {
+    select.add(new Option(group, group));
+  }
+});
+const dynamicPersonalGroupSubmit = $('#custom-form');
+if (dynamicPersonalGroupSubmit) dynamicPersonalGroupSubmit.addEventListener('submit', event => {
+  const group = $('#custom-group')?.value;
+  if (!extraWearableColorGroups.includes(group)) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const zh = $('#custom-zh').value.trim();
+  const en = clean($('#custom-en').value);
+  if (!zh || !en) return;
+  const item = { id: `custom_${Date.now()}`, group, zh, en, order: 2, adult: false, conflictGroup: '', builtIn: false };
+  state.customTags.push(item);
+  const ids = personTagSet(0);
+  ids.add(item.id);
+  savePersonTagSet(0, ids);
+  $('#custom-dialog').close();
+  render();
+  toast('自訂服裝顏色已加入人物設定');
+}, true);
 const outputGroupOrder = { '外觀特徵': 10, '臉部特徵': 11, '胸部': 12, '裸露': 13, '髮型': 14, '服裝': 20, '服裝風格': 21, '服裝顏色': 22, '上衣': 23, '上衣風格': 24, '上衣顏色': 25, '褲子': 26, '裙子': 26, '下身風格': 27, '下身顏色': 28, '內衣': 30, '胸罩': 31, '內褲': 32, '襪子': 33, '鞋子': 34, '配件': 35, '配件顏色': 36, '服裝細節': 37, '服裝材質': 38, '穿脫狀態': 39, '表情': 40, '姿勢': 41, '性行為': 42, '性姿勢': 43, '動作': 44, '物件': 45, '場景': 60, '畫面': 61 };
+Object.assign(outputGroupOrder, { '內衣顏色': 30, '胸罩顏色': 31, '內褲顏色': 32, '襪子顏色': 33, '鞋子顏色': 34 });
 function selectedTags(personIndex = null) { const ids = personIndex === null ? state.selected : personTagSet(personIndex); return allTags().filter(item => ids.has(item.id)).sort((a, b) => (outputGroupOrder[a.group] ?? 50) - (outputGroupOrder[b.group] ?? 50) || a.order - b.order || a.en.localeCompare(b.en)); }
 function personSelectedCount() { return Object.values(state.personSelected).reduce((total, ids) => total + ids.length, 0); }
 function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
@@ -852,7 +1014,7 @@ function conflictingTags(candidate, personIndex = null) {
     if (other === 'one_piece' && clothingLayers.includes(group)) return true;
     if (group === 'nudity' && [...clothingLayers, 'one_piece'].includes(other)) return true;
     if (other === 'nudity' && [...clothingLayers, 'one_piece'].includes(group)) return true;
-    return group === other && ['scene', 'time', 'framing', 'camera', 'hair_color', 'hair_length', 'body_type', 'breast_size', 'expression_eyes', 'expression_mouth', 'expression_mood', 'wear_state', 'legwear', 'footwear', 'sex_position'].includes(group);
+    return group === other && ['scene', 'time', 'framing', 'camera', 'hair_color', 'hair_length', 'body_type', 'breast_size', 'expression_eyes', 'expression_mouth', 'expression_mood', 'expression_face_detail', 'wear_state', 'legwear', 'footwear', 'sex_position'].includes(group);
   });
 }
 function characterOverrideMessage(item, personIndex) {
@@ -895,6 +1057,76 @@ function clothingStep() {
   return `<p class="wizard-note">服裝類型、風格與顏色／細節分開選擇。配件已獨立分類，配件顏色也可單獨選擇；只有選擇連身裝後才會顯示連身裝顏色，連身裝仍可搭配內搭。</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; const hasOnePiece = selectedTags(index).some(item => ['服裝', '服裝風格'].includes(item.group)); const visibleDetails = hasOnePiece ? details : details.filter(group => group !== '服裝顏色'); return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span>${slot.detailed ? `<button type="button" class="icon-button" data-random-clothing="${index}" title="隨機服裝穿搭">🎲 隨機穿搭</button>` : ''}</div>${slot.detailed ? `<b>服裝類型與樣式</b>${renderTagPicker(styles, `clothing-style-${index}`, index)}<hr><b>風格、顏色與服裝細節（可多選）</b>${renderTagPicker(visibleDetails, `clothing-detail-${index}`, index)}` : '<p class="wizard-note">此人物設定為不需細節，不加入服裝標籤。</p>'}</article>`; }).join('')}${nextButton('下一步：表情')}`;
 }
 
+function clothingDetailGroups(personIndex) {
+  const selected = selectedTags(personIndex);
+  const has = group => selected.some(item => item.group === group);
+  const onePiece = selected.some(item => ['服裝', '服裝風格'].includes(item.group));
+  const groups = ['服裝細節', '服裝材質', '穿脫狀態'];
+  if (onePiece) {
+    groups.unshift('服裝風格', '服裝顏色');
+  } else {
+    if (has('上衣')) groups.unshift('上衣風格', '上衣顏色');
+    if (has('褲子') || has('裙子')) groups.unshift('下身風格', '下身顏色');
+  }
+  if (has('內衣')) groups.splice(0, 0, '內衣顏色');
+  if (has('胸罩')) groups.splice(0, 0, '胸罩顏色');
+  if (has('內褲')) groups.splice(0, 0, '內褲顏色');
+  if (has('襪子')) groups.splice(0, 0, '襪子顏色');
+  if (has('鞋子')) groups.splice(0, 0, '鞋子顏色');
+  if (has('配件')) groups.splice(0, 0, '配件顏色');
+  return [...new Set(groups)];
+}
+
+function clothingStep() {
+  const styles = ['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件'];
+  return `<p class="wizard-note">先選擇服裝類型，再顯示該類型的風格與專用顏色。內衣、胸罩、內褲、襪子、鞋子與配件可以和外衣共同存在；髮型、臉部特徵與表情則在各自的角色分類中設定。</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; const details = clothingDetailGroups(index); return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span>${slot.detailed ? `<button type="button" class="icon-button" data-random-clothing="${index}" title="隨機服裝穿搭">🎲 隨機穿搭</button>` : ''}</div>${slot.detailed ? `<b>服裝類型與樣式</b>${renderTagPicker(styles, `clothing-style-${index}`, index)}<hr><b>已選服裝的風格、顏色與細節</b>${renderTagPicker(details, `clothing-detail-${index}`, index)}` : '<p class="wizard-note">此人物設定為不需細節，不加入服裝標籤。</p>'}</article>`; }).join('')}${nextButton('下一步：表情')}`;
+}
+
+function conflictGroup(item) {
+  if (item.group === '內衣') return 'underwear_top';
+  if (item.group === '內褲') return 'underwear_bottom';
+  if (item.group === '胸罩') return 'bra';
+  if (item.group === '內衣顏色') return 'underwear_top_color';
+  if (item.group === '內褲顏色') return 'underwear_bottom_color';
+  if (item.group === '胸罩顏色') return 'bra_color';
+  if (item.group === '襪子顏色') return 'legwear_color';
+  if (item.group === '鞋子顏色') return 'footwear_color';
+  if (item.conflictGroup) return item.conflictGroup;
+  const traitGroup = [...traitOverrideGroups(item.en)][0];
+  if (traitGroup) return traitGroup;
+  if (item.group === '上衣風格') return 'top_style';
+  if (item.group === '下身風格') return 'bottom_style';
+  if (item.group === '上衣顏色') return 'top_color';
+  if (item.group === '下身顏色') return 'bottom_color';
+  if (item.group === '服裝顏色') return 'clothing_color';
+  if (item.group === '配件顏色') return 'accessory_color';
+  if (item.group === '上衣') return 'top';
+  if (['褲子', '裙子'].includes(item.group)) return 'bottom';
+  if (['服裝', '服裝風格'].includes(item.group)) return 'one_piece';
+  return '';
+}
+
+function conflictingTags(candidate, personIndex = null) {
+  const group = conflictGroup(candidate);
+  if (!group) return [];
+  return selectedTags(personIndex).filter(item => {
+    const other = conflictGroup(item);
+    if (!other) return false;
+    if (group === 'basic_pose' && other === 'basic_pose') return true;
+    const underwear = ['underwear_top', 'underwear_bottom'];
+    if (group === 'topless' && ['top', 'top_style', 'bra'].includes(other)) return true;
+    if (group === 'bottomless' && ['bottom', 'bottom_style', ...underwear].includes(other)) return true;
+    if (['top', 'top_style', 'bra'].includes(group) && other === 'topless') return true;
+    if (['bottom', 'bottom_style', ...underwear].includes(group) && other === 'bottomless') return true;
+    const clothingLayers = ['top', 'bottom', 'top_color', 'bottom_color', 'top_style', 'bottom_style'];
+    if (group === 'one_piece' && clothingLayers.includes(other)) return true;
+    if (other === 'one_piece' && clothingLayers.includes(group)) return true;
+    if (group === 'nudity' && [...clothingLayers, 'one_piece'].includes(other)) return true;
+    if (other === 'nudity' && [...clothingLayers, 'one_piece'].includes(group)) return true;
+    return group === other && ['scene', 'time', 'framing', 'camera', 'hair_color', 'hair_length', 'body_type', 'breast_size', 'expression_eyes', 'expression_mouth', 'expression_mood', 'expression_face_detail', 'wear_state', 'legwear', 'footwear', 'sex_position'].includes(group);
+  });
+}
+
 function randomClothingTag(groups) { const seen = new Set(); const candidates = allTags().filter(item => groups.includes(item.group) && (state.showAdult || !item.adult) && !seen.has(`${item.group}|${item.en}`) && seen.add(`${item.group}|${item.en}`)); return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null; }
 function randomClothing(personIndex) { const ids = personTagSet(personIndex); const clothingGroups = new Set(['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '配件顏色', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態']); allTags().forEach(item => { if (ids.has(item.id) && clothingGroups.has(item.group)) ids.delete(item.id); }); const add = item => { if (item) ids.add(item.id); }; if (Math.random() < .5) { add(randomClothingTag(['服裝', '服裝風格'])); add(randomClothingTag(['服裝顏色'])); } else { add(randomClothingTag(['上衣'])); add(randomClothingTag(['褲子', '裙子'])); if (Math.random() < .6) add(randomClothingTag(['上衣風格'])); if (Math.random() < .6) add(randomClothingTag(['下身風格'])); if (Math.random() < .6) add(randomClothingTag(['上衣顏色'])); if (Math.random() < .6) add(randomClothingTag(['下身顏色'])); } if (Math.random() < .5) add(randomClothingTag(['胸罩'])); if (Math.random() < .5) add(randomClothingTag(['內衣'])); if (Math.random() < .5) add(randomClothingTag(['內褲'])); if (Math.random() < .7) add(randomClothingTag(['襪子'])); if (Math.random() < .8) add(randomClothingTag(['鞋子'])); if (Math.random() < .6) add(randomClothingTag(['穿脫狀態'])); if (Math.random() < .7) add(randomClothingTag(['服裝材質'])); const detailCandidates = allTags().filter(item => item.group === '服裝細節' && (state.showAdult || !item.adult)); detailCandidates.sort(() => Math.random() - .5).slice(0, 1 + Math.floor(Math.random() * 3)).forEach(item => ids.add(item.id)); const accessoryCandidates = allTags().filter(item => item.group === '配件' && (state.showAdult || !item.adult)); accessoryCandidates.sort(() => Math.random() - .5).slice(0, Math.floor(Math.random() * 3)).forEach(item => ids.add(item.id)); if (accessoryCandidates.length && Math.random() < .8) add(randomClothingTag(['配件顏色'])); savePersonTagSet(personIndex, ids); render(); toast(`人物 ${personIndex + 1} 已隨機生成服裝穿搭`); }
 function renderFilters() { const groups = ['全部', ...new Set(allTags().map(item => item.group))]; $('#group-filters').innerHTML = groups.map(group => `<button class="filter ${state.group === group ? 'active' : ''}" data-group="${esc(group)}">${esc(group)}</button>`).join(''); }
@@ -909,7 +1141,34 @@ function render() { renderWizard(); renderFilters(); renderTags(); renderPresets
 async function copyText(value, label) { try { await navigator.clipboard.writeText(value); } catch { const area = document.createElement('textarea'); area.value = value; document.body.append(area); area.select(); document.execCommand('copy'); area.remove(); } toast(`${label}已複製`); }
 function downloadBackup() { const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'betterwaifu-prompt-backup.json'; link.click(); URL.revokeObjectURL(link.href); toast('備份已匯出'); }
 function importBackup(file) { const reader = new FileReader(); reader.onload = () => { try { localStorage.setItem(STORAGE_KEY, reader.result); location.reload(); } catch { toast('JSON 備份格式無法讀取'); } }; reader.readAsText(file); }
-function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['動作', '物件'].includes(group)) return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '髮型', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '配件顏色', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
+function randomClothing(personIndex) {
+  const ids = personTagSet(personIndex);
+  const clothingGroups = new Set(['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '配件顏色', '內衣顏色', '胸罩顏色', '內褲顏色', '襪子顏色', '鞋子顏色', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態']);
+  allTags().forEach(item => { if (ids.has(item.id) && clothingGroups.has(item.group)) ids.delete(item.id); });
+  const add = item => { if (item) ids.add(item.id); };
+  const addWearable = (groups, colorGroup, chance = 1) => { const item = randomClothingTag(groups); add(item); if (item && Math.random() < chance) add(randomClothingTag([colorGroup])); };
+  if (Math.random() < .5) { const item = randomClothingTag(['服裝', '服裝風格']); add(item); if (item) add(randomClothingTag(['服裝顏色'])); } else {
+    addWearable(['上衣'], '上衣顏色', .8); addWearable(['褲子', '裙子'], '下身顏色', .8);
+    if (Math.random() < .6) add(randomClothingTag(['上衣風格']));
+    if (Math.random() < .6) add(randomClothingTag(['下身風格']));
+  }
+  if (Math.random() < .5) addWearable(['胸罩'], '胸罩顏色', .8);
+  if (Math.random() < .5) addWearable(['內衣'], '內衣顏色', .8);
+  if (Math.random() < .5) addWearable(['內褲'], '內褲顏色', .8);
+  if (Math.random() < .7) addWearable(['襪子'], '襪子顏色', .8);
+  if (Math.random() < .8) addWearable(['鞋子'], '鞋子顏色', .8);
+  const accessories = allTags().filter(item => item.group === '配件' && (state.showAdult || !item.adult)).sort(() => Math.random() - .5).slice(0, Math.floor(Math.random() * 3));
+  accessories.forEach(item => ids.add(item.id));
+  if (accessories.length && Math.random() < .8) add(randomClothingTag(['配件顏色']));
+  add(randomClothingTag(['穿脫狀態']));
+  add(randomClothingTag(['服裝材質']));
+  allTags().filter(item => item.group === '服裝細節' && (state.showAdult || !item.adult)).sort(() => Math.random() - .5).slice(0, 1 + Math.floor(Math.random() * 3)).forEach(item => ids.add(item.id));
+  savePersonTagSet(personIndex, ids);
+  render();
+  toast(`人物 ${personIndex + 1} 已隨機生成服裝穿搭`);
+}
+
+function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['動作', '物件'].includes(group)) return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '髮型', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '配件顏色', '內衣顏色', '胸罩顏色', '內褲顏色', '襪子顏色', '鞋子顏色', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
 
 document.addEventListener('click', event => {
   if (event.target.closest('[data-auto-search-anime]')) { searchRemoteAnime(); return; }
@@ -1002,3 +1261,26 @@ $('#version-btn').addEventListener('click', () => $('#version-dialog').showModal
 $('#version-close').addEventListener('click', () => $('#version-dialog').close());
 $('#version-ok').addEventListener('click', () => $('#version-dialog').close());
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+function tokens() {
+  const perPerson = [];
+  state.peopleSlots.forEach((slot, index) => {
+    perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en));
+  });
+  return unique([
+    ...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en),
+    ...splitTags(state.extra).map(autoTranslatePositiveTag), ...splitTags(state.preprompt)
+  ]);
+}
+function chineseText() {
+  const list = [personSummary()];
+  state.peopleSlots.forEach((slot, index) => {
+    if (!slot.detailed) return;
+    list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...selectedTags(index).map(item => item.zh)].join('、')}`);
+  });
+  list.push(...selectedTags().map(item => item.zh));
+  if (state.extra.trim()) list.push(`額外正向標籤（中文對照）：${splitTags(state.extra).map(autoTranslateTag).join('、')}`);
+  if (state.preprompt.trim()) list.push(`Amanatsu 品質前綴：${state.preprompt.trim()}`);
+  return list.join('。');
+}
+
+[object Object]

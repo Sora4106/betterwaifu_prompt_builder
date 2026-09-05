@@ -251,6 +251,43 @@ TagItem _tag(
         adult: adult,
         conflictGroup: conflictGroup);
 
+const _clothingColors = <List<String>>[
+  ['black', '\u9ED1\u8272'],
+  ['white', '\u767D\u8272'],
+  ['red', '\u7D05\u8272'],
+  ['blue', '\u85CD\u8272'],
+  ['pink', '\u7C89\u7D05\u8272'],
+  ['purple', '\u7D2B\u8272'],
+  ['green', '\u7DA0\u8272'],
+  ['yellow', '\u9EC3\u8272'],
+  ['brown', '\u68D5\u8272'],
+  ['gray', '\u7070\u8272'],
+  ['gold', '\u91D1\u8272'],
+  ['silver', '\u9280\u8272'],
+  ['multicolored', '\u591A\u5F69'],
+];
+
+List<TagItem> _clothingColorTags(
+  String prefix,
+  String group,
+  String zhSuffix,
+  String enSuffix,
+  String conflictGroup, {
+  bool adult = false,
+}) {
+  return _clothingColors
+      .map((color) => _tag(
+            '${prefix}_${color[0]}',
+            group,
+            '${color[1]}$zhSuffix',
+            '${color[0]} $enSuffix',
+            2,
+            adult: adult,
+            conflictGroup: conflictGroup,
+          ))
+      .toList();
+}
+
 List<TagItem> _seedTags() => [
       // Role and character basics.
       _tag('role_girl', '角色類型', '女性角色', '1girl', 0),
@@ -432,6 +469,78 @@ List<TagItem> _seedTags() => [
           'multicolored accessory', 2,
           conflictGroup: 'accessory_color'),
 
+      // Additional underwear, sock and footwear styles.
+      _tag('bra_underwire', '胸罩', '鋼圈胸罩', 'underwire bra', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('bra_push_up', '胸罩', '集中型胸罩', 'push-up bra', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('bra_bralette', '胸罩', '無鋼圈胸罩', 'bralette', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('bra_triangle', '胸罩', '三角罩杯胸罩', 'triangle bra', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('bra_racerback', '胸罩', '工字背胸罩', 'racerback bra', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('bra_front_clasp', '胸罩', '前扣式胸罩', 'front-clasp bra', 2,
+          adult: true, conflictGroup: 'bra'),
+      _tag('underwear_slip', '內衣', '襯裙式內衣', 'slip', 2,
+          adult: true, conflictGroup: 'underwear_top'),
+      _tag('underwear_long', '內衣', '保暖內衣', 'long underwear', 2,
+          conflictGroup: 'underwear_top'),
+      _tag('underwear_thermal', '內衣', '發熱內衣', 'thermal underwear', 2,
+          conflictGroup: 'underwear_top'),
+      _tag('underwear_bodystocking', '內衣', '連身襪衣', 'bodystocking', 2,
+          adult: true, conflictGroup: 'underwear_top'),
+      _tag('lace_panties', '內褲', '蕾絲內褲', 'lace panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('cotton_panties', '內褲', '棉質內褲', 'cotton panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('highwaist_panties', '內褲', '高腰內褲', 'high-waisted panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('lowrise_panties', '內褲', '低腰內褲', 'low-rise panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('boyshorts', '內褲', '男孩褲式內褲', 'boyshorts', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('cheeky_panties', '內褲', '半露臀內褲', 'cheeky panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('side_tie_panties', '內褲', '側綁帶內褲', 'side-tie panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom'),
+      _tag('leg_warmers', '襪子', '腿套', 'leg warmers', 2,
+          conflictGroup: 'legwear'),
+      _tag('crew_socks', '襪子', '中筒襪', 'crew socks', 2,
+          conflictGroup: 'legwear'),
+      _tag('over_knee_socks', '襪子', '過膝襪', 'over-knee socks', 2,
+          conflictGroup: 'legwear'),
+      _tag('toe_socks', '襪子', '五趾襪', 'toe socks', 2, conflictGroup: 'legwear'),
+      _tag('tabi_socks', '襪子', '分趾襪', 'tabi socks', 2,
+          conflictGroup: 'legwear'),
+      _tag('ankle_boots', '鞋子', '踝靴', 'ankle boots', 2,
+          conflictGroup: 'footwear'),
+      _tag('knee_high_boots', '鞋子', '膝上靴', 'knee-high boots', 2,
+          conflictGroup: 'footwear'),
+      _tag('mary_janes', '鞋子', '瑪莉珍鞋', 'mary janes', 2,
+          conflictGroup: 'footwear'),
+      _tag('pumps', '鞋子', '淺口高跟鞋', 'pumps', 2, conflictGroup: 'footwear'),
+      _tag('platform_shoes', '鞋子', '厚底鞋', 'platform shoes', 2,
+          conflictGroup: 'footwear'),
+      _tag('flip_flops', '鞋子', '夾腳拖鞋', 'flip-flops', 2,
+          conflictGroup: 'footwear'),
+      _tag('slippers', '鞋子', '拖鞋', 'slippers', 2, conflictGroup: 'footwear'),
+      _tag('geta', '鞋子', '木屐', 'geta', 2, conflictGroup: 'footwear'),
+      _tag('roller_skates', '鞋子', '溜冰鞋', 'roller skates', 2,
+          conflictGroup: 'footwear'),
+      ..._clothingColorTags(
+          'underwear_color', '內衣顏色', '內衣', 'underwear', 'underwear_top_color',
+          adult: true),
+      ..._clothingColorTags('bra_color', '胸罩顏色', '胸罩', 'bra', 'bra_color',
+          adult: true),
+      ..._clothingColorTags(
+          'panties_color', '內褲顏色', '內褲', 'panties', 'underwear_bottom_color',
+          adult: true),
+      ..._clothingColorTags(
+          'socks_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
+      ..._clothingColorTags(
+          'shoes_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+
       // Face tags and expressions.
       _tag('face_smile', '表情', '微笑', 'smile', 3),
       _tag('face_grin', '表情', '咧嘴笑', 'grin', 3),
@@ -448,6 +557,71 @@ List<TagItem> _seedTags() => [
       _tag('face_angry', '表情', '生氣', 'angry', 3),
       _tag('face_lust', '表情', '情慾表情（成年角色）', 'ahegao', 3, adult: true),
       _tag('face_orgasm', '表情', '高潮表情（成年角色）', 'orgasm', 3, adult: true),
+
+      // More face and expression details commonly used with Amanatsu / Illustrious.
+      _tag('expr_closed_mouth', '表情', '閉嘴', 'closed mouth', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_parted_lips', '表情', '微張嘴唇', 'parted lips', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_pout', '表情', '噘嘴', 'pout', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_puckered_lips', '表情', '嘟嘴', 'puckered lips', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_tongue_out', '表情', '吐舌', 'tongue out', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_biting_lip', '表情', '咬唇', 'biting lip', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_clenched_teeth', '表情', '咬緊牙關', 'clenched teeth', 3,
+          conflictGroup: 'expression_mouth'),
+      _tag('expr_one_eye_closed', '表情', '單眼閉起', 'one eye closed', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_half_closed_eyes', '表情', '半閉眼', 'half-closed eyes', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_narrowed_eyes', '表情', '瞇眼', 'narrowed eyes', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_sleepy_eyes', '表情', '惺忪睡眼', 'sleepy eyes', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_looking_at_viewer', '表情', '看向觀眾', 'looking at viewer', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_looking_away', '表情', '移開視線', 'looking away', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_looking_up', '表情', '向上看', 'looking up', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_looking_down', '表情', '向下看', 'looking down', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_sideways_glance', '表情', '側眼看', 'sideways glance', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_sparkling_eyes', '表情', '閃亮眼睛', 'sparkling eyes', 3,
+          conflictGroup: 'expression_eyes'),
+      _tag('expr_heart_shaped_pupils', '表情', '愛心瞳孔', 'heart-shaped pupils', 3,
+          adult: true, conflictGroup: 'expression_eyes'),
+      _tag('expr_nose_blush', '表情', '鼻頭泛紅', 'nose blush', 3,
+          conflictGroup: 'expression_face_detail'),
+      _tag('expr_sweatdrop', '表情', '汗滴', 'sweatdrop', 3,
+          conflictGroup: 'expression_face_detail'),
+      _tag('expr_steam_from_nose', '表情', '鼻子冒氣', 'steam from nose', 3,
+          conflictGroup: 'expression_face_detail'),
+      _tag('expr_anger_vein', '表情', '青筋', 'anger vein', 3,
+          conflictGroup: 'expression_face_detail'),
+      _tag('expr_facial_mark', '表情', '臉部符號', 'facial mark', 3,
+          conflictGroup: 'expression_face_detail'),
+      _tag('expr_sad', '表情', '悲傷', 'sad', 3, conflictGroup: 'expression_mood'),
+      _tag('expr_crying', '表情', '哭泣', 'crying', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_scared', '表情', '害怕', 'scared', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_nervous', '表情', '緊張', 'nervous', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_worried', '表情', '擔心', 'worried', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_confident', '表情', '自信', 'confident', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_smug', '表情', '得意', 'smug', 3,
+          conflictGroup: 'expression_mood'),
+      _tag('expr_seductive', '表情', '誘惑表情', 'seductive expression', 3,
+          adult: true, conflictGroup: 'expression_mood'),
+      _tag('expr_seductive_smile', '表情', '誘惑微笑', 'seductive smile', 3,
+          adult: true, conflictGroup: 'expression_mood'),
 
       // Pose/action.
       _tag('pose_standing', '姿勢', '站立', 'standing', 4),
@@ -797,7 +971,30 @@ class PromptBuilderApp extends StatefulWidget {
 }
 
 class _PromptBuilderAppState extends State<PromptBuilderApp> {
-  final List<TagItem> _builtIns = _seedTags();
+  final List<TagItem> _builtIns = _seedTags().map((tag) {
+    const mergedHairIds = {
+      'trait_long_hair',
+      'trait_short_hair',
+      'trait_hair_between_eyes',
+      'trait_blonde_hair',
+      'trait_black_hair',
+      'trait_silver_hair',
+      'trait_blue_hair',
+      'trait_red_hair',
+      'trait_pink_hair',
+    };
+    if (!mergedHairIds.contains(tag.id)) return tag;
+    return TagItem(
+      id: tag.id,
+      group: '髮型',
+      zh: tag.zh,
+      en: tag.en,
+      order: tag.order,
+      adult: tag.adult,
+      builtIn: tag.builtIn,
+      conflictGroup: tag.conflictGroup,
+    );
+  }).toList();
   final List<TagItem> _supplemental =
       supplementalTags.map(_catalogTag).toList();
   final Set<String> _selectedIds = <String>{};
@@ -872,10 +1069,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '下身風格': 27,
       '下身顏色': 28,
       '內衣': 30,
+      '內衣顏色': 31,
       '胸罩': 31,
+      '胸罩顏色': 32,
       '內褲': 32,
+      '內褲顏色': 33,
       '襪子': 33,
+      '襪子顏色': 34,
       '鞋子': 34,
+      '鞋子顏色': 35,
       '配件': 35,
       '配件顏色': 36,
       '服裝細節': 37,
@@ -1294,6 +1496,128 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .where((item) => item.isNotEmpty)
       .toList();
 
+  String _positiveEnglishTag(String value) {
+    final cleaned = _cleanTag(value);
+    if (cleaned.isEmpty || !RegExp(r'[\u4e00-\u9fff]').hasMatch(cleaned)) {
+      return cleaned;
+    }
+    for (final tag in _allTags) {
+      if (tag.zh == cleaned) return tag.en;
+    }
+    const replacements = <String, String>{
+      '超長髮': 'very long hair',
+      '極短髮': 'very short hair',
+      '粉紅色': 'pink',
+      '藍色': 'blue',
+      '黑色': 'black',
+      '白色': 'white',
+      '紅色': 'red',
+      '紫色': 'purple',
+      '綠色': 'green',
+      '黃色': 'yellow',
+      '棕色': 'brown',
+      '灰色': 'gray',
+      '銀色': 'silver',
+      '金色': 'gold',
+      '長髮': 'long hair',
+      '短髮': 'short hair',
+      '蕾絲': 'lace',
+      '花邊': 'frills',
+      '哥德式': 'gothic',
+      '晚禮服': 'evening gown',
+      '長裙': 'long skirt',
+      '短裙': 'short skirt',
+      '迷你裙': 'miniskirt',
+      '泳裝': 'swimsuit',
+      '運動服': 'sportswear',
+      '單肩': 'one shoulder',
+      '連身': 'one-piece',
+      '外套': 'jacket',
+      '上衣': 'top',
+      '洋裝': 'dress',
+      '裙子': 'skirt',
+      '褲子': 'pants',
+      '短褲': 'shorts',
+      '胸罩': 'bra',
+      '內褲': 'panties',
+      '內衣': 'underwear',
+      '襪子': 'socks',
+      '鞋子': 'shoes',
+      '靴子': 'boots',
+      '微笑': 'smile',
+      '臉紅': 'blush',
+      '哭泣': 'crying',
+      '生氣': 'angry',
+      '驚訝': 'surprised',
+      '坐著': 'sitting',
+      '站立': 'standing',
+      '躺著': 'lying',
+    };
+    var translated = cleaned;
+    final entries = replacements.entries.toList()
+      ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    for (final entry in entries) {
+      translated = translated.replaceAll(entry.key, entry.value);
+    }
+    return translated;
+  }
+
+  String _positiveChineseTag(String value) {
+    final cleaned = _cleanTag(value);
+    if (cleaned.isEmpty || RegExp(r'[\u4e00-\u9fff]').hasMatch(cleaned)) {
+      return cleaned;
+    }
+    for (final tag in _allTags) {
+      if (tag.en.toLowerCase() == cleaned.toLowerCase()) return tag.zh;
+    }
+    const replacements = <String, String>{
+      'very long hair': '超長髮',
+      'very short hair': '極短髮',
+      'long hair': '長髮',
+      'short hair': '短髮',
+      'blue': '藍色',
+      'black': '黑色',
+      'white': '白色',
+      'red': '紅色',
+      'pink': '粉紅色',
+      'purple': '紫色',
+      'green': '綠色',
+      'yellow': '黃色',
+      'brown': '棕色',
+      'gray': '灰色',
+      'silver': '銀色',
+      'gold': '金色',
+      'jacket': '外套',
+      'top': '上衣',
+      'dress': '洋裝',
+      'skirt': '裙子',
+      'pants': '褲子',
+      'shorts': '短褲',
+      'bra': '胸罩',
+      'panties': '內褲',
+      'underwear': '內衣',
+      'socks': '襪子',
+      'shoes': '鞋子',
+      'boots': '靴子',
+      'lace': '蕾絲',
+      'smile': '微笑',
+      'blush': '臉紅',
+      'crying': '哭泣',
+      'angry': '生氣',
+      'surprised': '驚訝',
+      'sitting': '坐著',
+      'standing': '站立',
+      'lying': '躺著',
+    };
+    var translated = cleaned;
+    final entries = replacements.entries.toList()
+      ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    for (final entry in entries) {
+      translated = translated.replaceAll(entry.key, entry.value);
+    }
+    return translated;
+  }
+
   String? _hairLengthTag(String value) {
     final normalized = _cleanTag(value).toLowerCase();
     final match = RegExp(r'^(very short|very long|long|medium|short) hair$')
@@ -1364,7 +1688,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tokens.addAll(_selectedTagsForPerson(index).map((tag) => tag.en));
     }
     tokens.addAll(_selectedTags.map((tag) => tag.en));
-    tokens.addAll(_extraTags(_extraPositive.text));
+    tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
     tokens.addAll(_extraTags(_preprompt.text));
     final seen = <String>{};
     return tokens.where((token) => seen.add(token.toLowerCase())).toList();
@@ -1382,8 +1706,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tokens.add('人物 ${index + 1}：${personal.join('、')}');
     }
     tokens.addAll(_selectedTags.map((tag) => tag.zh));
-    if (_extraPositive.text.trim().isNotEmpty)
-      tokens.add('額外英文標籤：${_extraPositive.text.trim()}');
+    if (_extraPositive.text.trim().isNotEmpty) {
+      tokens.add(
+        '額外正向標籤（中文對照）：${_extraTags(_extraPositive.text).map(_positiveChineseTag).join('、')}',
+      );
+    }
     if (_preprompt.text.trim().isNotEmpty)
       tokens.add('Amanatsu 品質前綴：${_preprompt.text.trim()}');
     return tokens.join('。 ');
@@ -1542,6 +1869,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _conflictGroup(TagItem tag) {
+    if (tag.group == '內衣') return 'underwear_top';
+    if (tag.group == '內褲') return 'underwear_bottom';
+    if (tag.group == '胸罩') return 'bra';
+    if (tag.group == '內衣顏色') return 'underwear_top_color';
+    if (tag.group == '內褲顏色') return 'underwear_bottom_color';
+    if (tag.group == '胸罩顏色') return 'bra_color';
+    if (tag.group == '襪子顏色') return 'legwear_color';
+    if (tag.group == '鞋子顏色') return 'footwear_color';
     if (tag.conflictGroup != null) return tag.conflictGroup;
     final traitGroups = _traitOverrideGroups(tag.en);
     if (traitGroups.isNotEmpty) return traitGroups.first;
@@ -1672,6 +2007,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝',
       '配件',
       '配件顏色',
+      '內衣顏色',
+      '胸罩顏色',
+      '內褲顏色',
+      '襪子顏色',
+      '鞋子顏色',
       '服裝風格',
       '上衣風格',
       '下身風格',
@@ -1725,6 +2065,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (accessoryCandidates.isNotEmpty && random.nextDouble() < 0.8) {
       add(_randomClothingTag(['配件顏色'], random));
+    }
+    bool hasTargetGroup(String group) => target
+        .any((id) => _allTags.any((tag) => tag.id == id && tag.group == group));
+    if (hasTargetGroup('內衣') && random.nextBool()) {
+      add(_randomClothingTag(['內衣顏色'], random));
+    }
+    if (hasTargetGroup('胸罩') && random.nextBool()) {
+      add(_randomClothingTag(['胸罩顏色'], random));
+    }
+    if (hasTargetGroup('內褲') && random.nextBool()) {
+      add(_randomClothingTag(['內褲顏色'], random));
+    }
+    if (hasTargetGroup('襪子') && random.nextBool()) {
+      add(_randomClothingTag(['襪子顏色'], random));
+    }
+    if (hasTargetGroup('鞋子') && random.nextBool()) {
+      add(_randomClothingTag(['鞋子顏色'], random));
     }
 
     setState(() {
@@ -2748,6 +3105,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     '配件',
                     '配件顏色',
+                    '內衣顏色',
+                    '胸罩顏色',
+                    '內褲顏色',
+                    '襪子顏色',
+                    '鞋子顏色',
                     '服裝風格',
                     '上衣風格',
                     '下身風格',
@@ -2817,6 +3179,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 setState(() {
                   _customTags.add(tag);
                   const personalGroups = {
+                    '內衣顏色',
+                    '胸罩顏色',
+                    '內褲顏色',
+                    '襪子顏色',
+                    '鞋子顏色',
                     '自訂角色',
                     '自訂特徵',
                     '髮型',
@@ -2978,21 +3345,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   setState(() => _personTagQueries[personIndex] = value),
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: groups.map((group) {
-            return ChoiceChip(
-                label: Text(_wizardGroupLabel(group)),
-                selected: group == currentGroup,
-                onSelected: (_) => setState(() {
-                      if (personIndex == null) {
-                        _activeGroup = group;
-                      } else {
-                        _personActiveGroups[groupKey!] = group;
-                      }
-                    }));
-          }).toList(),
+        SizedBox(
+          height: 48,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: groups.map((group) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                      label: Text(_wizardGroupLabel(group)),
+                      selected: group == currentGroup,
+                      onSelected: (_) => setState(() {
+                            if (personIndex == null) {
+                              _activeGroup = group;
+                            } else {
+                              _personActiveGroups[groupKey!] = group;
+                            }
+                          })),
+                );
+              }).toList(),
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         if (visible.isEmpty)
@@ -3088,6 +3462,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  List<String> _clothingDetailGroups(int personIndex) {
+    final selected = _selectedTagsForPerson(personIndex);
+    bool has(String group) => selected.any((tag) => tag.group == group);
+    final onePiece = selected.any((tag) => ['服裝', '服裝風格'].contains(tag.group));
+    final groups = <String>['服裝細節', '服裝材質', '穿脫狀態'];
+    if (onePiece) {
+      groups.insertAll(0, ['服裝風格', '服裝顏色']);
+    } else {
+      if (has('上衣')) groups.insertAll(0, ['上衣風格', '上衣顏色']);
+      if (has('褲子') || has('裙子')) {
+        groups.insertAll(0, ['下身風格', '下身顏色']);
+      }
+    }
+    if (has('內衣')) groups.insert(0, '內衣顏色');
+    if (has('胸罩')) groups.insert(0, '胸罩顏色');
+    if (has('內褲')) groups.insert(0, '內褲顏色');
+    if (has('襪子')) groups.insert(0, '襪子顏色');
+    if (has('鞋子')) groups.insert(0, '鞋子顏色');
+    if (has('配件')) groups.insert(0, '配件顏色');
+    return groups.toSet().toList();
+  }
+
   Widget _stepClothing() {
     const styles = [
       '上衣',
@@ -3101,18 +3497,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝',
       '配件',
     ];
-    const details = [
-      '服裝風格',
-      '上衣風格',
-      '下身風格',
-      '上衣顏色',
-      '下身顏色',
-      '服裝顏色',
-      '配件顏色',
-      '服裝細節',
-      '服裝材質',
-      '穿脫狀態',
-    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3122,11 +3506,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final index = entry.key;
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
-          final hasOnePiece = _selectedTagsForPerson(index)
-              .any((tag) => _conflictGroup(tag) == 'one_piece');
-          final visibleDetails = hasOnePiece
-              ? details
-              : details.where((group) => group != '服裝顏色').toList();
+          final adaptiveDetails = _clothingDetailGroups(index);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
           if (!slot.detailed) {
@@ -3169,7 +3549,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const Text('風格、顏色與服裝細節（可多選）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
-                  _stepTagPicker(visibleDetails,
+                  _stepTagPicker(adaptiveDetails,
                       nextLabel: '下一步', personIndex: index, showNext: false),
                 ],
               ),
@@ -3745,16 +4125,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 7,
-              runSpacing: 7,
-              children: _groups.map((group) {
-                return ChoiceChip(
-                  label: Text(group),
-                  selected: _activeGroup == group,
-                  onSelected: (_) => setState(() => _activeGroup = group),
-                );
-              }).toList(),
+            SizedBox(
+              height: 48,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _groups.map((group) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 7),
+                      child: ChoiceChip(
+                        label: Text(group),
+                        selected: _activeGroup == group,
+                        onSelected: (_) => setState(() => _activeGroup = group),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             if (visible.isEmpty)
@@ -3831,7 +4218,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
                 labelText: '額外正向標籤',
-                hintText: '可用中文或英文，以逗號或換行分隔',
+                hintText: '可輸入中文或英文；中文會自動轉成英文標籤',
+                helperText: '可用逗號或換行分隔；內建標籤會自動對應英文，英文欄位仍以英文輸出。',
                 prefixIcon: Icon(Icons.add_circle_outline),
               ),
             ),
