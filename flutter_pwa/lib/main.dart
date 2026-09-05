@@ -117,6 +117,8 @@ class PersonSlot {
   String characterId = '';
   String animeQuery = '';
   String animeTag = '';
+  String remoteAnimeZh = '';
+  String remoteAnimeEn = '';
   String query = '';
   String originalAnimeZh = '';
   String originalAnimeEn = '';
@@ -133,6 +135,8 @@ class PersonSlot {
         'characterId': characterId,
         'animeQuery': animeQuery,
         'animeTag': animeTag,
+        'remoteAnimeZh': remoteAnimeZh,
+        'remoteAnimeEn': remoteAnimeEn,
         'query': query,
         'originalAnimeZh': originalAnimeZh,
         'originalAnimeEn': originalAnimeEn,
@@ -151,6 +155,8 @@ class PersonSlot {
         ..characterId = '${json['characterId'] ?? ''}'
         ..animeQuery = '${json['animeQuery'] ?? ''}'
         ..animeTag = '${json['animeTag'] ?? ''}'
+        ..remoteAnimeZh = '${json['remoteAnimeZh'] ?? ''}'
+        ..remoteAnimeEn = '${json['remoteAnimeEn'] ?? ''}'
         ..query = '${json['query'] ?? ''}'
         ..originalAnimeZh = '${json['originalAnimeZh'] ?? ''}'
         ..originalAnimeEn = '${json['originalAnimeEn'] ?? ''}'
@@ -159,6 +165,53 @@ class PersonSlot {
         ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
         ..originalTraits = '${json['originalTraits'] ?? ''}';
+}
+
+class _RemoteAnime {
+  const _RemoteAnime({
+    required this.id,
+    required this.title,
+    required this.titleJapanese,
+    required this.year,
+    this.source = 'jikan',
+    this.characters = const <_RemoteCharacter>[],
+  });
+
+  final int id;
+  final String title;
+  final String titleJapanese;
+  final int? year;
+  final String source;
+  final List<_RemoteCharacter> characters;
+
+  String get tag => title
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9_ -]'), '')
+      .replaceAll(RegExp(r'\s+'), '_');
+}
+
+class _RemoteCharacter {
+  const _RemoteCharacter({
+    required this.id,
+    required this.name,
+    required this.nameKanji,
+    required this.role,
+    this.about = '',
+  });
+
+  final int id;
+  final String name;
+  final String nameKanji;
+  final String role;
+  final String about;
+
+  _RemoteCharacter withAbout(String value) => _RemoteCharacter(
+        id: id,
+        name: name,
+        nameKanji: nameKanji,
+        role: role,
+        about: value,
+      );
 }
 
 TagItem _catalogTag(CatalogTagData data, {String prefix = 'catalog'}) =>
@@ -481,6 +534,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<String, String> _personActiveGroups = <String, String>{};
   final List<TagItem> _customTags = <TagItem>[];
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
+  final Map<int, List<_RemoteAnime>> _remoteAnimeResults =
+      <int, List<_RemoteAnime>>{};
+  final Map<int, _RemoteAnime> _remoteAnimeSelection =
+      <int, _RemoteAnime>{};
+  final Map<int, List<_RemoteCharacter>> _remoteCharacters =
+      <int, List<_RemoteCharacter>>{};
+  final Set<int> _remoteLookupLoading = <int>{};
+  final Map<int, String> _remoteLookupErrors = <int, String>{};
   final List<PersonSlot> _personSlots = <PersonSlot>[PersonSlot()];
   final List<String> _recentCharacterIds = <String>[];
   final List<Preset> _presets = <Preset>[];
@@ -518,11 +579,50 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> get _selectedTags {
     final tags =
         _allTags.where((tag) => _selectedIds.contains(tag.id)).toList();
-    tags.sort((a, b) {
-      final order = a.order.compareTo(b.order);
-      return order == 0 ? a.en.compareTo(b.en) : order;
-    });
+    tags.sort(_compareOutputTags);
     return tags;
+  }
+
+  int _outputGroupOrder(String group) {
+    const order = <String, int>{
+      '外觀特徵': 10,
+      '臉部特徵': 11,
+      '胸部': 12,
+      '裸露': 13,
+      '服裝': 20,
+      '服裝風格': 21,
+      '服裝顏色': 22,
+      '上衣': 23,
+      '上衣風格': 24,
+      '上衣顏色': 25,
+      '褲子': 26,
+      '裙子': 26,
+      '下身風格': 27,
+      '下身顏色': 28,
+      '內衣': 30,
+      '胸罩': 31,
+      '內褲': 32,
+      '襪子': 33,
+      '鞋子': 34,
+      '配件': 35,
+      '服裝細節': 36,
+      '服裝材質': 37,
+      '穿脫狀態': 38,
+      '表情': 40,
+      '姿勢': 41,
+      '性行為': 42,
+      '性姿勢': 43,
+      '場景': 60,
+      '畫面': 61,
+    };
+    return order[group] ?? 50;
+  }
+
+  int _compareOutputTags(TagItem a, TagItem b) {
+    final groupOrder = _outputGroupOrder(a.group).compareTo(_outputGroupOrder(b.group));
+    if (groupOrder != 0) return groupOrder;
+    final catalogOrder = a.order.compareTo(b.order);
+    return catalogOrder == 0 ? a.en.compareTo(b.en) : catalogOrder;
   }
 
   Set<String> _personTagIds(int index) =>
@@ -531,10 +631,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> _selectedTagsForPerson(int index) {
     final ids = _personTagIds(index);
     final tags = _allTags.where((tag) => ids.contains(tag.id)).toList();
-    tags.sort((a, b) {
-      final order = a.order.compareTo(b.order);
-      return order == 0 ? a.en.compareTo(b.en) : order;
-    });
+    tags.sort(_compareOutputTags);
     return tags;
   }
 
@@ -700,7 +797,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
-      _stepIndex = (data['stepIndex'] as num?)?.toInt() ?? 0;
+      _stepIndex = ((data['stepIndex'] as num?)?.toInt() ?? 0).clamp(0, 6).toInt();
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -1257,6 +1354,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final currentTags = personIndex == null
         ? _selectedTags
         : _selectedTagsForPerson(personIndex);
+    if (personIndex != null &&
+        tag.group == '服裝顏色' &&
+        !currentTags.any((item) => _conflictGroup(item) == 'one_piece')) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('請先選擇連身裝，才可以設定連身裝顏色。')));
+      return;
+    }
     if (targetIds.contains(tag.id)) {
       setState(() {
         targetIds.remove(tag.id);
@@ -1561,6 +1665,364 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return source.take(18).toList();
   }
 
+  Future<Map<String, dynamic>> _remoteJson(String url) async {
+    final raw = await html.HttpRequest.getString(url);
+    return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+  }
+
+  Future<Map<String, dynamic>> _anilistJson(String query, String keyword) async {
+    final response = await html.HttpRequest.request(
+      'https://graphql.anilist.co',
+      method: 'POST',
+      requestHeaders: {'Content-Type': 'application/json'},
+      sendData: jsonEncode({
+        'query': query,
+        'variables': {'search': keyword},
+      }),
+    );
+    return Map<String, dynamic>.from(jsonDecode(response.responseText ?? '{}') as Map);
+  }
+
+  Future<void> _searchRemoteAnime(int slotIndex) async {
+    if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
+    final query = _personSlots[slotIndex].animeQuery.trim();
+    if (query.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('請先輸入動漫名稱再查詢。')),
+      );
+      return;
+    }
+    setState(() {
+      _remoteLookupLoading.add(slotIndex);
+      _remoteLookupErrors.remove(slotIndex);
+    });
+    try {
+      const queryText = r'''query ($search: String!) {
+        Page(perPage: 8) {
+          media(search: $search, type: ANIME) {
+            id
+            title { romaji english native }
+            startDate { year }
+            characters(perPage: 50) {
+              edges { role node { id name { full native } description } }
+            }
+          }
+        }
+      }''';
+      final data = await _anilistJson(queryText, query);
+      final results = ((data['data'] as Map?)?['Page'] as Map?)?['media'] as List? ?? [];
+      final mapped = results.whereType<Map>().map((item) {
+        final title = Map<String, dynamic>.from(item['title'] as Map? ?? {});
+        final date = Map<String, dynamic>.from(item['startDate'] as Map? ?? {});
+        final characters = ((item['characters'] as Map?)?['edges'] as List? ?? [])
+            .whereType<Map>()
+            .map((edge) {
+              final node = Map<String, dynamic>.from(edge['node'] as Map? ?? {});
+              final name = Map<String, dynamic>.from(node['name'] as Map? ?? {});
+              return _RemoteCharacter(
+                id: (node['id'] as num?)?.toInt() ?? 0,
+                name: '${name['full'] ?? ''}',
+                nameKanji: '${name['native'] ?? ''}',
+                role: '${edge['role'] ?? ''}',
+                about: '${node['description'] ?? ''}',
+              );
+            })
+            .where((character) => character.id > 0 && character.name.isNotEmpty)
+            .toList();
+        return _RemoteAnime(
+          id: (item['id'] as num?)?.toInt() ?? 0,
+          title: '${title['english'] ?? title['romaji'] ?? ''}',
+          titleJapanese: '${title['native'] ?? ''}',
+          year: (date['year'] as num?)?.toInt(),
+          source: 'anilist',
+          characters: characters,
+        );
+      }).where((item) => item.id > 0 && item.title.isNotEmpty).toList();
+      final mappedResults = mapped.isNotEmpty ? mapped : <_RemoteAnime>[];
+      if (!mounted) return;
+      setState(() {
+        _remoteAnimeResults[slotIndex] = mappedResults;
+        _remoteLookupLoading.remove(slotIndex);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _remoteLookupLoading.remove(slotIndex);
+        _remoteLookupErrors[slotIndex] = '自動查詢失敗，請稍後再試或使用手動新增。';
+      });
+    }
+  }
+
+  Future<void> _loadRemoteCharacters(int slotIndex, _RemoteAnime anime) async {
+    if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
+    setState(() {
+      _remoteLookupLoading.add(slotIndex);
+      _remoteLookupErrors.remove(slotIndex);
+      _remoteAnimeSelection[slotIndex] = anime;
+    });
+    try {
+      final characters = anime.source == 'anilist'
+          ? anime.characters
+          : ((await _remoteJson(
+                      'https://api.jikan.moe/v4/anime/${anime.id}/characters'))['data']
+                  as List? ?? [])
+          .whereType<Map>()
+          .map((item) {
+            final character = Map<String, dynamic>.from(
+                item['character'] as Map? ?? <String, dynamic>{});
+            return _RemoteCharacter(
+              id: (character['mal_id'] as num?)?.toInt() ?? 0,
+              name: '${character['name'] ?? ''}',
+              nameKanji: '${character['name_kanji'] ?? ''}',
+              role: '${item['role'] ?? ''}',
+            );
+          })
+          .where((item) => item.id > 0 && item.name.isNotEmpty)
+          .toList();
+      if (!mounted) return;
+      final slot = _personSlots[slotIndex];
+      slot.animeTag = anime.tag;
+      slot.remoteAnimeZh = anime.titleJapanese.isEmpty
+          ? anime.title
+          : anime.titleJapanese;
+      slot.remoteAnimeEn = anime.title;
+      slot.animeQuery = '';
+      _clearPersonSearchController(slotIndex, 'anime');
+      setState(() {
+        _remoteCharacters[slotIndex] = characters;
+        _remoteLookupLoading.remove(slotIndex);
+        _persist();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _remoteLookupLoading.remove(slotIndex);
+        _remoteLookupErrors[slotIndex] = '角色查詢失敗，請稍後再試。';
+      });
+    }
+  }
+
+  Future<String> _remoteCharacterAbout(int id) async {
+    try {
+      final data = await _remoteJson(
+          'https://api.jikan.moe/v4/characters/$id/full');
+      return '${data['data']?['about'] ?? ''}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  List<CatalogTagData> _remoteTraits(_RemoteCharacter character) {
+    var about = character.about.toLowerCase().replaceAll('-', ' ');
+    final traits = <CatalogTagData>[];
+    void add(String zh, String en) {
+      if (traits.any((item) => item.en == en)) return;
+      traits.add(CatalogTagData(
+        id: 'remote_trait_${DateTime.now().microsecondsSinceEpoch}_${traits.length}',
+        group: '自訂特徵',
+        zh: zh,
+        en: en,
+        order: 1,
+      ));
+    }
+
+    const hairColors = {
+      'pink': '粉紅色頭髮',
+      'red': '紅色頭髮',
+      'blue': '藍色頭髮',
+      'green': '綠色頭髮',
+      'purple': '紫色頭髮',
+      'blonde': '金色頭髮',
+      'black': '黑色頭髮',
+      'white': '白色頭髮',
+      'silver': '銀色頭髮',
+      'brown': '棕色頭髮',
+      'aqua': '藍綠色頭髮',
+      'orange': '橘色頭髮',
+      'yellow': '黃色頭髮',
+    };
+    for (final entry in hairColors.entries) {
+      if (RegExp('\b${entry.key} hair\b').hasMatch(about)) {
+        add(entry.value, '${entry.key} hair');
+      }
+    }
+    const eyeColors = {
+      'pink': '粉紅色眼睛',
+      'red': '紅色眼睛',
+      'blue': '藍色眼睛',
+      'green': '綠色眼睛',
+      'purple': '紫色眼睛',
+      'brown': '棕色眼睛',
+      'aqua': '藍綠色眼睛',
+      'yellow': '黃色眼睛',
+    };
+    for (final entry in eyeColors.entries) {
+      if (RegExp('\b${entry.key} eyes?\b').hasMatch(about)) {
+        add(entry.value, '${entry.key} eyes');
+      }
+    }
+    const phrases = <String, Map<String, String>>{
+      'long hair': {'zh': '長髮', 'en': 'long hair'},
+      'short hair': {'zh': '短髮', 'en': 'short hair'},
+      'twin tails': {'zh': '雙馬尾', 'en': 'twintails'},
+      'twintails': {'zh': '雙馬尾', 'en': 'twintails'},
+      'ponytail': {'zh': '馬尾', 'en': 'ponytail'},
+      'glasses': {'zh': '眼鏡', 'en': 'glasses'},
+      'horns': {'zh': '角', 'en': 'horns'},
+      'elf ears': {'zh': '精靈耳', 'en': 'elf ears'},
+      'tail': {'zh': '尾巴', 'en': 'tail'},
+      'slim': {'zh': '纖細身材', 'en': 'slim'},
+    };
+    for (final entry in phrases.entries) {
+      if (about.contains(entry.key)) {
+        add(entry.value['zh']!, entry.value['en']!);
+      }
+    }
+    return traits;
+  }
+
+  CatalogCharacter _remoteCatalogCharacter(
+      _RemoteAnime anime, _RemoteCharacter remote) {
+    CatalogCharacter? local;
+    final normalized = remote.name.toLowerCase().replaceAll(
+        RegExp(r'[^a-z0-9]'), '');
+    for (final item in _allCharacters) {
+      final itemName = item.characterEn.toLowerCase().replaceAll(
+          RegExp(r'[^a-z0-9]'), '');
+      if (itemName == normalized ||
+          item.characterTag.toLowerCase() == _slug(remote.name)) {
+        local = item;
+        break;
+      }
+    }
+    return CatalogCharacter(
+      id: 'jikan_character_${remote.id}',
+      animeZh: anime.titleJapanese.isEmpty ? anime.title : anime.titleJapanese,
+      animeEn: anime.title,
+      animeTag: anime.tag,
+      characterZh: remote.nameKanji.isEmpty ? remote.name : remote.nameKanji,
+      characterEn: remote.name,
+      characterTag: _slug(remote.name),
+      traits: local?.traits ?? _remoteTraits(remote),
+    );
+  }
+
+  Future<void> _importRemoteCharacters(int slotIndex,
+      {List<_RemoteCharacter>? only}) async {
+    final anime = _remoteAnimeSelection[slotIndex];
+    final remoteCharacters = _remoteCharacters[slotIndex] ?? const [];
+    if (anime == null || remoteCharacters.isEmpty) return;
+    final source = only ?? remoteCharacters;
+    setState(() => _remoteLookupLoading.add(slotIndex));
+    final imported = <CatalogCharacter>[];
+    for (var index = 0; index < source.length; index++) {
+      var remote = source[index];
+      if (remote.about.isEmpty && (only != null || index < 18)) {
+        remote = remote.withAbout(await _remoteCharacterAbout(remote.id));
+        if (index < source.length - 1) {
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+        }
+      }
+      final character = _remoteCatalogCharacter(anime, remote);
+      if (!_customCharacters.any((item) => item.id == character.id)) {
+        imported.add(character);
+      }
+    }
+    _customCharacters.addAll(imported);
+    if (imported.isNotEmpty) {
+      final slot = _personSlots[slotIndex];
+      slot.mode = '?憤閫';
+      slot.characterId = imported.first.id;
+      slot.animeTag = imported.first.animeTag;
+      _recentCharacterIds
+        ..remove(imported.first.id)
+        ..insert(0, imported.first.id);
+      if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
+    }
+    if (!mounted) return;
+    setState(() {
+      _remoteLookupLoading.remove(slotIndex);
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓外觀特徵。')));
+  }
+
+  Widget _remoteAnimePanel(int index) {
+    final results = _remoteAnimeResults[index] ?? const <_RemoteAnime>[];
+    final error = _remoteLookupErrors[index];
+    if (results.isEmpty && error == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        const Text('自動查詢結果', style: TextStyle(fontWeight: FontWeight.w700)),
+        if (error != null) Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(error),
+        ),
+        ...results.map((anime) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: Text(anime.title),
+              subtitle: Text(anime.titleJapanese.isEmpty
+                  ? 'Jikan / MyAnimeList 公開資料'
+                  : '${anime.titleJapanese} · Jikan / MyAnimeList'),
+              trailing: TextButton(
+                onPressed: () => _loadRemoteCharacters(index, anime),
+                child: const Text('查詢角色'),
+              ),
+            )),
+      ],
+    );
+  }
+
+  Widget _remoteCharacterPanel(int index) {
+    final anime = _remoteAnimeSelection[index];
+    final characters = _remoteCharacters[index] ?? const <_RemoteCharacter>[];
+    if (anime == null || characters.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text('${anime.title}：自動查詢到 ${characters.length} 名角色',
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 5),
+        OutlinedButton.icon(
+          onPressed: _remoteLookupLoading.contains(index)
+              ? null
+              : () => _importRemoteCharacters(index),
+          icon: const Icon(Icons.download_outlined),
+          label: const Text('匯入此作品角色與可辨識特徵'),
+        ),
+        SizedBox(
+          height: 190,
+          child: ListView.builder(
+            itemCount: characters.length,
+            itemBuilder: (_, characterIndex) {
+              final character = characters[characterIndex];
+              return ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(character.name),
+                subtitle: Text(character.nameKanji.isEmpty
+                    ? character.role
+                    : '${character.nameKanji} · ${character.role}'),
+                trailing: TextButton(
+                  onPressed: _remoteLookupLoading.contains(index)
+                      ? null
+                      : () => _importRemoteCharacters(index,
+                          only: [character]),
+                  child: const Text('匯入'),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   void _selectAnime(int slotIndex, CatalogCharacter anime) {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
@@ -1758,12 +2220,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _advanceStep() {
-    if (_stepIndex == 2 && !_charactersComplete()) {
+    if (_stepIndex == 1 && !_charactersComplete()) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
       return;
     }
-    final nextStep = _stepIndex < 7 ? _stepIndex + 1 : _stepIndex;
+    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
     setState(() {
       _stepIndex = nextStep;
       _activeGroup = '全部';
@@ -2173,6 +2635,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final index = entry.key;
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
+          final hasOnePiece = _selectedTagsForPerson(index).any(
+              (tag) => _conflictGroup(tag) == 'one_piece');
+          final visibleDetails = hasOnePiece
+              ? details
+              : details.where((group) => group != '服裝顏色').toList();
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
           if (!slot.detailed) {
@@ -2215,7 +2682,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const Text('風格、顏色與服裝細節（可多選）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
-                  _stepTagPicker(details,
+                  _stepTagPicker(visibleDetails,
                       nextLabel: '下一步', personIndex: index, showNext: false),
                 ],
               ),
@@ -2318,90 +2785,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           value: _personSlots.length,
           decoration: const InputDecoration(
               labelText: '人物數量（必填）', prefixIcon: Icon(Icons.groups_outlined)),
-          items: List.generate(6, (index) => index + 1)
+          items: List.generate(10, (index) => index + 1)
               .map((value) =>
                   DropdownMenuItem(value: value, child: Text('$value 人')))
               .toList(),
           onChanged: (value) => _setPeopleCount(value ?? 1),
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: _model,
-          decoration: const InputDecoration(
-              labelText: '目標模型', prefixIcon: Icon(Icons.auto_awesome)),
-          items: const ['Amanatsu 1.1', 'Amanatsu（自訂設定）', '通用 Danbooru']
-              .map(
-                  (value) => DropdownMenuItem(value: value, child: Text(value)))
-              .toList(),
-          onChanged: (value) => setState(() {
-            _model = value ?? _model;
-            _persist();
-          }),
+        Text(
+          '模型、Sampler、Steps、CFG 與 Clip skip 請直接在 AI 生成網站設定；本工具只輸出可貼上的提示標籤。',
+          style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: 12),
-        Row(children: [
-          Expanded(
-              child: DropdownButtonFormField<String>(
-                  value: _sampler,
-                  decoration: const InputDecoration(labelText: 'Sampler'),
-                  items: const [
-                    'Euler a',
-                    'DPM++ 2M Karras',
-                    'DPM++ SDE Karras',
-                    'DDIM'
-                  ]
-                      .map((value) =>
-                          DropdownMenuItem(value: value, child: Text(value)))
-                      .toList(),
-                  onChanged: (value) => setState(() {
-                        _sampler = value ?? _sampler;
-                        _persist();
-                      }))),
-          const SizedBox(width: 9),
-          Expanded(
-              child: DropdownButtonFormField<int>(
-                  value: _steps,
-                  decoration: const InputDecoration(labelText: 'Steps'),
-                  items: const [20, 24, 28, 32, 35, 40]
-                      .map((value) =>
-                          DropdownMenuItem(value: value, child: Text('$value')))
-                      .toList(),
-                  onChanged: (value) => setState(() {
-                        _steps = value ?? _steps;
-                        _persist();
-                      }))),
-          const SizedBox(width: 9),
-          Expanded(
-              child: DropdownButtonFormField<String>(
-                  value: _cfg,
-                  decoration: const InputDecoration(labelText: 'CFG'),
-                  items: const ['4.5', '5.0', '5.5', '6.0', '7.0']
-                      .map((value) =>
-                          DropdownMenuItem(value: value, child: Text(value)))
-                      .toList(),
-                  onChanged: (value) => setState(() {
-                        _cfg = value ?? _cfg;
-                        _persist();
-                      }))),
-          const SizedBox(width: 9),
-          Expanded(
-              child: DropdownButtonFormField<String>(
-                  value: _clipSkip,
-                  decoration: const InputDecoration(labelText: 'Clip skip'),
-                  items: const ['1', '2']
-                      .map((value) =>
-                          DropdownMenuItem(value: value, child: Text(value)))
-                      .toList(),
-                  onChanged: (value) => setState(() {
-                        _clipSkip = value ?? _clipSkip;
-                        _persist();
-                      }))),
-        ]),
-        const SizedBox(height: 5),
-        Text('參考起始設定：Euler a · 28 steps · CFG 5 · Clip skip 2。',
-            style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant)),
         const SizedBox(height: 14),
         Align(
             alignment: Alignment.centerRight,
@@ -2417,8 +2813,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            const Icon(Icons.groups_outlined, size: 20),
+            const SizedBox(width: 8),
+            Text('人物資料數量：${_personSlots.length}',
+                style: const TextStyle(fontWeight: FontWeight.w700)),
+            const Spacer(),
+            IconButton(
+              tooltip: '減少人物',
+              onPressed: _personSlots.length <= 1
+                  ? null
+                  : () => _setPeopleCount(_personSlots.length - 1),
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+            IconButton(
+              tooltip: '增加人物（最多 10 人）',
+              onPressed: _personSlots.length >= 10
+                  ? null
+                  : () => _setPeopleCount(_personSlots.length + 1),
+              icon: const Icon(Icons.add_circle_outline),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
         const Text(
-            '每個人物都要選擇「動漫角色」、「原創角色」，或明確選擇「不需細節」。動漫角色會自動帶入動漫英文 tag、角色英文 tag 與角色特徵。'),
+            '人物數量會依下方角色資料卡自動計算。每個人物都要選擇「動漫角色」、「原創角色」，或明確選擇「不需細節」。動漫角色會自動帶入動漫英文 tag、角色英文 tag 與角色特徵。'),
         const SizedBox(height: 12),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
@@ -2482,14 +2902,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               .toList()),
                       if (slot.mode == '動漫角色') ...[
                         const SizedBox(height: 10),
-                        TextField(
-                            controller: _personSearchController(
-                                index, 'anime', slot.animeQuery),
-                            decoration: const InputDecoration(
-                                labelText: '第一步：查詢動漫名稱',
-                                prefixIcon: Icon(Icons.search)),
-                            onChanged: (value) =>
-                                setState(() => slot.animeQuery = value)),
+                        Row(children: [
+                          Expanded(
+                            child: TextField(
+                                controller: _personSearchController(
+                                    index, 'anime', slot.animeQuery),
+                                decoration: const InputDecoration(
+                                    labelText: '第一步：查詢動漫名稱',
+                                    prefixIcon: Icon(Icons.search)),
+                                onChanged: (value) =>
+                                    setState(() => slot.animeQuery = value)),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: _remoteLookupLoading.contains(index)
+                                ? null
+                                : () => _searchRemoteAnime(index),
+                            icon: const Icon(Icons.public, size: 18),
+                            label: const Text('自動查詢'),
+                          ),
+                        ]),
+                        _remoteAnimePanel(index),
+                        _remoteCharacterPanel(index),
                         const SizedBox(height: 9),
                         if (animeMatches.isNotEmpty)
                           Wrap(
@@ -2619,7 +3053,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             child: FilledButton.icon(
                 onPressed: _advanceStep,
                 icon: const Icon(Icons.arrow_forward),
-                label: const Text('完成角色：下一步場景'))),
+                label: const Text('完成角色：下一步特徵'))),
       ],
     );
   }
@@ -2676,10 +3110,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _progressiveBuilder() {
     return Column(children: [
-      _stepCard(0, '人物數量與模型', '${_peopleTokensNew().join('、')} · $_model',
-          Icons.groups_outlined, _stepPeople()),
       _stepCard(
-          1,
+          0,
           '場景與畫面',
           _selectedTags
               .where((tag) => ['場景', '畫面'].contains(tag.group))
@@ -2689,13 +3121,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.landscape_outlined,
           _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料')),
       _stepCard(
-          2,
+          1,
           '角色資料',
           _characterChineseNew().join('、').ifEmpty('每個人物都要設定或選擇不需細節'),
           Icons.badge_outlined,
           _stepCharacters()),
       _stepCard(
-          3,
+          2,
           '角色特徵',
           _personSelectedIds.isEmpty
               ? '每位人物分別設定'
@@ -2712,7 +3144,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：服裝',
               instruction: '請在每位人物自己的區塊內設定外觀、臉部、胸部與裸露標籤。')),
       _stepCard(
-          4,
+          3,
           '服裝與穿脫狀態',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -2743,7 +3175,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.checkroom_outlined,
           _stepClothing()),
       _stepCard(
-          5,
+          4,
           '表情',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -2755,7 +3187,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker(['表情'],
               nextLabel: '下一步：姿勢', instruction: '請分別設定每位人物的表情。')),
       _stepCard(
-          6,
+          5,
           '姿勢與 18+ 姿勢',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -2767,7 +3199,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker(['姿勢', '性行為', '性姿勢'],
               nextLabel: '下一步：品質與負面',
               instruction: '請分別設定每位人物的基本姿勢、性行為與性姿勢；不同人物可以使用不同姿勢。')),
-      _stepCard(7, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
+      _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
   }
@@ -2869,140 +3301,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              value: _model,
-              decoration: const InputDecoration(
-                labelText: '目標模型',
-                prefixIcon: Icon(Icons.auto_awesome),
-              ),
-              items: const ['Amanatsu 1.1', 'Amanatsu（自訂設定）', '通用 Danbooru']
-                  .map(
-                    (value) =>
-                        DropdownMenuItem(value: value, child: Text(value)),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() {
-                _model = value ?? _model;
-                _persist();
-              }),
+            const Text(
+              '人物數量與性別請在「角色資料」區直接增加、減少人物卡片並分別設定。',
+              style: TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _gender,
-                    decoration: const InputDecoration(labelText: '角色型態'),
-                    items: const ['女性', '男性', '混合']
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(value),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _gender = value ?? _gender;
-                      _persist();
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: _peopleCount,
-                    decoration: const InputDecoration(labelText: '人數'),
-                    items: List.generate(6, (index) => index + 1)
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text('$value 人'),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _peopleCount = value ?? 1;
-                      _persist();
-                    }),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _sampler,
-                    decoration: const InputDecoration(labelText: 'Sampler'),
-                    items: const [
-                      'Euler a',
-                      'DPM++ 2M Karras',
-                      'DPM++ SDE Karras',
-                      'DDIM'
-                    ]
-                        .map((value) =>
-                            DropdownMenuItem(value: value, child: Text(value)))
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _sampler = value ?? _sampler;
-                      _persist();
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<int>(
-                    value: _steps,
-                    decoration: const InputDecoration(labelText: 'Steps'),
-                    items: const [20, 24, 28, 32, 35, 40]
-                        .map((value) => DropdownMenuItem(
-                            value: value, child: Text('$value')))
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _steps = value ?? _steps;
-                      _persist();
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _cfg,
-                    decoration: const InputDecoration(labelText: 'CFG'),
-                    items: const ['4.5', '5.0', '5.5', '6.0', '7.0']
-                        .map((value) =>
-                            DropdownMenuItem(value: value, child: Text(value)))
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _cfg = value ?? _cfg;
-                      _persist();
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _clipSkip,
-                    decoration: const InputDecoration(labelText: 'Clip skip'),
-                    items: const ['1', '2']
-                        .map((value) =>
-                            DropdownMenuItem(value: value, child: Text(value)))
-                        .toList(),
-                    onChanged: (value) => setState(() {
-                      _clipSkip = value ?? _clipSkip;
-                      _persist();
-                    }),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
             Text(
-              '起始建議：Euler a · 28 steps · CFG 5 · Clip skip 2；請以自己的 seed 與畫面比例實測。',
+              '模型、Sampler、Steps、CFG 與 Clip skip 請直接在 AI 生成網站設定；本工具只輸出可貼上的提示標籤。',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 11,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 6),
@@ -3200,7 +3508,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '模型設定：$_sampler · $_steps steps · CFG $_cfg · Clip skip $_clipSkip。',
+                      '模型參數請在 AI 生成網站設定；這裡只提供可貼上的提示標籤。',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -3324,7 +3632,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              '• 參考起始設定為 Euler a、28 steps、CFG 5、Clip skip 2；實際效果仍需依 seed、尺寸與 prompt 測試。',
+              '• 模型、Sampler、Steps、CFG、Clip skip 與 seed 請在 AI 生成網站設定；本工具專注產生提示標籤。',
             ),
           ),
           Align(

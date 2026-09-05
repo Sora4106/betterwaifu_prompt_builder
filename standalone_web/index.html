@@ -37,18 +37,8 @@
       <div class="main-column">
         <article class="panel setup-panel">
           <div class="panel-heading"><div><p class="eyebrow">01 / SETUP</p><h2>組合設定</h2></div><span class="model-pill">✦ Amanatsu preset</span></div>
-          <div class="control-grid">
-            <label>目標模型<select id="model"><option>Amanatsu 1.1</option><option>Amanatsu（自訂設定）</option><option>通用 Danbooru</option></select></label>
-            <label>角色型態<select id="gender"><option>女性</option><option>男性</option><option>混合</option></select></label>
-            <label>角色人數<select id="people-count"><option value="1">1 人</option><option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5">5 人</option><option value="6">6 人</option></select></label>
-          </div>
-          <div class="control-grid settings-grid">
-            <label>Sampler<select id="sampler"><option>Euler a</option><option>DPM++ 2M Karras</option><option>DPM++ SDE Karras</option><option>DDIM</option></select></label>
-            <label>Steps<select id="steps"><option value="20">20</option><option value="24">24</option><option value="28">28</option><option value="32">32</option><option value="35">35</option><option value="40">40</option></select></label>
-            <label>CFG<select id="cfg"><option>4.5</option><option>5.0</option><option>5.5</option><option>6.0</option><option>7.0</option></select></label>
-            <label>Clip skip<select id="clip-skip"><option>1</option><option>2</option></select></label>
-          </div>
-          <p class="settings-hint">起始建議：Euler a · 28 steps · CFG 5 · Clip skip 2；請以自己的 seed 與畫面比例實測。</p>
+          <p class="panel-caption">人物數量與性別請在「人物與角色資料」區直接增加、減少人物卡片並分別設定。</p>
+          <p class="settings-hint">模型、Sampler、Steps、CFG、Clip skip 與 seed 請直接在 AI 生成網站設定；本工具只輸出提示標籤。</p>
           <label class="switch-row"><input type="checkbox" id="show-adult"><span class="switch"></span><span><b>顯示 18+ 標籤分類</b><small>包含胸部、裸露、性行為與性姿勢；只建立成年角色內容。</small></span></label>
           <div class="fields-row">
             <label class="grow">Amanatsu 品質前綴（可修改）<textarea id="preprompt" rows="2">masterpiece, best quality, newest, absurdres, highres</textarea><small>依參考指南預設；輸出在全部選取標籤之後。</small></label>
