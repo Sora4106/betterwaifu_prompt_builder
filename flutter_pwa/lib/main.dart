@@ -9,6 +9,10 @@ import 'catalog_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
+const _buttonSurface = Color(0xff34344d);
+const _buttonBorder = Color(0xff77779b);
+const _buttonSelectedSurface = Color(0xffc4b5fd);
+const _buttonSelectedText = Color(0xff171326);
 const _defaultNegativeText =
     'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, '
     'multiple views, fewer digits, extra limbs, missing fingers, deformed, text, '
@@ -3229,20 +3233,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  Color _groupColor(String group, BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    if (group.contains('服裝') ||
-        ['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件']
-            .contains(group)) {
-      return scheme.tertiaryContainer;
-    }
-    if (group.contains('性') || group == '裸露' || group == '胸部')
-      return scheme.errorContainer;
-    if (group == '表情' || group == '姿勢') return scheme.secondaryContainer;
-    if (group == '品質') return scheme.primaryContainer;
-    return scheme.surfaceVariant;
-  }
-
   List<TagItem> _visibleTags(String group) {
     final query = _search.text.trim().toLowerCase();
     return _allTags.where((tag) {
@@ -3272,13 +3262,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ),
       child: FilterChip(
         selected: selected,
-        label: Text('${tag.zh}  ·  ${tag.en}'),
-        avatar: tag.adult ? const Icon(Icons.eighteen_mp, size: 15) : null,
+        label: Text(
+          '${tag.zh}  ·  ${tag.en}',
+          softWrap: true,
+          style: TextStyle(
+            color: selected ? _buttonSelectedText : Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        avatar: tag.adult
+            ? Icon(Icons.eighteen_mp,
+                size: 15,
+                color: selected ? _buttonSelectedText : const Color(0xffffa7b7))
+            : null,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         labelPadding: EdgeInsets.zero,
         visualDensity: VisualDensity.standard,
-        backgroundColor: _groupColor(tag.group, context).withOpacity(.32),
-        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: _buttonSurface,
+        selectedColor: _buttonSelectedSurface,
+        checkmarkColor: _buttonSelectedText,
+        side: BorderSide(
+          color: selected ? const Color(0xfff0eaff) : _buttonBorder,
+        ),
         onSelected: (_) => _toggle(tag, personIndex: personIndex),
       ),
     );
@@ -3354,8 +3359,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
-                      label: Text(_wizardGroupLabel(group)),
+                      label: Text(
+                        _wizardGroupLabel(group),
+                        softWrap: false,
+                        overflow: TextOverflow.visible,
+                        style: TextStyle(
+                          color: group == currentGroup
+                              ? _buttonSelectedText
+                              : Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       selected: group == currentGroup,
+                      backgroundColor: _buttonSurface,
+                      selectedColor: _buttonSelectedSurface,
+                      side: BorderSide(
+                        color: group == currentGroup
+                            ? const Color(0xfff0eaff)
+                            : _buttonBorder,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       onSelected: (_) => setState(() {
                             if (personIndex == null) {
                               _activeGroup = group;
@@ -4134,8 +4157,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 7),
                       child: ChoiceChip(
-                        label: Text(group),
+                        label: Text(
+                          group,
+                          softWrap: false,
+                          overflow: TextOverflow.visible,
+                          style: TextStyle(
+                            color: _activeGroup == group
+                                ? _buttonSelectedText
+                                : Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         selected: _activeGroup == group,
+                        backgroundColor: _buttonSurface,
+                        selectedColor: _buttonSelectedSurface,
+                        side: BorderSide(
+                          color: _activeGroup == group
+                              ? const Color(0xfff0eaff)
+                              : _buttonBorder,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         onSelected: (_) => setState(() => _activeGroup = group),
                       ),
                     );
@@ -4670,9 +4711,45 @@ void main() {
           border: OutlineInputBorder(),
           filled: true,
         ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: MaterialStatePropertyAll(_buttonSelectedSurface),
+            foregroundColor: MaterialStatePropertyAll(_buttonSelectedText),
+            side: MaterialStatePropertyAll(
+              BorderSide(color: Color(0xfff0eaff)),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: MaterialStatePropertyAll(_buttonSurface),
+            foregroundColor: MaterialStatePropertyAll(Colors.white),
+            side: MaterialStatePropertyAll(BorderSide(color: _buttonBorder)),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: ButtonStyle(
+            foregroundColor: MaterialStatePropertyAll(_buttonSelectedSurface),
+          ),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            foregroundColor: MaterialStatePropertyAll(Colors.white),
+            backgroundColor: MaterialStatePropertyAll(_buttonSurface),
+          ),
+        ),
         chipTheme: const ChipThemeData(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          labelStyle: TextStyle(fontSize: 12, height: 1.25),
+          labelStyle: TextStyle(
+            fontSize: 12,
+            height: 1.25,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+          backgroundColor: _buttonSurface,
+          selectedColor: _buttonSelectedSurface,
+          checkmarkColor: _buttonSelectedText,
+          side: BorderSide(color: _buttonBorder),
         ),
         cardTheme: const CardThemeData(margin: EdgeInsets.zero, elevation: 0),
       ),
