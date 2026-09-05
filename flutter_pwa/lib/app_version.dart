@@ -1,7 +1,8 @@
-const appVersion = '1.1.18';
-const appBuildNumber = 20;
-const appVersionLabel = '1.1.18+20';
+const appVersion = '1.1.19';
+const appBuildNumber = 21;
+const appVersionLabel = '1.1.19+21';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: make generated Chinese tags removable'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: wrap category filters for small screens'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: map imported characters to anime tags and close lookup'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show imported anime characters in prompt content'},

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.18",
-  "build": 20,
-  "label": "1.1.18+20",
+  "version": "1.1.19",
+  "build": 21,
+  "label": "1.1.19+21",
   "history": [
+    {
+      "version": "1.1.19",
+      "build": 21,
+      "label": "1.1.19+21",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: make generated Chinese tags removable"
+    },
     {
       "version": "1.1.18",
       "build": 20,

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.19+21 - 2026-09-05
+
+- 自動偵測：feat: make generated Chinese tags removable
+
+
 ## 1.1.18+20 - 2026-09-05
 
 - 自動偵測：fix: wrap category filters for small screens
