@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.20+22 - 2026-09-05
+
+- 自動偵測：feat: group multi-character prompt tags
+
+
 ## 1.1.19+21 - 2026-09-05
 
 - 自動偵測：feat: make generated Chinese tags removable
