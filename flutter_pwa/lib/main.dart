@@ -240,8 +240,16 @@ TagItem _tag(
   String en,
   int order, {
   bool adult = false,
+  String? conflictGroup,
 }) =>
-    TagItem(id: id, group: group, zh: zh, en: en, order: order, adult: adult);
+    TagItem(
+        id: id,
+        group: group,
+        zh: zh,
+        en: en,
+        order: order,
+        adult: adult,
+        conflictGroup: conflictGroup);
 
 List<TagItem> _seedTags() => [
       // Role and character basics.
@@ -280,6 +288,60 @@ List<TagItem> _seedTags() => [
       _tag('trait_necklace', '外觀特徵', '項鍊', 'necklace', 1),
       _tag('trait_tattoo', '外觀特徵', '刺青', 'tattoo', 1),
       _tag('trait_nail_polish', '外觀特徵', '指甲油', 'nail polish', 1),
+
+      // Hairstyle types.
+      _tag('hair_very_short', '髮型', '極短髮', 'very short hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_medium', '髮型', '中長髮', 'medium hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_very_long', '髮型', '超長髮', 'very long hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_bob_cut', '髮型', '鮑伯頭', 'bob cut', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_pixie_cut', '髮型', '精靈短髮', 'pixie cut', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_straight', '髮型', '直髮', 'straight hair', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_wavy', '髮型', '波浪髮', 'wavy hair', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_curly', '髮型', '捲髮', 'curly hair', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_messy', '髮型', '凌亂髮', 'messy hair', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_spiky', '髮型', '刺蝟頭', 'spiky hair', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_ponytail', '髮型', '馬尾', 'ponytail', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_high_ponytail', '髮型', '高馬尾', 'high ponytail', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_low_ponytail', '髮型', '低馬尾', 'low ponytail', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_side_ponytail', '髮型', '側馬尾', 'side ponytail', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_twintails', '髮型', '雙馬尾', 'twintails', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_short_twintails', '髮型', '短雙馬尾', 'short twintails', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_low_twintails', '髮型', '低雙馬尾', 'low twintails', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_single_braid', '髮型', '單辮子', 'single braid', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_twin_braids', '髮型', '雙辮子', 'twin braids', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_side_braid', '髮型', '側辮子', 'side braid', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_french_braid', '髮型', '法式辮子', 'french braid', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_bun', '髮型', '髮髻', 'hair bun', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_double_bun', '髮型', '雙丸子頭', 'double bun', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_odango', '髮型', '丸子頭', 'odango', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_side_bun', '髮型', '側髮髻', 'side bun', 1,
+          conflictGroup: 'hair_style'),
+      _tag('hair_drill', '髮型', '鑽頭捲', 'drill hair', 1,
+          conflictGroup: 'hair_style'),
 
       // Clothing, intentionally split into practical sub-groups.
       _tag('clothing_tshirt', '上衣', 'T恤', 't-shirt', 2),
@@ -368,6 +430,92 @@ List<TagItem> _seedTags() => [
       _tag('pose_from_behind', '姿勢', '從後方視角', 'from behind', 4),
       _tag('pose_selfie', '姿勢', '自拍姿勢', 'selfie', 4),
 
+      // Dynamic actions and sports poses.
+      _tag('action_basketball_shooting', '動作', '投籃', 'shooting basketball', 4),
+      _tag('action_basketball_dribbling', '動作', '運球', 'dribbling basketball', 4),
+      _tag('action_basketball_dunk', '動作', '灌籃', 'dunking', 4),
+      _tag('action_soccer_kicking', '動作', '踢足球', 'kicking soccer ball', 4),
+      _tag('action_soccer_dribbling', '動作', '足球帶球', 'dribbling soccer ball', 4),
+      _tag('action_baseball_batting', '動作', '打棒球', 'batting', 4),
+      _tag('action_baseball_pitching', '動作', '投棒球', 'pitching', 4),
+      _tag('action_tennis_swing', '動作', '揮網球拍', 'swinging tennis racket', 4),
+      _tag('action_volleyball_spiking', '動作', '排球扣球', 'spiking volleyball', 4),
+      _tag('action_badminton_swing', '動作', '揮羽球拍', 'swinging badminton racket', 4),
+      _tag('action_archery', '動作', '射箭', 'drawing bow', 4),
+      _tag('action_aiming', '動作', '瞄準', 'aiming', 4),
+      _tag('action_sword_swinging', '動作', '揮劍', 'sword swinging', 4),
+      _tag('action_fencing', '動作', '擊劍', 'fencing', 4),
+      _tag('action_running', '動作', '奔跑', 'running', 4),
+      _tag('action_jumping', '動作', '跳躍', 'jumping', 4),
+      _tag('action_dancing', '動作', '跳舞', 'dancing', 4),
+      _tag('action_skating', '動作', '溜冰', 'ice skating', 4),
+      _tag('action_swimming', '動作', '游泳', 'swimming', 4),
+      _tag('action_cycling', '動作', '騎腳踏車', 'cycling', 4),
+      _tag('action_climbing', '動作', '攀爬', 'climbing', 4),
+      _tag('action_punching', '動作', '出拳', 'punching', 4),
+      _tag('action_kicking', '動作', '踢腿', 'kicking', 4),
+      _tag('action_throwing', '動作', '投擲', 'throwing', 4),
+      _tag('action_playing_guitar', '動作', '彈吉他', 'playing guitar', 4),
+      _tag('action_playing_piano', '動作', '彈鋼琴', 'playing piano', 4),
+      _tag('action_reading', '動作', '閱讀', 'reading', 4),
+      _tag('action_writing', '動作', '書寫', 'writing', 4),
+      _tag('action_painting', '動作', '繪畫', 'painting', 4),
+      _tag('action_photographing', '動作', '拍照', 'photography', 4),
+      _tag('action_using_phone', '動作', '使用手機', 'using smartphone', 4),
+      _tag('action_typing', '動作', '打字', 'typing', 4),
+      _tag('action_cooking', '動作', '烹飪', 'cooking', 4),
+      _tag('action_eating', '動作', '吃東西', 'eating', 4),
+      _tag('action_drinking', '動作', '喝東西', 'drinking', 4),
+
+      // Common props and handheld objects.
+      _tag('object_basketball', '物件', '籃球', 'basketball', 4),
+      _tag('object_soccer_ball', '物件', '足球', 'soccer ball', 4),
+      _tag('object_volleyball', '物件', '排球', 'volleyball', 4),
+      _tag('object_baseball', '物件', '棒球', 'baseball', 4),
+      _tag('object_baseball_bat', '物件', '棒球棒', 'baseball bat', 4),
+      _tag('object_tennis_racket', '物件', '網球拍', 'tennis racket', 4),
+      _tag('object_badminton_racket', '物件', '羽球拍', 'badminton racket', 4),
+      _tag('object_bow', '物件', '弓', 'bow', 4),
+      _tag('object_arrow', '物件', '箭', 'arrow', 4),
+      _tag('object_sword', '物件', '劍', 'sword', 4),
+      _tag('object_shield', '物件', '盾牌', 'shield', 4),
+      _tag('object_umbrella', '物件', '雨傘', 'umbrella', 4),
+      _tag('object_camera', '物件', '相機', 'camera', 4),
+      _tag('object_smartphone', '物件', '智慧型手機', 'smartphone', 4),
+      _tag('object_laptop', '物件', '筆記型電腦', 'laptop', 4),
+      _tag('object_tablet', '物件', '平板電腦', 'tablet', 4),
+      _tag('object_headphones', '物件', '耳機', 'headphones', 4),
+      _tag('object_book', '物件', '書本', 'book', 4),
+      _tag('object_notebook', '物件', '筆記本', 'notebook', 4),
+      _tag('object_pen', '物件', '原子筆', 'pen', 4),
+      _tag('object_pencil', '物件', '鉛筆', 'pencil', 4),
+      _tag('object_backpack', '物件', '背包', 'backpack', 4),
+      _tag('object_handbag', '物件', '手提包', 'handbag', 4),
+      _tag('object_briefcase', '物件', '公事包', 'briefcase', 4),
+      _tag('object_water_bottle', '物件', '水瓶', 'water bottle', 4),
+      _tag('object_cup', '物件', '杯子', 'cup', 4),
+      _tag('object_mug', '物件', '馬克杯', 'mug', 4),
+      _tag('object_plate', '物件', '盤子', 'plate', 4),
+      _tag('object_fork', '物件', '叉子', 'fork', 4),
+      _tag('object_spoon', '物件', '湯匙', 'spoon', 4),
+      _tag('object_chopsticks', '物件', '筷子', 'chopsticks', 4),
+      _tag('object_microphone', '物件', '麥克風', 'microphone', 4),
+      _tag('object_guitar', '物件', '吉他', 'guitar', 4),
+      _tag('object_violin', '物件', '小提琴', 'violin', 4),
+      _tag('object_piano', '物件', '鋼琴', 'piano', 4),
+      _tag('object_paintbrush', '物件', '畫筆', 'paintbrush', 4),
+      _tag('object_palette', '物件', '調色盤', 'palette', 4),
+      _tag('object_flower', '物件', '花朵', 'flower', 4),
+      _tag('object_bouquet', '物件', '花束', 'bouquet', 4),
+      _tag('object_balloon', '物件', '氣球', 'balloon', 4),
+      _tag('object_teddy_bear', '物件', '泰迪熊', 'teddy bear', 4),
+      _tag('object_stuffed_toy', '物件', '玩偶', 'stuffed toy', 4),
+      _tag('object_skateboard', '物件', '滑板', 'skateboard', 4),
+      _tag('object_bicycle', '物件', '腳踏車', 'bicycle', 4),
+      _tag('object_candle', '物件', '蠟燭', 'candle', 4),
+      _tag('object_key', '物件', '鑰匙', 'key', 4),
+      _tag('object_gift', '物件', '禮物', 'present', 4),
+
       // Breasts and nudity groups based on the supplied Danbooru references.
       _tag('body_flat_chest', '胸部', '平胸', 'flat chest', 5),
       _tag('body_small_breasts', '胸部', '小胸', 'small breasts', 5),
@@ -378,7 +526,6 @@ List<TagItem> _seedTags() => [
       _tag('body_cleavage', '胸部', '乳溝', 'cleavage', 5, adult: true),
       _tag('body_nipples', '胸部', '乳頭可見', 'nipples', 5, adult: true),
       _tag('body_breast_press', '胸部', '胸部擠壓', 'breast press', 5, adult: true),
-      _tag('body_groping', '胸部', '撫摸胸部', 'groping', 5, adult: true),
       _tag('nudity_nude', '裸露', '裸體', 'nude', 6, adult: true),
       _tag('nudity_topless', '裸露', '上空', 'topless', 6, adult: true),
       _tag('nudity_bottomless', '裸露', '下空', 'bottomless', 6, adult: true),
@@ -589,6 +736,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '臉部特徵': 11,
       '胸部': 12,
       '裸露': 13,
+      '髮型': 14,
       '服裝': 20,
       '服裝風格': 21,
       '服裝顏色': 22,
@@ -612,6 +760,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '姿勢': 41,
       '性行為': 42,
       '性姿勢': 43,
+      '動作': 44,
+      '物件': 45,
       '場景': 60,
       '畫面': 61,
     };
@@ -906,8 +1056,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .hasMatch(value)) {
       groups.add('hair_color');
     }
-    if (RegExp(r'\b(very\s+long|long|medium|short)\s+hair\b').hasMatch(value)) {
+    if (RegExp(r'\b(very\s+short|very\s+long|long|medium|short)\s+hair\b').hasMatch(value)) {
       groups.add('hair_length');
+    }
+    if (RegExp(
+            r'\b(bob\s+cut|pixie\s+cut|straight\s+hair|wavy\s+hair|curly\s+hair|messy\s+hair|spiky\s+hair|braid|braids|ponytail|twintails|bun|odango|drill\s+hair)\b')
+        .hasMatch(value)) {
+      groups.add('hair_style');
     }
     if (RegExp(
             r'\b(green|blue|red|purple|yellow|aqua|brown|pink|orange)\s+eyes\b')
@@ -1013,7 +1168,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _hairLengthTag(String value) {
     final normalized = _cleanTag(value).toLowerCase();
-    final match = RegExp(r'^(very long|long|medium|short) hair$')
+    final match = RegExp(r'^(very short|very long|long|medium|short) hair$')
         .firstMatch(normalized);
     return match?.group(0);
   }
@@ -1050,6 +1205,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final result = <String>[];
     switch (lengths.first) {
       case 'short hair':
+        result.add('long hair');
+        break;
+      case 'very short hair':
         result.add('long hair');
         break;
       case 'long hair':
@@ -1139,6 +1297,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'chromatic aberration': '色差',
       'artistic error': '藝術錯誤',
       'short hair': '短髮',
+      'very short hair': '極短髮',
       'long hair': '長髮',
       'very long hair': '超長髮',
       'medium hair': '中長髮',
@@ -2332,6 +2491,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   items: const [
                     '自訂角色',
                     '自訂特徵',
+                    '髮型',
                     '上衣',
                     '褲子',
                     '裙子',
@@ -2353,6 +2513,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '穿脫狀態',
                     '表情',
                     '姿勢',
+                    '動作',
+                    '物件',
                     '場景',
                     '其他',
                   ]
@@ -2411,6 +2573,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const personalGroups = {
                     '自訂角色',
                     '自訂特徵',
+                    '髮型',
                     '上衣',
                     '褲子',
                     '裙子',
@@ -2432,6 +2595,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '穿脫狀態',
                     '表情',
                     '姿勢',
+                    '動作',
+                    '物件',
                   };
                   if (personalGroups.contains(group)) {
                     _personTagIds(0).add(tag.id);
@@ -3205,14 +3370,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
                   .where(
-                      (tag) => ['外觀特徵', '臉部特徵', '胸部', '裸露'].contains(tag.group))
+                      (tag) => ['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'].contains(tag.group))
                   .map((tag) => tag.zh)
                   .join('、')
                   .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
-          _stepPersonTagPicker(['外觀特徵', '臉部特徵', '胸部', '裸露'],
+          _stepPersonTagPicker(['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'],
               nextLabel: '下一步：服裝',
-              instruction: '請在每位人物自己的區塊內設定外觀、臉部、胸部與裸露標籤。')),
+              instruction: '請在每位人物自己的區塊內設定外觀、髮型、臉部、胸部與裸露標籤。')),
       _stepCard(
           3,
           '服裝與穿脫狀態',
@@ -3258,17 +3423,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：姿勢', instruction: '請分別設定每位人物的表情。')),
       _stepCard(
           5,
-          '姿勢與 18+ 姿勢',
+          '姿勢、動作與物件',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) => ['姿勢', '性行為', '性姿勢'].contains(tag.group))
+              .where((tag) => ['姿勢', '動作', '物件', '性行為', '性姿勢'].contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
-          _stepPersonTagPicker(['姿勢', '性行為', '性姿勢'],
+          _stepPersonTagPicker(['姿勢', '動作', '物件', '性行為', '性姿勢'],
               nextLabel: '下一步：品質與負面',
-              instruction: '請分別設定每位人物的基本姿勢、性行為與性姿勢；不同人物可以使用不同姿勢。')),
+              instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件與性姿勢；不同人物可以使用不同姿勢。')),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
@@ -3300,7 +3465,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             const SizedBox(height: 7),
             Text(
-              '點選標籤加入提示詞；排序會依照角色 → 特徵 → 服裝 → 表情 → 姿勢。',
+                    '點選標籤加入提示詞；排序會依照角色 → 特徵 → 服裝 → 表情 → 姿勢／動作／物件。',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

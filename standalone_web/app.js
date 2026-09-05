@@ -90,6 +90,32 @@ const seedTags = [
   tag('trait_blue_hair', '外觀特徵', '藍髮', 'blue hair', 1, false, 'hair_color'),
   tag('trait_red_hair', '外觀特徵', '紅髮', 'red hair', 1, false, 'hair_color'),
   tag('trait_pink_hair', '外觀特徵', '粉紅髮', 'pink hair', 1, false, 'hair_color'),
+  tag('hair_very_short', '髮型', '極短髮', 'very short hair', 1, false, 'hair_length'),
+  tag('hair_medium', '髮型', '中長髮', 'medium hair', 1, false, 'hair_length'),
+  tag('hair_very_long', '髮型', '超長髮', 'very long hair', 1, false, 'hair_length'),
+  tag('hair_bob_cut', '髮型', '鮑伯頭', 'bob cut', 1, false, 'hair_style'),
+  tag('hair_pixie_cut', '髮型', '精靈短髮', 'pixie cut', 1, false, 'hair_style'),
+  tag('hair_straight', '髮型', '直髮', 'straight hair', 1, false, 'hair_style'),
+  tag('hair_wavy', '髮型', '波浪髮', 'wavy hair', 1, false, 'hair_style'),
+  tag('hair_curly', '髮型', '捲髮', 'curly hair', 1, false, 'hair_style'),
+  tag('hair_messy', '髮型', '凌亂髮', 'messy hair', 1, false, 'hair_style'),
+  tag('hair_spiky', '髮型', '刺蝟頭', 'spiky hair', 1, false, 'hair_style'),
+  tag('hair_ponytail', '髮型', '馬尾', 'ponytail', 1, false, 'hair_style'),
+  tag('hair_high_ponytail', '髮型', '高馬尾', 'high ponytail', 1, false, 'hair_style'),
+  tag('hair_low_ponytail', '髮型', '低馬尾', 'low ponytail', 1, false, 'hair_style'),
+  tag('hair_side_ponytail', '髮型', '側馬尾', 'side ponytail', 1, false, 'hair_style'),
+  tag('hair_twintails', '髮型', '雙馬尾', 'twintails', 1, false, 'hair_style'),
+  tag('hair_short_twintails', '髮型', '短雙馬尾', 'short twintails', 1, false, 'hair_style'),
+  tag('hair_low_twintails', '髮型', '低雙馬尾', 'low twintails', 1, false, 'hair_style'),
+  tag('hair_single_braid', '髮型', '單辮子', 'single braid', 1, false, 'hair_style'),
+  tag('hair_twin_braids', '髮型', '雙辮子', 'twin braids', 1, false, 'hair_style'),
+  tag('hair_side_braid', '髮型', '側辮子', 'side braid', 1, false, 'hair_style'),
+  tag('hair_french_braid', '髮型', '法式辮子', 'french braid', 1, false, 'hair_style'),
+  tag('hair_bun', '髮型', '髮髻', 'hair bun', 1, false, 'hair_style'),
+  tag('hair_double_bun', '髮型', '雙丸子頭', 'double bun', 1, false, 'hair_style'),
+  tag('hair_odango', '髮型', '丸子頭', 'odango', 1, false, 'hair_style'),
+  tag('hair_side_bun', '髮型', '側髮髻', 'side bun', 1, false, 'hair_style'),
+  tag('hair_drill', '髮型', '鑽頭捲', 'drill hair', 1, false, 'hair_style'),
   tag('trait_green_eyes', '臉部特徵', '綠眼睛', 'green eyes', 1, false, 'eye_color'),
   tag('trait_blue_eyes', '臉部特徵', '藍眼睛', 'blue eyes', 1, false, 'eye_color'),
   tag('trait_red_eyes', '臉部特徵', '紅眼睛', 'red eyes', 1, false, 'eye_color'),
@@ -311,6 +337,88 @@ const seedTags = [
   tag('pose_ass_up', '姿勢', '翹臀', 'ass up', 4, true),
   tag('pose_from_behind', '姿勢', '背後視角', 'from behind', 4),
   tag('pose_selfie', '姿勢', '自拍', 'selfie', 4),
+  tag('action_basketball_shooting', '動作', '投籃', 'shooting basketball', 4),
+  tag('action_basketball_dribbling', '動作', '運球', 'dribbling basketball', 4),
+  tag('action_basketball_dunk', '動作', '灌籃', 'dunking', 4),
+  tag('action_soccer_kicking', '動作', '踢足球', 'kicking soccer ball', 4),
+  tag('action_soccer_dribbling', '動作', '足球帶球', 'dribbling soccer ball', 4),
+  tag('action_baseball_batting', '動作', '打棒球', 'batting', 4),
+  tag('action_baseball_pitching', '動作', '投棒球', 'pitching', 4),
+  tag('action_tennis_swing', '動作', '揮網球拍', 'swinging tennis racket', 4),
+  tag('action_volleyball_spiking', '動作', '排球扣球', 'spiking volleyball', 4),
+  tag('action_badminton_swing', '動作', '揮羽球拍', 'swinging badminton racket', 4),
+  tag('action_archery', '動作', '射箭', 'drawing bow', 4),
+  tag('action_aiming', '動作', '瞄準', 'aiming', 4),
+  tag('action_sword_swinging', '動作', '揮劍', 'sword swinging', 4),
+  tag('action_fencing', '動作', '擊劍', 'fencing', 4),
+  tag('action_running', '動作', '奔跑', 'running', 4),
+  tag('action_jumping', '動作', '跳躍', 'jumping', 4),
+  tag('action_dancing', '動作', '跳舞', 'dancing', 4),
+  tag('action_skating', '動作', '溜冰', 'ice skating', 4),
+  tag('action_swimming', '動作', '游泳', 'swimming', 4),
+  tag('action_cycling', '動作', '騎腳踏車', 'cycling', 4),
+  tag('action_climbing', '動作', '攀爬', 'climbing', 4),
+  tag('action_punching', '動作', '出拳', 'punching', 4),
+  tag('action_kicking', '動作', '踢腿', 'kicking', 4),
+  tag('action_throwing', '動作', '投擲', 'throwing', 4),
+  tag('action_playing_guitar', '動作', '彈吉他', 'playing guitar', 4),
+  tag('action_playing_piano', '動作', '彈鋼琴', 'playing piano', 4),
+  tag('action_reading', '動作', '閱讀', 'reading', 4),
+  tag('action_writing', '動作', '書寫', 'writing', 4),
+  tag('action_painting', '動作', '繪畫', 'painting', 4),
+  tag('action_photographing', '動作', '拍照', 'photography', 4),
+  tag('action_using_phone', '動作', '使用手機', 'using smartphone', 4),
+  tag('action_typing', '動作', '打字', 'typing', 4),
+  tag('action_cooking', '動作', '烹飪', 'cooking', 4),
+  tag('action_eating', '動作', '吃東西', 'eating', 4),
+  tag('action_drinking', '動作', '喝東西', 'drinking', 4),
+  tag('object_basketball', '物件', '籃球', 'basketball', 4),
+  tag('object_soccer_ball', '物件', '足球', 'soccer ball', 4),
+  tag('object_volleyball', '物件', '排球', 'volleyball', 4),
+  tag('object_baseball', '物件', '棒球', 'baseball', 4),
+  tag('object_baseball_bat', '物件', '棒球棒', 'baseball bat', 4),
+  tag('object_tennis_racket', '物件', '網球拍', 'tennis racket', 4),
+  tag('object_badminton_racket', '物件', '羽球拍', 'badminton racket', 4),
+  tag('object_bow', '物件', '弓', 'bow', 4),
+  tag('object_arrow', '物件', '箭', 'arrow', 4),
+  tag('object_sword', '物件', '劍', 'sword', 4),
+  tag('object_shield', '物件', '盾牌', 'shield', 4),
+  tag('object_umbrella', '物件', '雨傘', 'umbrella', 4),
+  tag('object_camera', '物件', '相機', 'camera', 4),
+  tag('object_smartphone', '物件', '智慧型手機', 'smartphone', 4),
+  tag('object_laptop', '物件', '筆記型電腦', 'laptop', 4),
+  tag('object_tablet', '物件', '平板電腦', 'tablet', 4),
+  tag('object_headphones', '物件', '耳機', 'headphones', 4),
+  tag('object_book', '物件', '書本', 'book', 4),
+  tag('object_notebook', '物件', '筆記本', 'notebook', 4),
+  tag('object_pen', '物件', '原子筆', 'pen', 4),
+  tag('object_pencil', '物件', '鉛筆', 'pencil', 4),
+  tag('object_backpack', '物件', '背包', 'backpack', 4),
+  tag('object_handbag', '物件', '手提包', 'handbag', 4),
+  tag('object_briefcase', '物件', '公事包', 'briefcase', 4),
+  tag('object_water_bottle', '物件', '水瓶', 'water bottle', 4),
+  tag('object_cup', '物件', '杯子', 'cup', 4),
+  tag('object_mug', '物件', '馬克杯', 'mug', 4),
+  tag('object_plate', '物件', '盤子', 'plate', 4),
+  tag('object_fork', '物件', '叉子', 'fork', 4),
+  tag('object_spoon', '物件', '湯匙', 'spoon', 4),
+  tag('object_chopsticks', '物件', '筷子', 'chopsticks', 4),
+  tag('object_microphone', '物件', '麥克風', 'microphone', 4),
+  tag('object_guitar', '物件', '吉他', 'guitar', 4),
+  tag('object_violin', '物件', '小提琴', 'violin', 4),
+  tag('object_piano', '物件', '鋼琴', 'piano', 4),
+  tag('object_paintbrush', '物件', '畫筆', 'paintbrush', 4),
+  tag('object_palette', '物件', '調色盤', 'palette', 4),
+  tag('object_flower', '物件', '花朵', 'flower', 4),
+  tag('object_bouquet', '物件', '花束', 'bouquet', 4),
+  tag('object_balloon', '物件', '氣球', 'balloon', 4),
+  tag('object_teddy_bear', '物件', '泰迪熊', 'teddy bear', 4),
+  tag('object_stuffed_toy', '物件', '玩偶', 'stuffed toy', 4),
+  tag('object_skateboard', '物件', '滑板', 'skateboard', 4),
+  tag('object_bicycle', '物件', '腳踏車', 'bicycle', 4),
+  tag('object_candle', '物件', '蠟燭', 'candle', 4),
+  tag('object_key', '物件', '鑰匙', 'key', 4),
+  tag('object_gift', '物件', '禮物', 'present', 4),
   tag('act_kissing', '性行為', '接吻', 'kissing', 5),
   tag('act_sex', '性行為', '性交', 'sex', 5, true),
   tag('act_vaginal', '性行為', '陰道性交', 'vaginal', 5, true),
@@ -426,7 +534,8 @@ function traitOverrideGroups(en) {
   const value = String(en || '').trim().toLowerCase();
   const groups = new Set();
   if (/\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow)\s+hair\b/.test(value)) groups.add('hair_color');
-  if (/\b(very\s+long|long|medium|short)\s+hair\b/.test(value)) groups.add('hair_length');
+  if (/\b(very\s+short|very\s+long|long|medium|short)\s+hair\b/.test(value)) groups.add('hair_length');
+  if (/\b(bob\s+cut|pixie\s+cut|straight\s+hair|wavy\s+hair|curly\s+hair|messy\s+hair|spiky\s+hair|braid|braids|ponytail|twintails|bun|odango|drill\s+hair)\b/.test(value)) groups.add('hair_style');
   if (/\b(green|blue|red|purple|yellow|aqua|brown|pink|orange)\s+eyes\b/.test(value)) groups.add('eye_color');
   if (['slim', 'tall', 'curvy', 'muscular', 'petite'].includes(value)) groups.add('body_type');
   if (['flat chest', 'small breasts', 'medium breasts', 'large breasts', 'huge breasts'].includes(value)) groups.add('breast_size');
@@ -471,14 +580,14 @@ function characterTokens() {
 }
 function personTagSet(index) { if (!state.personSelected[index]) state.personSelected[index] = []; return new Set(state.personSelected[index]); }
 function savePersonTagSet(index, ids) { state.personSelected[index] = [...ids]; }
-const outputGroupOrder = { '外觀特徵': 10, '臉部特徵': 11, '胸部': 12, '裸露': 13, '服裝': 20, '服裝風格': 21, '服裝顏色': 22, '上衣': 23, '上衣風格': 24, '上衣顏色': 25, '褲子': 26, '裙子': 26, '下身風格': 27, '下身顏色': 28, '內衣': 30, '胸罩': 31, '內褲': 32, '襪子': 33, '鞋子': 34, '配件': 35, '服裝細節': 36, '服裝材質': 37, '穿脫狀態': 38, '表情': 40, '姿勢': 41, '性行為': 42, '性姿勢': 43, '場景': 60, '畫面': 61 };
+const outputGroupOrder = { '外觀特徵': 10, '臉部特徵': 11, '胸部': 12, '裸露': 13, '髮型': 14, '服裝': 20, '服裝風格': 21, '服裝顏色': 22, '上衣': 23, '上衣風格': 24, '上衣顏色': 25, '褲子': 26, '裙子': 26, '下身風格': 27, '下身顏色': 28, '內衣': 30, '胸罩': 31, '內褲': 32, '襪子': 33, '鞋子': 34, '配件': 35, '服裝細節': 36, '服裝材質': 37, '穿脫狀態': 38, '表情': 40, '姿勢': 41, '性行為': 42, '性姿勢': 43, '動作': 44, '物件': 45, '場景': 60, '畫面': 61 };
 function selectedTags(personIndex = null) { const ids = personIndex === null ? state.selected : personTagSet(personIndex); return allTags().filter(item => ids.has(item.id)).sort((a, b) => (outputGroupOrder[a.group] ?? 50) - (outputGroupOrder[b.group] ?? 50) || a.order - b.order || a.en.localeCompare(b.en)); }
 function personSelectedCount() { return Object.values(state.personSelected).reduce((total, ids) => total + ids.length, 0); }
 function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
 function positiveText() { return tokens().map(item => `${item}.`).join(' '); }
 function chineseText() { const list = [personSummary()]; state.peopleSlots.forEach((slot, index) => { if (!slot.detailed) return; list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...selectedTags(index).map(item => item.zh)].join('、')}`); }); list.push(...selectedTags().map(item => item.zh)); if (state.extra.trim()) list.push(`額外正向標籤：${state.extra.trim()}`); if (state.preprompt.trim()) list.push(`Amanatsu 品質前綴：${state.preprompt.trim()}`); return list.join('。'); }
-const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', duplicate: '重複內容', 'short hair': '短髮', 'long hair': '長髮', 'very long hair': '超長髮', 'medium hair': '中長髮' };
-function hairLengthTag(value) { const match = /^\s*(very long|long|medium|short) hair\s*$/i.exec(String(value || '')); return match ? match[0].toLowerCase() : ''; }
+const negativeTranslations = { lowres: '低解析度', 'worst quality': '最差品質', 'bad quality': '低品質', 'bad anatomy': '錯誤的人體結構', 'bad hands': '錯誤的手部', 'extra digits': '多餘手指', 'multiple views': '多重視角', 'fewer digits': '手指數量不足', 'extra limbs': '多餘肢體', 'missing fingers': '缺少手指', deformed: '變形', text: '文字', error: '錯誤', 'jpeg artifacts': 'JPEG 壓縮瑕疵', watermark: '浮水印', unfinished: '未完成', displeasing: '令人不悅', signature: '簽名', username: '使用者名稱', 'scan artifacts': '掃描瑕疵', 'bad feet': '錯誤的腳部', 'poorly drawn face': '臉部繪製不佳', duplicate: '重複內容', 'short hair': '短髮', 'very short hair': '極短髮', 'long hair': '長髮', 'very long hair': '超長髮', 'medium hair': '中長髮' };
+function hairLengthTag(value) { const match = /^\s*(very short|very long|long|medium|short) hair\s*$/i.exec(String(value || '')); return match ? match[0].toLowerCase() : ''; }
 function effectiveHairLength(slot, index) {
   if (!slot.detailed) return '';
   const selected = selectedTags(index).map(item => hairLengthTag(item.en)).find(Boolean);
@@ -498,7 +607,7 @@ function hairGuardNegativeTags() {
   });
   if (lengths.length !== 1) return [];
   const result = [];
-  if (lengths[0] === 'short hair') result.push('long hair');
+  if (lengths[0] === 'short hair' || lengths[0] === 'very short hair') result.push('long hair');
   else if (lengths[0] === 'long hair' || lengths[0] === 'very long hair') result.push('short hair');
   else if (lengths[0] === 'medium hair') result.push('short hair', 'long hair');
   return unique(result);
@@ -538,7 +647,7 @@ function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot()
 function toast(message) { const element = $('#toast'); if (!element) return; element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 1900); }
 function renderVersionInfo() { const label = $('#app-version'); if (label) label.textContent = `v${APP_VERSION.label}`; const outputVersion = $('#output-version'); if (outputVersion) outputVersion.textContent = APP_VERSION.label; const history = $('#version-history'); if (history) history.innerHTML = (APP_VERSION.history || []).map(item => `<article class="version-entry"><b>${esc(item.label)} · ${esc(item.date)}</b><p>${esc(item.notes)}</p></article>`).join(''); }
 function checkForVersionUpdate() { const previous = localStorage.getItem(VERSION_STORAGE_KEY); localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION.label); if (previous && previous !== APP_VERSION.label) { setTimeout(() => { toast(`已更新至 ${APP_VERSION.label}`); $('#version-dialog')?.showModal(); }, 350); } }
-function migrateLegacyPersonalTags(saved) { if (saved.personSelected) return; const personalGroups = new Set(['外觀特徵', '臉部特徵', '胸部', '裸露', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢', '性行為', '性姿勢']); const ids = allTags().filter(item => state.selected.has(item.id) && personalGroups.has(item.group)).map(item => item.id); if (ids.length) { state.personSelected[0] = ids; ids.forEach(id => state.selected.delete(id)); } }
+function migrateLegacyPersonalTags(saved) { if (saved.personSelected) return; const personalGroups = new Set(['外觀特徵', '臉部特徵', '胸部', '裸露', '髮型', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢', '動作', '物件', '性行為', '性姿勢']); const ids = allTags().filter(item => state.selected.has(item.id) && personalGroups.has(item.group)).map(item => item.id); if (ids.length) { state.personSelected[0] = ids; ids.forEach(id => state.selected.delete(id)); } }
 function restore() { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (!saved) return; Object.assign(state, saved); state.negativeTranslations = saved.negativeTranslations || {}; state.selected = new Set(saved.selected || []); state.personSelected = saved.personSelected || {}; migrateLegacyPersonalTags(saved); state.personQueries = {}; state.peopleSlots = (saved.peopleSlots || []).map(slot => ({ ...newSlot(), ...slot })); if (!state.peopleSlots.length) state.peopleSlots = [newSlot()]; state.customTags = saved.customTags || []; state.customCharacters = saved.customCharacters || []; state.recentCharacterIds = saved.recentCharacterIds || []; state.presets = saved.presets || []; state.count = state.peopleSlots.length; state.gender = state.peopleSlots[0].gender; } catch { toast('記憶資料無法讀取，已使用預設值。'); } }
 
 function setPeopleCount(value) { const count = Math.max(1, Math.min(10, Number(value) || 1)); while (state.peopleSlots.length < count) state.peopleSlots.push(newSlot()); while (state.peopleSlots.length > count) state.peopleSlots.pop(); Object.keys(state.personSelected).forEach(key => { if (Number(key) >= count) delete state.personSelected[key]; }); state.count = count; state.gender = state.peopleSlots[0].gender; lookupState.target = Math.min(lookupState.target, count - 1); }
@@ -683,7 +792,7 @@ function render() { renderWizard(); renderFilters(); renderTags(); renderPresets
 async function copyText(value, label) { try { await navigator.clipboard.writeText(value); } catch { const area = document.createElement('textarea'); area.value = value; document.body.append(area); area.select(); document.execCommand('copy'); area.remove(); } toast(`${label}已複製`); }
 function downloadBackup() { const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'betterwaifu-prompt-backup.json'; link.click(); URL.revokeObjectURL(link.href); toast('備份已匯出'); }
 function importBackup(file) { const reader = new FileReader(); reader.onload = () => { try { localStorage.setItem(STORAGE_KEY, reader.result); location.reload(); } catch { toast('JSON 備份格式無法讀取'); } }; reader.readAsText(file); }
-function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
+function groupOrder(group) { if (group === '場景') return 6; if (group === '表情') return 3; if (group === '姿勢') return 4; if (['動作', '物件'].includes(group)) return 4; if (['性行為', '性姿勢'].includes(group)) return 5; if (['服裝', '髮型', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態'].includes(group)) return 2; return 1; }
 
 document.addEventListener('click', event => {
   if (event.target.closest('[data-auto-search-anime]')) { searchRemoteAnime(); return; }
@@ -741,7 +850,7 @@ $('#export-btn').addEventListener('click', downloadBackup);
 $('#import-btn').addEventListener('click', () => $('#import-file').click());
 $('#import-file').addEventListener('change', event => { if (event.target.files?.[0]) importBackup(event.target.files[0]); event.target.value = ''; });
 $('#add-tag-btn').addEventListener('click', () => { $('#custom-zh').value = ''; $('#custom-en').value = ''; $('#custom-group').value = '自訂特徵'; $('#custom-dialog').showModal(); });
-$('#custom-form').addEventListener('submit', event => { event.preventDefault(); const zh = $('#custom-zh').value.trim(); const en = clean($('#custom-en').value); if (!zh || !en) return; const group = $('#custom-group').value; const item = { id: `custom_${Date.now()}`, group, zh, en, order: groupOrder(group), adult: false, conflictGroup: '', builtIn: false }; state.customTags.push(item); const personalGroup = ['自訂角色', '自訂特徵', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢'].includes(group); if (personalGroup) { const ids = personTagSet(0); ids.add(item.id); savePersonTagSet(0, ids); } else state.selected.add(item.id); $('#custom-dialog').close(); render(); toast('自訂標籤已加入'); });
+$('#custom-form').addEventListener('submit', event => { event.preventDefault(); const zh = $('#custom-zh').value.trim(); const en = clean($('#custom-en').value); if (!zh || !en) return; const group = $('#custom-group').value; const item = { id: `custom_${Date.now()}`, group, zh, en, order: groupOrder(group), adult: false, conflictGroup: '', builtIn: false }; state.customTags.push(item); const personalGroup = ['自訂角色', '自訂特徵', '髮型', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件', '服裝風格', '上衣風格', '下身風格', '上衣顏色', '下身顏色', '服裝顏色', '服裝細節', '服裝材質', '穿脫狀態', '表情', '姿勢', '動作', '物件'].includes(group); if (personalGroup) { const ids = personTagSet(0); ids.add(item.id); savePersonTagSet(0, ids); } else state.selected.add(item.id); $('#custom-dialog').close(); render(); toast('自訂標籤已加入'); });
 $('#character-form').addEventListener('submit', event => { event.preventDefault(); const animeZh = $('#character-anime-zh').value.trim(), animeEn = $('#character-anime-en').value.trim(), characterZh = $('#character-zh').value.trim(), characterEn = $('#character-en').value.trim(); if (!animeZh || !animeEn || !characterZh || !characterEn) return; const c = { id: `custom_character_${Date.now()}`, animeZh, animeEn, animeTag: clean($('#character-anime-tag').value) || slug(animeEn), characterZh, characterEn, characterTag: clean($('#character-tag').value) || slug(characterEn), traits: splitTags($('#character-traits-en').value).map((en, index) => ({ en, zh: splitTags($('#character-traits-zh').value)[index] || en })) }; state.customCharacters.push(c); const emptySlot = state.peopleSlots.find(slot => slot.mode === '動漫角色' && !slot.characterId); if (emptySlot) { emptySlot.animeTag = c.animeTag; emptySlot.animeQuery = ''; emptySlot.characterId = c.id; } state.recentCharacterIds = [c.id, ...state.recentCharacterIds].slice(0, 10); $('#character-dialog').close(); render(); toast('角色資料已儲存'); });
 
 function charactersStep() {
@@ -753,10 +862,10 @@ function renderWizard() {
   $('#wizard').innerHTML = [
     stepCard(0, '場景與畫面', '背景、時間、鏡頭與構圖', '⌂', tagsStep(['場景', '畫面'])),
     stepCard(1, '人物與角色資料', '在角色資料卡調整人物數量與性別', '♙', charactersStep()),
-    stepCard(2, '角色特徵', '每位人物各自設定外觀、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')),
+    stepCard(2, '角色特徵', '每位人物各自設定外觀、髮型、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')),
     stepCard(3, '服裝與穿脫狀態', '先選服裝類型，再分開選顏色、蕾絲、材質與穿脫狀態', '◇', clothingStep()),
     stepCard(4, '表情', '每位人物各自設定表情', '☺', personTagsStep(['表情'], '請分別設定每位人物的表情。')),
-    stepCard(5, '姿勢與 18+ 姿勢', '每位人物各自設定姿勢；不同人物可以使用不同姿勢', '♧', personTagsStep(['姿勢', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、性行為與性姿勢。')),
+    stepCard(5, '姿勢、動作與物件', '每位人物可設定基本姿勢、運動動作與手持物件', '♧', personTagsStep(['姿勢', '動作', '物件', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、運動動作、常見物件與 18+ 姿勢。')),
     stepCard(6, '品質與負面標籤', '全圖共用的品質、額外與負面標籤', '✓', finalStep()),
   ].join('');
 }
