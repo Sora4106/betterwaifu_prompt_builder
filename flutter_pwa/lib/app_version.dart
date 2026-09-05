@@ -1,7 +1,8 @@
-const appVersion = '1.1.11';
-const appBuildNumber = 13;
-const appVersionLabel = '1.1.11+13';
+const appVersion = '1.1.12';
+const appBuildNumber = 14;
+const appVersionLabel = '1.1.12+14';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: make tag controls responsive'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand pose detail skirt lengths and anime aliases'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand hairstyles actions and objects'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add automatic hair length negative guards'},

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.11",
-  "build": 13,
-  "label": "1.1.11+13",
+  "version": "1.1.12",
+  "build": 14,
+  "label": "1.1.12+14",
   "history": [
+    {
+      "version": "1.1.12",
+      "build": 14,
+      "label": "1.1.12+14",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: make tag controls responsive"
+    },
     {
       "version": "1.1.11",
       "build": 13,
