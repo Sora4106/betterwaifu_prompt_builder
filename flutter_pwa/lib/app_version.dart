@@ -1,7 +1,8 @@
-const appVersion = '1.1.15';
-const appBuildNumber = 17;
-const appVersionLabel = '1.1.15+17';
+const appVersion = '1.1.16';
+const appBuildNumber = 18;
+const appVersionLabel = '1.1.16+18';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show imported anime characters in prompt content'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: improve button contrast and adaptive category widths'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: support Chinese separators for extra tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: translate extra positive tags and expand expression catalog'},

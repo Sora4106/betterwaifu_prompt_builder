@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.16+18 - 2026-09-05
+
+- 自動偵測：fix: show imported anime characters in prompt content
+
+
 ## 1.1.15+17 - 2026-09-05
 
 - 自動偵測：fix: improve button contrast and adaptive category widths
