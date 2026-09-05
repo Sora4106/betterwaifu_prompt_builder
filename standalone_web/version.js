@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.1",
-  "build": 3,
-  "label": "1.1.1+3",
+  "version": "1.1.2",
+  "build": 4,
+  "label": "1.1.2+4",
   "history": [
+    {
+      "version": "1.1.2",
+      "build": 4,
+      "label": "1.1.2+4",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: refine character overrides and clothing filters"
+    },
     {
       "version": "1.1.1",
       "build": 3,
