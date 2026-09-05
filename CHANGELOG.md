@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.18+20 - 2026-09-05
+
+- 自動偵測：fix: wrap category filters for small screens
+
+
 ## 1.1.17+19 - 2026-09-05
 
 - 自動偵測：fix: map imported characters to anime tags and close lookup
