@@ -1,7 +1,8 @@
-const appVersion = '1.1.3';
-const appBuildNumber = 5;
-const appVersionLabel = '1.1.3+5';
+const appVersion = '1.1.4';
+const appBuildNumber = 6;
+const appVersionLabel = '1.1.4+6';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: split clothing colors and enforce outfit layers'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add reset control and section navigation'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: refine character overrides and clothing filters'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: scope tags to each character'},

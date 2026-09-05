@@ -1,8 +1,15 @@
 {
-  "version": "1.1.3",
-  "build": 5,
-  "label": "1.1.3+5",
+  "version": "1.1.4",
+  "build": 6,
+  "label": "1.1.4+6",
   "history": [
+    {
+      "version": "1.1.4",
+      "build": 6,
+      "label": "1.1.4+6",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: split clothing colors and enforce outfit layers"
+    },
     {
       "version": "1.1.3",
       "build": 5,
