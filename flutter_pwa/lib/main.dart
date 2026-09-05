@@ -1247,6 +1247,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
         );
       if (_personSlots.isEmpty) _personSlots.add(PersonSlot());
+      // Older builds saved imported remote characters with a malformed mode
+      // value. A non-empty characterId that points to the catalog is always
+      // an anime-character slot, so repair it when restoring local memory.
+      for (final slot in _personSlots) {
+        if (slot.characterId.isNotEmpty &&
+            _allCharacters.any((item) => item.id == slot.characterId)) {
+          slot.mode = '動漫角色';
+        }
+      }
       _recentCharacterIds.addAll(
         (data['recentCharacterIds'] as List? ?? []).map((id) => '$id'),
       );
@@ -2760,7 +2769,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _customCharacters.addAll(imported);
     if (imported.isNotEmpty) {
       final slot = _personSlots[slotIndex];
-      slot.mode = '?憤閫';
+      slot.mode = '動漫角色';
       slot.characterId = imported.first.id;
       slot.animeTag = imported.first.animeTag;
       _recentCharacterIds
