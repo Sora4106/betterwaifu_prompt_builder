@@ -332,8 +332,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_style'),
       _tag('hair_french_braid', '髮型', '法式辮子', 'french braid', 1,
           conflictGroup: 'hair_style'),
-      _tag('hair_bun', '髮型', '髮髻', 'hair bun', 1,
-          conflictGroup: 'hair_style'),
+      _tag('hair_bun', '髮型', '髮髻', 'hair bun', 1, conflictGroup: 'hair_style'),
       _tag('hair_double_bun', '髮型', '雙丸子頭', 'double bun', 1,
           conflictGroup: 'hair_style'),
       _tag('hair_odango', '髮型', '丸子頭', 'odango', 1,
@@ -429,7 +428,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'accessory_color'),
       _tag('accessory_color_silver', '配件顏色', '銀色配件', 'silver accessory', 2,
           conflictGroup: 'accessory_color'),
-      _tag('accessory_color_multicolored', '配件顏色', '多彩配件', 'multicolored accessory', 2,
+      _tag('accessory_color_multicolored', '配件顏色', '多彩配件',
+          'multicolored accessory', 2,
           conflictGroup: 'accessory_color'),
 
       // Face tags and expressions.
@@ -479,9 +479,11 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'basic_pose'),
       _tag('pose_standing_one_leg', '姿勢', '單腳站立', 'standing on one leg', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_crossed_legs', '姿勢', '交叉腿站立', 'standing with crossed legs', 4,
+      _tag('pose_standing_crossed_legs', '姿勢', '交叉腿站立',
+          'standing with crossed legs', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_legs_apart', '姿勢', '分腿站立', 'standing with legs apart', 4,
+      _tag('pose_standing_legs_apart', '姿勢', '分腿站立', 'standing with legs apart',
+          4,
           conflictGroup: 'basic_pose'),
       _tag('pose_standing_tiptoes', '姿勢', '踮腳站立', 'standing on tiptoes', 4,
           conflictGroup: 'basic_pose'),
@@ -542,7 +544,8 @@ List<TagItem> _seedTags() => [
 
       // Dynamic actions and sports poses.
       _tag('action_basketball_shooting', '動作', '投籃', 'shooting basketball', 4),
-      _tag('action_basketball_dribbling', '動作', '運球', 'dribbling basketball', 4),
+      _tag(
+          'action_basketball_dribbling', '動作', '運球', 'dribbling basketball', 4),
       _tag('action_basketball_dunk', '動作', '灌籃', 'dunking', 4),
       _tag('action_soccer_kicking', '動作', '踢足球', 'kicking soccer ball', 4),
       _tag('action_soccer_dribbling', '動作', '足球帶球', 'dribbling soccer ball', 4),
@@ -550,7 +553,8 @@ List<TagItem> _seedTags() => [
       _tag('action_baseball_pitching', '動作', '投棒球', 'pitching', 4),
       _tag('action_tennis_swing', '動作', '揮網球拍', 'swinging tennis racket', 4),
       _tag('action_volleyball_spiking', '動作', '排球扣球', 'spiking volleyball', 4),
-      _tag('action_badminton_swing', '動作', '揮羽球拍', 'swinging badminton racket', 4),
+      _tag('action_badminton_swing', '動作', '揮羽球拍', 'swinging badminton racket',
+          4),
       _tag('action_archery', '動作', '射箭', 'drawing bow', 4),
       _tag('action_aiming', '動作', '瞄準', 'aiming', 4),
       _tag('action_sword_swinging', '動作', '揮劍', 'sword swinging', 4),
@@ -804,8 +808,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
   final Map<int, List<_RemoteAnime>> _remoteAnimeResults =
       <int, List<_RemoteAnime>>{};
-  final Map<int, _RemoteAnime> _remoteAnimeSelection =
-      <int, _RemoteAnime>{};
+  final Map<int, _RemoteAnime> _remoteAnimeSelection = <int, _RemoteAnime>{};
   final Map<int, List<_RemoteCharacter>> _remoteCharacters =
       <int, List<_RemoteCharacter>>{};
   final Set<int> _remoteLookupLoading = <int>{};
@@ -891,7 +894,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   int _compareOutputTags(TagItem a, TagItem b) {
-    final groupOrder = _outputGroupOrder(a.group).compareTo(_outputGroupOrder(b.group));
+    final groupOrder =
+        _outputGroupOrder(a.group).compareTo(_outputGroupOrder(b.group));
     if (groupOrder != 0) return groupOrder;
     final catalogOrder = a.order.compareTo(b.order);
     return catalogOrder == 0 ? a.en.compareTo(b.en) : catalogOrder;
@@ -1069,7 +1073,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
-      _stepIndex = ((data['stepIndex'] as num?)?.toInt() ?? 0).clamp(0, 6).toInt();
+      _stepIndex =
+          ((data['stepIndex'] as num?)?.toInt() ?? 0).clamp(0, 6).toInt();
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -1178,7 +1183,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .hasMatch(value)) {
       groups.add('hair_color');
     }
-    if (RegExp(r'\b(very\s+short|very\s+long|long|medium|short)\s+hair\b').hasMatch(value)) {
+    if (RegExp(r'\b(very\s+short|very\s+long|long|medium|short)\s+hair\b')
+        .hasMatch(value)) {
       groups.add('hair_length');
     }
     if (RegExp(
@@ -1428,12 +1434,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         (RegExp(r'[\u4e00-\u9fff]').hasMatch(tag) ? tag : '未內建翻譯：$tag');
   }
 
-  String get _negativeZh => _negativeTokens
-      .map((tag) => '${_negativeTranslation(tag)}。')
-      .join(' ');
+  String get _negativeZh =>
+      _negativeTokens.map((tag) => '${_negativeTranslation(tag)}。').join(' ');
 
-  String get _negativeText =>
-      _negativeTokens.map((tag) => '$tag.').join(' ');
+  String get _negativeText => _negativeTokens.map((tag) => '$tag.').join(' ');
 
   void _toggleNegativeTag(String english, String chinese) {
     final tags = _extraTags(_negative.text);
@@ -1456,42 +1460,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final englishController = TextEditingController();
     final chineseController = TextEditingController();
     final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('新增負面標籤'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: englishController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: '英文標籤',
-                  hintText: '例如 blurry 或 bad composition',
-                ),
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('新增負面標籤'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: englishController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: '英文標籤',
+                hintText: '例如 blurry 或 bad composition',
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: chineseController,
-                decoration: const InputDecoration(
-                  labelText: '中文翻譯',
-                  hintText: '例如 模糊 或 構圖不佳',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('取消'),
             ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('加入'),
+            const SizedBox(height: 10),
+            TextField(
+              controller: chineseController,
+              decoration: const InputDecoration(
+                labelText: '中文翻譯',
+                hintText: '例如 模糊 或 構圖不佳',
+              ),
             ),
           ],
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('加入'),
+          ),
+        ],
+      ),
+    );
     final english = _cleanTag(englishController.text);
     final chinese = _cleanTag(chineseController.text).ifEmpty(english);
     englishController.dispose();
@@ -1509,9 +1513,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _negativeTagPicker() {
-    final selected = _extraTags(_negative.text)
-        .map((item) => item.toLowerCase())
-        .toSet();
+    final selected =
+        _extraTags(_negative.text).map((item) => item.toLowerCase()).toSet();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1738,8 +1741,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (personIndex != null &&
         tag.group == '服裝顏色' &&
         !currentTags.any((item) => _conflictGroup(item) == 'one_piece')) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('請先選擇連身裝，才可以設定連身裝顏色。')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('請先選擇連身裝，才可以設定連身裝顏色。')));
       return;
     }
     if (targetIds.contains(tag.id)) {
@@ -2051,7 +2054,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Map<String, dynamic>.from(jsonDecode(raw) as Map);
   }
 
-  Future<Map<String, dynamic>> _anilistJson(String query, String keyword) async {
+  Future<Map<String, dynamic>> _anilistJson(
+      String query, String keyword) async {
     final response = await html.HttpRequest.request(
       'https://graphql.anilist.co',
       method: 'POST',
@@ -2061,7 +2065,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'variables': {'search': keyword},
       }),
     );
-    return Map<String, dynamic>.from(jsonDecode(response.responseText ?? '{}') as Map);
+    return Map<String, dynamic>.from(
+        jsonDecode(response.responseText ?? '{}') as Map);
   }
 
   List<String> _animeSearchTerms(String query) {
@@ -2079,8 +2084,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '咒術迴戰': ['Jujutsu Kaisen', '呪術廻戦'],
       '我的英雄學院': ['My Hero Academia', 'Boku no Hero Academia', '僕のヒーローアカデミア'],
       '間諜家家酒': ['SPY x FAMILY', 'SPY×FAMILY'],
-      '葬送的芙莉蓮': ["Frieren: Beyond Journey's End", 'Sousou no Frieren', '葬送のフリーレン'],
-      '涼宮春日的憂鬱': ['The Melancholy of Haruhi Suzumiya', 'Suzumiya Haruhi no Yuuutsu', '涼宮ハルヒの憂鬱'],
+      '葬送的芙莉蓮': [
+        "Frieren: Beyond Journey's End",
+        'Sousou no Frieren',
+        '葬送のフリーレン'
+      ],
+      '涼宮春日的憂鬱': [
+        'The Melancholy of Haruhi Suzumiya',
+        'Suzumiya Haruhi no Yuuutsu',
+        '涼宮ハルヒの憂鬱'
+      ],
       '出包王女': ['To LOVE-Ru', 'To LOVEる -とらぶる-'],
     };
     final input = query.trim();
@@ -2124,44 +2137,57 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final results = <Map>[];
       for (final term in _animeSearchTerms(query)) {
         final data = await _anilistJson(queryText, term);
-        final page = ((data['data'] as Map?)?['Page'] as Map?)?['media'] as List? ?? [];
+        final page =
+            ((data['data'] as Map?)?['Page'] as Map?)?['media'] as List? ?? [];
         results.addAll(page.whereType<Map>());
         if (results.isNotEmpty) break;
       }
       final seenIds = <int>{};
-      final mapped = results.where((item) {
-        final id = (item['id'] as num?)?.toInt() ?? 0;
-        if (id <= 0 || seenIds.contains(id)) return false;
-        seenIds.add(id);
-        return true;
-      }).map((item) {
-        final title = Map<String, dynamic>.from(item['title'] as Map? ?? {});
-        final date = Map<String, dynamic>.from(item['startDate'] as Map? ?? {});
-        final characters = ((item['characters'] as Map?)?['edges'] as List? ?? [])
-            .whereType<Map>()
-            .map((edge) {
-              final node = Map<String, dynamic>.from(edge['node'] as Map? ?? {});
-              final name = Map<String, dynamic>.from(node['name'] as Map? ?? {});
-              return _RemoteCharacter(
-                id: (node['id'] as num?)?.toInt() ?? 0,
-                name: '${name['full'] ?? ''}',
-                nameKanji: '${name['native'] ?? ''}',
-                role: '${edge['role'] ?? ''}',
-                about: '${node['description'] ?? ''}',
-              );
-            })
-            .where((character) => character.id > 0 && character.name.isNotEmpty)
-            .toList();
-        return _RemoteAnime(
-          id: (item['id'] as num?)?.toInt() ?? 0,
-          title: '${title['english'] ?? title['romaji'] ?? title['native'] ?? ''}',
-          titleJapanese: '${title['native'] ?? ''}',
-          year: (date['year'] as num?)?.toInt(),
-          source: 'anilist',
-          characters: characters,
-        );
-      }).where((item) => item.id > 0 && item.title.isNotEmpty).toList();
-      final mappedResults = mapped.where((item) => item.id > 0 && item.title.isNotEmpty).toList();
+      final mapped = results
+          .where((item) {
+            final id = (item['id'] as num?)?.toInt() ?? 0;
+            if (id <= 0 || seenIds.contains(id)) return false;
+            seenIds.add(id);
+            return true;
+          })
+          .map((item) {
+            final title =
+                Map<String, dynamic>.from(item['title'] as Map? ?? {});
+            final date =
+                Map<String, dynamic>.from(item['startDate'] as Map? ?? {});
+            final characters =
+                ((item['characters'] as Map?)?['edges'] as List? ?? [])
+                    .whereType<Map>()
+                    .map((edge) {
+                      final node =
+                          Map<String, dynamic>.from(edge['node'] as Map? ?? {});
+                      final name =
+                          Map<String, dynamic>.from(node['name'] as Map? ?? {});
+                      return _RemoteCharacter(
+                        id: (node['id'] as num?)?.toInt() ?? 0,
+                        name: '${name['full'] ?? ''}',
+                        nameKanji: '${name['native'] ?? ''}',
+                        role: '${edge['role'] ?? ''}',
+                        about: '${node['description'] ?? ''}',
+                      );
+                    })
+                    .where((character) =>
+                        character.id > 0 && character.name.isNotEmpty)
+                    .toList();
+            return _RemoteAnime(
+              id: (item['id'] as num?)?.toInt() ?? 0,
+              title:
+                  '${title['english'] ?? title['romaji'] ?? title['native'] ?? ''}',
+              titleJapanese: '${title['native'] ?? ''}',
+              year: (date['year'] as num?)?.toInt(),
+              source: 'anilist',
+              characters: characters,
+            );
+          })
+          .where((item) => item.id > 0 && item.title.isNotEmpty)
+          .toList();
+      final mappedResults =
+          mapped.where((item) => item.id > 0 && item.title.isNotEmpty).toList();
       if (!mounted) return;
       setState(() {
         _remoteAnimeResults[slotIndex] = mappedResults;
@@ -2190,27 +2216,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final characters = anime.source == 'anilist'
           ? anime.characters
           : ((await _remoteJson(
-                      'https://api.jikan.moe/v4/anime/${anime.id}/characters'))['data']
-                  as List? ?? [])
-          .whereType<Map>()
-          .map((item) {
-            final character = Map<String, dynamic>.from(
-                item['character'] as Map? ?? <String, dynamic>{});
-            return _RemoteCharacter(
-              id: (character['mal_id'] as num?)?.toInt() ?? 0,
-              name: '${character['name'] ?? ''}',
-              nameKanji: '${character['name_kanji'] ?? ''}',
-              role: '${item['role'] ?? ''}',
-            );
-          })
-          .where((item) => item.id > 0 && item.name.isNotEmpty)
-          .toList();
+                          'https://api.jikan.moe/v4/anime/${anime.id}/characters'))[
+                      'data'] as List? ??
+                  [])
+              .whereType<Map>()
+              .map((item) {
+                final character = Map<String, dynamic>.from(
+                    item['character'] as Map? ?? <String, dynamic>{});
+                return _RemoteCharacter(
+                  id: (character['mal_id'] as num?)?.toInt() ?? 0,
+                  name: '${character['name'] ?? ''}',
+                  nameKanji: '${character['name_kanji'] ?? ''}',
+                  role: '${item['role'] ?? ''}',
+                );
+              })
+              .where((item) => item.id > 0 && item.name.isNotEmpty)
+              .toList();
       if (!mounted) return;
       final slot = _personSlots[slotIndex];
       slot.animeTag = anime.tag;
-      slot.remoteAnimeZh = anime.titleJapanese.isEmpty
-          ? anime.title
-          : anime.titleJapanese;
+      slot.remoteAnimeZh =
+          anime.titleJapanese.isEmpty ? anime.title : anime.titleJapanese;
       slot.remoteAnimeEn = anime.title;
       slot.animeQuery = '';
       _clearPersonSearchController(slotIndex, 'anime');
@@ -2230,8 +2256,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Future<String> _remoteCharacterAbout(int id) async {
     try {
-      final data = await _remoteJson(
-          'https://api.jikan.moe/v4/characters/$id/full');
+      final data =
+          await _remoteJson('https://api.jikan.moe/v4/characters/$id/full');
       return '${data['data']?['about'] ?? ''}';
     } catch (_) {
       return '';
@@ -2326,11 +2352,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   CatalogCharacter _remoteCatalogCharacter(
       _RemoteAnime anime, _RemoteCharacter remote) {
     CatalogCharacter? local;
-    final normalized = remote.name.toLowerCase().replaceAll(
-        RegExp(r'[^a-z0-9]'), '');
+    final normalized =
+        remote.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
     for (final item in _allCharacters) {
-      final itemName = item.characterEn.toLowerCase().replaceAll(
-          RegExp(r'[^a-z0-9]'), '');
+      final itemName =
+          item.characterEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       if (itemName == normalized ||
           item.characterTag.toLowerCase() == _slug(remote.name)) {
         local = item;
@@ -2386,8 +2412,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _remoteLookupLoading.remove(slotIndex);
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓外觀特徵。')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓外觀特徵。')));
   }
 
   Widget _remoteAnimePanel(int index) {
@@ -2399,10 +2425,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       children: [
         const SizedBox(height: 8),
         const Text('自動查詢結果', style: TextStyle(fontWeight: FontWeight.w700)),
-        if (error != null) Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(error),
-        ),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(error),
+          ),
         ...results.map((anime) => ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
@@ -2453,8 +2480,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 trailing: TextButton(
                   onPressed: _remoteLookupLoading.contains(index)
                       ? null
-                      : () => _importRemoteCharacters(index,
-                          only: [character]),
+                      : () => _importRemoteCharacters(index, only: [character]),
                   child: const Text('匯入'),
                 ),
               );
@@ -2862,17 +2888,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }).toList();
   }
 
+  double _adaptiveChipLabelWidth(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width < 430) return 124;
+    if (width < 800) return 154;
+    return 190;
+  }
+
   Widget _tagChip(TagItem tag, {int? personIndex}) {
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
-    return FilterChip(
-      selected: selected,
-      label: Text('${tag.zh}  ·  ${tag.en}'),
-      avatar: tag.adult ? const Icon(Icons.eighteen_mp, size: 15) : null,
-      backgroundColor: _groupColor(tag.group, context).withOpacity(.32),
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      onSelected: (_) => _toggle(tag, personIndex: personIndex),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
+      ),
+      child: FilterChip(
+        selected: selected,
+        label: Text('${tag.zh}  ·  ${tag.en}'),
+        avatar: tag.adult ? const Icon(Icons.eighteen_mp, size: 15) : null,
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+        labelPadding: EdgeInsets.zero,
+        visualDensity: VisualDensity.standard,
+        backgroundColor: _groupColor(tag.group, context).withOpacity(.32),
+        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+        onSelected: (_) => _toggle(tag, personIndex: personIndex),
+      ),
     );
   }
 
@@ -2937,26 +2978,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   setState(() => _personTagQueries[personIndex] = value),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: groups.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 6),
-            itemBuilder: (_, index) {
-              final group = groups[index];
-              return ChoiceChip(
-                  label: Text(_wizardGroupLabel(group)),
-                  selected: group == currentGroup,
-                  onSelected: (_) => setState(() {
-                        if (personIndex == null) {
-                          _activeGroup = group;
-                        } else {
-                          _personActiveGroups[groupKey!] = group;
-                        }
-                      }));
-            },
-          ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: groups.map((group) {
+            return ChoiceChip(
+                label: Text(_wizardGroupLabel(group)),
+                selected: group == currentGroup,
+                onSelected: (_) => setState(() {
+                      if (personIndex == null) {
+                        _activeGroup = group;
+                      } else {
+                        _personActiveGroups[groupKey!] = group;
+                      }
+                    }));
+          }).toList(),
         ),
         const SizedBox(height: 12),
         if (visible.isEmpty)
@@ -3086,8 +3122,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final index = entry.key;
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
-          final hasOnePiece = _selectedTagsForPerson(index).any(
-              (tag) => _conflictGroup(tag) == 'one_piece');
+          final hasOnePiece = _selectedTagsForPerson(index)
+              .any((tag) => _conflictGroup(tag) == 'one_piece');
           final visibleDetails = hasOnePiece
               ? details
               : details.where((group) => group != '服裝顏色').toList();
@@ -3591,8 +3627,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               : _personSelectedIds.values
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
-                  .where(
-                      (tag) => ['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'].contains(tag.group))
+                  .where((tag) =>
+                      ['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'].contains(tag.group))
                   .map((tag) => tag.zh)
                   .join('、')
                   .ifEmpty('尚未選擇'),
@@ -3648,7 +3684,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           '姿勢、動作與物件',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) => ['姿勢', '動作', '物件', '性行為', '性姿勢'].contains(tag.group))
+              .where(
+                  (tag) => ['姿勢', '動作', '物件', '性行為', '性姿勢'].contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
@@ -3687,7 +3724,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             const SizedBox(height: 7),
             Text(
-                    '點選標籤加入提示詞；排序會依照角色 → 特徵 → 服裝 → 表情 → 姿勢／動作／物件。',
+              '點選標籤加入提示詞；排序會依照角色 → 特徵 → 服裝 → 表情 → 姿勢／動作／物件。',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -3708,21 +3745,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _groups.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 7),
-                itemBuilder: (_, index) {
-                  final group = _groups[index];
-                  return ChoiceChip(
-                    label: Text(group),
-                    selected: _activeGroup == group,
-                    onSelected: (_) => setState(() => _activeGroup = group),
-                  );
-                },
-              ),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: _groups.map((group) {
+                return ChoiceChip(
+                  label: Text(group),
+                  selected: _activeGroup == group,
+                  onSelected: (_) => setState(() => _activeGroup = group),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 12),
             if (visible.isEmpty)
@@ -4249,6 +4281,10 @@ void main() {
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),
           filled: true,
+        ),
+        chipTheme: const ChipThemeData(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          labelStyle: TextStyle(fontSize: 12, height: 1.25),
         ),
         cardTheme: const CardThemeData(margin: EdgeInsets.zero, elevation: 0),
       ),
