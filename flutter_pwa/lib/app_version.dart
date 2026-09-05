@@ -1,7 +1,8 @@
-const appVersion = '1.1.9';
-const appBuildNumber = 11;
-const appVersionLabel = '1.1.9+11';
+const appVersion = '1.1.10';
+const appBuildNumber = 12;
+const appVersionLabel = '1.1.10+12';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand hairstyles actions and objects'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add automatic hair length negative guards'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: derive people count from character cards'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add editable negative tag library'},

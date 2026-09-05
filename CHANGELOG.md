@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.10+12 - 2026-09-05
+
+- 自動偵測：feat: expand hairstyles actions and objects
+
+
 ## 1.1.9+11 - 2026-09-05
 
 - 自動偵測：feat: add automatic hair length negative guards
