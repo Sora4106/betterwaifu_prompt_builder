@@ -78,6 +78,8 @@ class PersonSlot {
   bool detailed = true;
   String mode = '原創';
   String characterId = '';
+  String animeQuery = '';
+  String animeTag = '';
   String query = '';
   String originalAnimeZh = '';
   String originalAnimeEn = '';
@@ -92,6 +94,8 @@ class PersonSlot {
         'detailed': detailed,
         'mode': mode,
         'characterId': characterId,
+        'animeQuery': animeQuery,
+        'animeTag': animeTag,
         'query': query,
         'originalAnimeZh': originalAnimeZh,
         'originalAnimeEn': originalAnimeEn,
@@ -108,6 +112,8 @@ class PersonSlot {
         ..detailed = json['detailed'] != false
         ..mode = '${json['mode'] ?? '原創'}'
         ..characterId = '${json['characterId'] ?? ''}'
+        ..animeQuery = '${json['animeQuery'] ?? ''}'
+        ..animeTag = '${json['animeTag'] ?? ''}'
         ..query = '${json['query'] ?? ''}'
         ..originalAnimeZh = '${json['originalAnimeZh'] ?? ''}'
         ..originalAnimeEn = '${json['originalAnimeEn'] ?? ''}'
@@ -433,11 +439,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _supplemental =
       supplementalTags.map(_catalogTag).toList();
   final Set<String> _selectedIds = <String>{};
+  final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
+  final Map<int, String> _personTagQueries = <int, String>{};
   final List<TagItem> _customTags = <TagItem>[];
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
   final List<PersonSlot> _personSlots = <PersonSlot>[PersonSlot()];
   final List<String> _recentCharacterIds = <String>[];
   final List<Preset> _presets = <Preset>[];
+  final Map<String, TextEditingController> _personSearchControllers =
+      <String, TextEditingController>{};
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _negative = TextEditingController(
@@ -477,6 +487,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     return tags;
   }
+
+  Set<String> _personTagIds(int index) =>
+      _personSelectedIds.putIfAbsent(index, () => <String>{});
+
+  List<TagItem> _selectedTagsForPerson(int index) {
+    final ids = _personTagIds(index);
+    final tags = _allTags.where((tag) => ids.contains(tag.id)).toList();
+    tags.sort((a, b) {
+      final order = a.order.compareTo(b.order);
+      return order == 0 ? a.en.compareTo(b.en) : order;
+    });
+    return tags;
+  }
+
+  int get _personSelectedCount =>
+      _personSelectedIds.values.fold(0, (total, ids) => total + ids.length);
 
   List<String> get _groups => [
         '全部',
@@ -559,7 +585,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _extraPositive.dispose();
     _negative.dispose();
     _preprompt.dispose();
+    for (final controller in _personSearchControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  TextEditingController _personSearchController(
+      int index, String field, String value) {
+    final key = '$index:$field';
+    final controller = _personSearchControllers.putIfAbsent(
+        key, () => TextEditingController(text: value));
+    if (controller.text != value) {
+      controller.text = value;
+    }
+    return controller;
+  }
+
+  void _clearPersonSearchController(int index, String field) {
+    _personSearchControllers['$index:$field']?.clear();
   }
 
   void _restore() {
@@ -598,6 +642,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedIds.addAll(
         (data['selectedIds'] as List? ?? []).map((id) => '$id'),
       );
+      if (!data.containsKey('personSelectedIds')) {
+        final legacyPersonal = _allTags
+            .where((tag) =>
+                _selectedIds.contains(tag.id) &&
+                !['場景', '畫面', '品質'].contains(tag.group))
+            .toList();
+        if (legacyPersonal.isNotEmpty) {
+          _personSelectedIds[0] = legacyPersonal.map((tag) => tag.id).toSet();
+          _selectedIds.removeAll(legacyPersonal.map((tag) => tag.id));
+        }
+      }
+      final personTags = data['personSelectedIds'] as Map?;
+      if (personTags != null) {
+        for (final entry in personTags.entries) {
+          final index = int.tryParse('${entry.key}');
+          if (index == null) continue;
+          _personSelectedIds[index] =
+              (entry.value as List? ?? []).map((id) => '$id').toSet();
+        }
+      }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _stepIndex = (data['stepIndex'] as num?)?.toInt() ?? 0;
       _gender = '${data['gender'] ?? '女性'}';
@@ -618,6 +682,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Map<String, dynamic> _snapshot() => {
         'selectedIds': _selectedIds.toList(),
+        'personSelectedIds': _personSelectedIds.map(
+          (index, ids) => MapEntry('$index', ids.toList()),
+        ),
         'customTags': _customTags.map((tag) => tag.toJson()).toList(),
         'customCharacters':
             _customCharacters.map((item) => item.toJson()).toList(),
@@ -691,26 +758,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  List<String> _characterTokensForSlot(PersonSlot slot) {
+    if (!slot.detailed) return [];
+    if (slot.mode == '動漫角色') {
+      final character = _characterForNew(slot);
+      if (character == null) return [];
+      return [
+        character.animeTag,
+        character.characterTag,
+        ...character.traits.map((item) => item.en),
+      ];
+    }
+    final own = <String>[];
+    if (_cleanTag(slot.originalAnimeTag).isNotEmpty) {
+      own.add(_cleanTag(slot.originalAnimeTag));
+    }
+    if (_cleanTag(slot.originalCharacterTag).isNotEmpty) {
+      own.add(_cleanTag(slot.originalCharacterTag));
+    }
+    own.addAll(_extraTags(slot.originalTraits));
+    return own.isEmpty ? ['original'] : own;
+  }
+
+  List<String> _characterChineseForSlot(PersonSlot slot) {
+    if (!slot.detailed) return ['此角色不設定細節'];
+    if (slot.mode == '動漫角色') {
+      final character = _characterForNew(slot);
+      if (character == null) return ['尚未選擇動漫角色'];
+      return [
+        '${character.animeZh}／${character.characterZh}',
+        ...character.traits.map((item) => item.zh),
+      ];
+    }
+    return [
+      slot.originalCharacterZh.trim().isEmpty
+          ? '原創角色'
+          : slot.originalCharacterZh.trim(),
+      if (slot.originalTraits.trim().isNotEmpty)
+        '原創特徵：${slot.originalTraits.trim()}',
+    ];
+  }
+
   List<String> _characterTokensNew() {
     final result = <String>[];
     for (final slot in _personSlots) {
-      if (!slot.detailed) continue;
-      if (slot.mode == '動漫角色') {
-        final character = _characterForNew(slot);
-        if (character != null) {
-          result.add(character.animeTag);
-          result.add(character.characterTag);
-          result.addAll(character.traits.map((item) => item.en));
-        }
-      } else {
-        final own = <String>[];
-        if (_cleanTag(slot.originalAnimeTag).isNotEmpty)
-          own.add(_cleanTag(slot.originalAnimeTag));
-        if (_cleanTag(slot.originalCharacterTag).isNotEmpty)
-          own.add(_cleanTag(slot.originalCharacterTag));
-        own.addAll(_extraTags(slot.originalTraits));
-        result.addAll(own.isEmpty ? ['original'] : own);
-      }
+      result.addAll(_characterTokensForSlot(slot));
     }
     return result;
   }
@@ -718,25 +810,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> _characterChineseNew() {
     final result = <String>[];
     for (final slot in _personSlots) {
-      if (!slot.detailed) {
-        result.add('此角色不設定細節');
-        continue;
-      }
-      if (slot.mode == '動漫角色') {
-        final character = _characterForNew(slot);
-        if (character == null) {
-          result.add('尚未選擇動漫角色');
-        } else {
-          result.add('${character.animeZh}／${character.characterZh}');
-          result.addAll(character.traits.map((item) => item.zh));
-        }
-      } else {
-        result.add(slot.originalCharacterZh.trim().isEmpty
-            ? '原創角色'
-            : slot.originalCharacterZh.trim());
-        if (slot.originalTraits.trim().isNotEmpty)
-          result.add('原創特徵：${slot.originalTraits.trim()}');
-      }
+      result.addAll(_characterChineseForSlot(slot));
     }
     return result;
   }
@@ -754,7 +828,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _positiveTokens {
     final tokens = <String>[..._peopleTokensNew()];
-    tokens.addAll(_characterTokensNew());
+    for (var index = 0; index < _personSlots.length; index++) {
+      tokens.addAll(_characterTokensForSlot(_personSlots[index]));
+      tokens.addAll(_selectedTagsForPerson(index).map((tag) => tag.en));
+    }
     tokens.addAll(_selectedTags.map((tag) => tag.en));
     tokens.addAll(_extraTags(_extraPositive.text));
     tokens.addAll(_extraTags(_preprompt.text));
@@ -765,7 +842,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String get _positiveText => _positiveTokens.map((tag) => '$tag.').join(' ');
 
   String get _positiveZh {
-    final tokens = <String>[_peopleZhNew(), ..._characterChineseNew()];
+    final tokens = <String>[_peopleZhNew()];
+    for (var index = 0; index < _personSlots.length; index++) {
+      final personal = [
+        ..._characterChineseForSlot(_personSlots[index]),
+        ..._selectedTagsForPerson(index).map((tag) => tag.zh),
+      ];
+      tokens.add('人物 ${index + 1}：${personal.join('、')}');
+    }
     tokens.addAll(_selectedTags.map((tag) => tag.zh));
     if (_extraPositive.text.trim().isNotEmpty)
       tokens.add('額外英文標籤：${_extraPositive.text.trim()}');
@@ -846,12 +930,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _tagsConflict(TagItem first, TagItem second) {
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
-    // Basic poses can belong to different people in a multi-person scene.
-    // Keep the replacement warning for a single person, but allow e.g.
-    // sitting + standing when the prompt contains multiple character slots.
-    if (firstGroup == 'pose' &&
-        secondGroup == 'pose' &&
-        _personSlots.length > 1) return false;
     if (firstGroup != null && firstGroup == secondGroup) return true;
     final firstNude =
         first.en == 'nude' || first.en == 'topless' || first.en == 'bottomless';
@@ -866,16 +944,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return false;
   }
 
-  Future<void> _toggle(TagItem tag) async {
-    if (_selectedIds.contains(tag.id)) {
+  Future<void> _toggle(TagItem tag, {int? personIndex}) async {
+    final targetIds =
+        personIndex == null ? _selectedIds : _personTagIds(personIndex);
+    final currentTags = personIndex == null
+        ? _selectedTags
+        : _selectedTagsForPerson(personIndex);
+    if (targetIds.contains(tag.id)) {
       setState(() {
-        _selectedIds.remove(tag.id);
+        targetIds.remove(tag.id);
         _persist();
       });
       return;
     }
     final conflicts =
-        _selectedTags.where((item) => _tagsConflict(item, tag)).toList();
+        currentTags.where((item) => _tagsConflict(item, tag)).toList();
     if (conflicts.isNotEmpty) {
       final replace = await showDialog<bool>(
         context: context,
@@ -897,9 +980,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     setState(() {
       for (final conflict in conflicts) {
-        _selectedIds.remove(conflict.id);
+        targetIds.remove(conflict.id);
       }
-      _selectedIds.add(tag.id);
+      targetIds.add(tag.id);
       _persist();
     });
   }
@@ -947,6 +1030,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           html.window.localStorage[_storageKey] = '${reader.result}';
           setState(() {
             _selectedIds.clear();
+            _personSelectedIds.clear();
             _customTags.clear();
             _presets.clear();
             _restore();
@@ -1003,6 +1087,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedIds
         ..clear()
         ..addAll((data['selectedIds'] as List? ?? []).map((id) => '$id'));
+      _personSelectedIds
+        ..clear()
+        ..addAll({
+          for (final entry in (data['personSelectedIds'] as Map? ?? {}).entries)
+            if (int.tryParse('${entry.key}') != null)
+              int.parse('${entry.key}'):
+                  (entry.value as List? ?? []).map((id) => '$id').toSet(),
+        });
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _gender = '${data['gender'] ?? _gender}';
       _model = '${data['model'] ?? _model}';
@@ -1022,14 +1114,33 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       while (_personSlots.length < count) _personSlots.add(PersonSlot());
       while (_personSlots.length > count) _personSlots.removeLast();
+      _personSelectedIds.removeWhere((index, _) => index >= count);
       _peopleCount = count;
       _persist();
     });
   }
 
-  List<CatalogCharacter> _matchingCharacters(String query) {
-    final lower = query.trim().toLowerCase();
+  List<CatalogCharacter> _matchingAnime(PersonSlot slot) {
+    final lower = slot.animeQuery.trim().toLowerCase();
+    final seen = <String>{};
+    return _allCharacters
+        .where((item) {
+          if (!seen.add(item.animeTag)) return false;
+          if (lower.isEmpty) return true;
+          return '${item.animeZh} ${item.animeEn} ${item.animeTag}'
+              .toLowerCase()
+              .contains(lower);
+        })
+        .take(18)
+        .toList();
+  }
+
+  List<CatalogCharacter> _matchingCharacters(PersonSlot slot) {
+    final lower = slot.query.trim().toLowerCase();
     final source = _allCharacters.where((item) {
+      if (slot.animeTag.isNotEmpty && item.animeTag != slot.animeTag) {
+        return false;
+      }
       if (lower.isEmpty) return true;
       return '${item.animeZh} ${item.animeEn} ${item.characterZh} ${item.characterEn} ${item.animeTag} ${item.characterTag}'
           .toLowerCase()
@@ -1045,12 +1156,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return source.take(18).toList();
   }
 
+  void _selectAnime(int slotIndex, CatalogCharacter anime) {
+    if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
+    setState(() {
+      final slot = _personSlots[slotIndex];
+      slot.animeTag = anime.animeTag;
+      slot.animeQuery = '';
+      slot.query = '';
+      slot.characterId = '';
+      _clearPersonSearchController(slotIndex, 'anime');
+      _clearPersonSearchController(slotIndex, 'character');
+      _persist();
+    });
+  }
+
   void _selectCharacter(int slotIndex, CatalogCharacter character) {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
       final slot = _personSlots[slotIndex];
       slot.characterId = character.id;
       slot.mode = '動漫角色';
+      slot.animeTag = character.animeTag;
+      slot.animeQuery = '';
+      slot.query = '';
+      _clearPersonSearchController(slotIndex, 'anime');
+      _clearPersonSearchController(slotIndex, 'character');
       _recentCharacterIds.remove(character.id);
       _recentCharacterIds.insert(0, character.id);
       if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
@@ -1201,6 +1331,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               final target = _personSlots[targetIndex];
               target.mode = '動漫角色';
               target.characterId = character.id;
+              target.animeTag = character.animeTag;
+              target.animeQuery = '';
+              target.query = '';
+              _clearPersonSearchController(targetIndex, 'anime');
+              _clearPersonSearchController(targetIndex, 'character');
               _recentCharacterIds
                 ..remove(character.id)
                 ..insert(0, character.id);
@@ -1330,7 +1465,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 );
                 setState(() {
                   _customTags.add(tag);
-                  _selectedIds.add(tag.id);
+                  const personalGroups = {
+                    '自訂角色',
+                    '自訂特徵',
+                    '上衣',
+                    '褲子',
+                    '裙子',
+                    '胸罩',
+                    '內褲',
+                    '襪子',
+                    '鞋子',
+                    '服裝',
+                    '配件',
+                    '表情',
+                    '姿勢',
+                  };
+                  if (personalGroups.contains(group)) {
+                    _personTagIds(0).add(tag.id);
+                  } else {
+                    _selectedIds.add(tag.id);
+                  }
                   _persist();
                 });
                 Navigator.pop(dialogContext);
@@ -1368,20 +1522,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }).toList();
   }
 
-  Widget _tagChip(TagItem tag) {
-    final selected = _selectedIds.contains(tag.id);
+  Widget _tagChip(TagItem tag, {int? personIndex}) {
+    final selected = personIndex == null
+        ? _selectedIds.contains(tag.id)
+        : _personTagIds(personIndex).contains(tag.id);
     return FilterChip(
       selected: selected,
       label: Text('${tag.zh}  ·  ${tag.en}'),
       avatar: tag.adult ? const Icon(Icons.eighteen_mp, size: 15) : null,
       backgroundColor: _groupColor(tag.group, context).withOpacity(.32),
       selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      onSelected: (_) => _toggle(tag),
+      onSelected: (_) => _toggle(tag, personIndex: personIndex),
     );
   }
 
-  List<TagItem> _stepVisibleTags(List<String> groups) {
-    final query = _search.text.trim().toLowerCase();
+  List<TagItem> _stepVisibleTags(List<String> groups, {String? queryText}) {
+    final query = (queryText ?? _search.text).trim().toLowerCase();
     return _allTags.where((tag) {
       final inGroup = groups.contains(tag.group);
       final adultMatch = _showAdult || !tag.adult;
@@ -1392,24 +1548,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }).toList();
   }
 
-  Widget _stepTagPicker(List<String> groups, {required String nextLabel}) {
+  Widget _stepTagPicker(List<String> groups,
+      {required String nextLabel, int? personIndex, bool showNext = true}) {
     final currentGroup =
         groups.contains(_activeGroup) ? _activeGroup : groups.first;
-    final visible = _stepVisibleTags(groups);
+    final tagQuery = personIndex == null
+        ? _search.text
+        : (_personTagQueries[personIndex] ?? '');
+    final visible = _stepVisibleTags(groups, queryText: tagQuery);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
-            controller: _search,
-            decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: '搜尋此步驟的中文或英文標籤…',
-                filled: true,
-                suffixIcon: _search.text.isEmpty
-                    ? null
-                    : IconButton(
-                        onPressed: _search.clear,
-                        icon: const Icon(Icons.clear)))),
+          controller: personIndex == null ? _search : null,
+          decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: '搜尋此步驟的中文或英文標籤…',
+              filled: true,
+              suffixIcon: tagQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      onPressed: () {
+                        if (personIndex == null) {
+                          _search.clear();
+                        } else {
+                          setState(() => _personTagQueries[personIndex] = '');
+                        }
+                      },
+                      icon: const Icon(Icons.clear))),
+          onChanged: personIndex == null
+              ? null
+              : (value) =>
+                  setState(() => _personTagQueries[personIndex] = value),
+        ),
         const SizedBox(height: 10),
         SizedBox(
           height: 36,
@@ -1433,14 +1604,84 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: visible.map(_tagChip).toList()),
-        const SizedBox(height: 14),
+              children: visible
+                  .map((tag) => _tagChip(tag, personIndex: personIndex))
+                  .toList()),
+        if (showNext) ...[
+          const SizedBox(height: 14),
+          Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton.icon(
+                  onPressed: _advanceStep,
+                  icon: const Icon(Icons.arrow_forward),
+                  label: Text(nextLabel))),
+        ],
+      ],
+    );
+  }
+
+  Widget _stepPersonTagPicker(List<String> groups,
+      {required String nextLabel, required String instruction}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(instruction),
+        const SizedBox(height: 12),
+        ..._personSlots.asMap().entries.map((entry) {
+          final index = entry.key;
+          final slot = entry.value;
+          final characterNames = _characterChineseForSlot(slot);
+          final title =
+              characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
+          if (!slot.detailed) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(child: Text('${index + 1}')),
+                title: Text('人物 ${index + 1}'),
+                subtitle: const Text('此人物設定為不需細節，不加入此類標籤。'),
+              ),
+            );
+          }
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            color:
+                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(child: Text('${index + 1}')),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text('人物 ${index + 1} · $title',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _stepTagPicker(groups,
+                      nextLabel: nextLabel,
+                      personIndex: index,
+                      showNext: false),
+                ],
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
         Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-                onPressed: _advanceStep,
-                icon: const Icon(Icons.arrow_forward),
-                label: Text(nextLabel))),
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: _advanceStep,
+            icon: const Icon(Icons.arrow_forward),
+            label: Text(nextLabel),
+          ),
+        ),
       ],
     );
   }
@@ -1610,7 +1851,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
           final slot = entry.value;
-          final matches = _matchingCharacters(slot.query);
+          final animeMatches = _matchingAnime(slot);
+          final matches = _matchingCharacters(slot);
           return Card(
             color:
                 Theme.of(context).colorScheme.surfaceVariant.withOpacity(.35),
@@ -1669,27 +1911,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       if (slot.mode == '動漫角色') ...[
                         const SizedBox(height: 10),
                         TextField(
+                            controller: _personSearchController(
+                                index, 'anime', slot.animeQuery),
                             decoration: const InputDecoration(
-                                labelText: '查詢動漫或角色',
+                                labelText: '第一步：查詢動漫名稱',
                                 prefixIcon: Icon(Icons.search)),
                             onChanged: (value) =>
-                                setState(() => slot.query = value)),
+                                setState(() => slot.animeQuery = value)),
                         const SizedBox(height: 9),
-                        if (matches.isNotEmpty)
+                        if (animeMatches.isNotEmpty)
                           Wrap(
                               spacing: 7,
                               runSpacing: 7,
-                              children: matches
-                                  .map((character) => ChoiceChip(
+                              children: animeMatches
+                                  .map((anime) => ChoiceChip(
                                       label: Text(
-                                          '${character.animeZh} · ${character.characterZh}'),
-                                      selected:
-                                          slot.characterId == character.id,
+                                          '${anime.animeZh} · ${anime.animeEn}'),
+                                      selected: slot.animeTag == anime.animeTag,
                                       onSelected: (_) =>
-                                          _selectCharacter(index, character)))
+                                          _selectAnime(index, anime)))
                                   .toList())
                         else
-                          const Text('查無資料，可新增自己的動漫/角色。'),
+                          const Text('查無動漫資料，可新增自己的動漫與角色。'),
+                        if (slot.animeTag.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          TextField(
+                              controller: _personSearchController(
+                                  index, 'character', slot.query),
+                              decoration: const InputDecoration(
+                                  labelText: '第二步：查詢角色名稱',
+                                  prefixIcon: Icon(Icons.person_search)),
+                              onChanged: (value) =>
+                                  setState(() => slot.query = value)),
+                          const SizedBox(height: 9),
+                          if (matches.isNotEmpty)
+                            Wrap(
+                                spacing: 7,
+                                runSpacing: 7,
+                                children: matches
+                                    .map((character) => ChoiceChip(
+                                        label: Text(
+                                            '${character.characterZh} · ${character.characterEn}'),
+                                        selected:
+                                            slot.characterId == character.id,
+                                        onSelected: (_) =>
+                                            _selectCharacter(index, character)))
+                                    .toList())
+                          else
+                            const Text('查無此動漫角色，可自行新增角色資料。'),
+                        ],
                         const SizedBox(height: 9),
                         OutlinedButton.icon(
                             onPressed: _addCustomCharacter,
@@ -1868,43 +2138,57 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepCard(
           3,
           '角色特徵',
-          _selectedTags
-              .where((tag) => ['外觀特徵', '臉部特徵', '胸部', '裸露'].contains(tag.group))
-              .map((tag) => tag.zh)
-              .join('、')
-              .ifEmpty('尚未選擇'),
+          _personSelectedIds.isEmpty
+              ? '每位人物分別設定'
+              : _personSelectedIds.values
+                  .expand(
+                      (ids) => _allTags.where((tag) => ids.contains(tag.id)))
+                  .where(
+                      (tag) => ['外觀特徵', '臉部特徵', '胸部', '裸露'].contains(tag.group))
+                  .map((tag) => tag.zh)
+                  .join('、')
+                  .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
-          _stepTagPicker(['外觀特徵', '臉部特徵', '胸部', '裸露'], nextLabel: '下一步：服裝')),
+          _stepPersonTagPicker(['外觀特徵', '臉部特徵', '胸部', '裸露'],
+              nextLabel: '下一步：服裝',
+              instruction: '請在每位人物自己的區塊內設定外觀、臉部、胸部與裸露標籤。')),
       _stepCard(
           4,
           '服裝與穿脫狀態',
-          _selectedTags
+          _personSelectedIds.values
+              .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
               .where((tag) => clothing.contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
-              .ifEmpty('尚未選擇'),
+              .ifEmpty('每位人物分別設定'),
           Icons.checkroom_outlined,
-          _stepTagPicker(clothing, nextLabel: '下一步：表情')),
+          _stepPersonTagPicker(clothing,
+              nextLabel: '下一步：表情', instruction: '請分別設定每位人物的服裝、顏色、材質與穿脫狀態。')),
       _stepCard(
           5,
           '表情',
-          _selectedTags
+          _personSelectedIds.values
+              .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
               .where((tag) => tag.group == '表情')
               .map((tag) => tag.zh)
               .join('、')
-              .ifEmpty('尚未選擇'),
+              .ifEmpty('每位人物分別設定'),
           Icons.mood_outlined,
-          _stepTagPicker(['表情'], nextLabel: '下一步：姿勢')),
+          _stepPersonTagPicker(['表情'],
+              nextLabel: '下一步：姿勢', instruction: '請分別設定每位人物的表情。')),
       _stepCard(
           6,
           '姿勢與 18+ 姿勢',
-          _selectedTags
+          _personSelectedIds.values
+              .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
               .where((tag) => ['姿勢', '性行為', '性姿勢'].contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
-              .ifEmpty('尚未選擇'),
+              .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
-          _stepTagPicker(['姿勢', '性行為', '性姿勢'], nextLabel: '下一步：品質與負面')),
+          _stepPersonTagPicker(['姿勢', '性行為', '性姿勢'],
+              nextLabel: '下一步：品質與負面',
+              instruction: '請分別設定每位人物的基本姿勢、性行為與性姿勢；不同人物可以使用不同姿勢。')),
       _stepCard(7, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
@@ -2233,7 +2517,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _outputPanel() {
-    final selectedCount = _selectedTags.length;
+    final selectedCount = _selectedTags.length + _personSelectedCount;
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
