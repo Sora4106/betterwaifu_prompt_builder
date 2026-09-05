@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.11+13 - 2026-09-05
+
+- 自動偵測：feat: expand pose detail skirt lengths and anime aliases
+
+
 ## 1.1.10+12 - 2026-09-05
 
 - 自動偵測：feat: expand hairstyles actions and objects

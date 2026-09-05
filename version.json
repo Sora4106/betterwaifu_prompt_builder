@@ -1,8 +1,15 @@
 {
-  "version": "1.1.10",
-  "build": 12,
-  "label": "1.1.10+12",
+  "version": "1.1.11",
+  "build": 13,
+  "label": "1.1.11+13",
   "history": [
+    {
+      "version": "1.1.11",
+      "build": 13,
+      "label": "1.1.11+13",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: expand pose detail skirt lengths and anime aliases"
+    },
     {
       "version": "1.1.10",
       "build": 12,
