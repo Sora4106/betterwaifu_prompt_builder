@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.2",
-  "build": 4,
-  "label": "1.1.2+4",
+  "version": "1.1.3",
+  "build": 5,
+  "label": "1.1.3+5",
   "history": [
+    {
+      "version": "1.1.3",
+      "build": 5,
+      "label": "1.1.3+5",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add reset control and section navigation"
+    },
     {
       "version": "1.1.2",
       "build": 4,

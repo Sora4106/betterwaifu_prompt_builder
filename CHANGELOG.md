@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.3+5 - 2026-09-05
+
+- 自動偵測：feat: add reset control and section navigation
+
+
 ## 1.1.2+4 - 2026-09-05
 
 - 自動偵測：feat: refine character overrides and clothing filters
