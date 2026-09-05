@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -20,6 +20,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Auto append version for new changes
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          if ($env:EVENT_NAME -ne 'push') {
+            Write-Host 'Manual build only; version is not changed.'
+            exit 0
+          }
+          $files = git diff-tree --no-commit-id --name-only -r $env:COMMIT_SHA
+          if ($files -contains 'version.json' -or $files -contains 'CHANGELOG.md') {
+            Write-Host 'This commit already contains version metadata; keeping its version.'
+            exit 0
+          }
+          $note = if ([string]::IsNullOrWhiteSpace($env:COMMIT_MESSAGE)) { '自動偵測專案更新' } else { "自動偵測：$($env:COMMIT_MESSAGE.Split("`n")[0])" }
+          pwsh -NoProfile -File tools/update-version.ps1 -Notes $note
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add version.json CHANGELOG.md standalone_web/version.js flutter_pwa/lib/app_version.dart flutter_pwa/pubspec.yaml
+          git commit -m 'chore: auto append version [skip ci]'
+          git push
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2

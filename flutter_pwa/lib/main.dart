@@ -3,9 +3,11 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 
+import 'app_version.dart';
 import 'catalog_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
+const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 
 extension _StringFallback on String {
   String ifEmpty(String fallback) => trim().isEmpty ? fallback : this;
@@ -485,7 +487,70 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void initState() {
     super.initState();
     _restore();
+    _checkForVersionUpdate();
     _search.addListener(() => setState(() {}));
+  }
+
+  void _checkForVersionUpdate() {
+    final previous = html.window.localStorage[_lastSeenVersionKey];
+    html.window.localStorage[_lastSeenVersionKey] = appVersionLabel;
+    if (previous != null && previous != appVersionLabel) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showVersionHistory(previous);
+      });
+    }
+  }
+
+  void _showVersionHistory([String? previousVersion]) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.new_releases_outlined),
+            const SizedBox(width: 8),
+            Text('版本更新 $appVersionLabel'),
+          ],
+        ),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (previousVersion != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text('已從 $previousVersion 更新到 $appVersionLabel。'),
+                  ),
+                ...appVersionHistory.map(
+                  (release) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${release['label']} · ${release['date']}',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(release['notes'] ?? ''),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -2371,7 +2436,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         leading: const Icon(Icons.rule),
         title: const Text('Amanatsu / BetterWaifu 使用提示'),
         childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-        children: const [
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 17),
+                const SizedBox(width: 6),
+                Text('目前版本：$appVersionLabel'),
+                const SizedBox(width: 10),
+                TextButton(
+                  onPressed: _showVersionHistory,
+                  child: const Text('查看版本歷程'),
+                ),
+              ],
+            ),
+          ),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -2408,14 +2488,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 22,
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.auto_awesome, size: 25),
             SizedBox(width: 10),
-            Text('Prompt Atelier'),
+            Flexible(child: Text('Prompt Atelier')),
+            SizedBox(width: 10),
+            Text(
+              'v$appVersionLabel',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+            ),
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: '版本歷程',
+            onPressed: _showVersionHistory,
+            icon: const Icon(Icons.new_releases_outlined),
+          ),
           IconButton(
             tooltip: '匯出備份',
             onPressed: _downloadBackup,

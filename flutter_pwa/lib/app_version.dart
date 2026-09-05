@@ -1,0 +1,19 @@
+const appVersion = '1.1.0';
+const appBuildNumber = 2;
+const appVersionLabel = '1.1.0+2';
+const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.0',
+    'build': '2',
+    'label': '1.1.0+2',
+    'date': '2026-09-05',
+    'notes': '加入版本顯示、更新提示、版本歷程與自動追加版本號工具。',
+  },
+  {
+    'version': '1.0.0',
+    'build': '1',
+    'label': '1.0.0+1',
+    'date': '2026-09-05',
+    'notes': '建立 BetterWaifu Amanatsu 1.1 提示標籤組合工具。',
+  },
+];

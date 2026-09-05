@@ -1,5 +1,7 @@
 /* BetterWaifu Prompt Atelier — dependency-free browser version. */
 const STORAGE_KEY = 'betterwaifu_prompt_builder_state_v2';
+const VERSION_STORAGE_KEY = 'betterwaifu_prompt_builder_last_seen_version';
+const APP_VERSION = window.BETTERWAIFU_VERSION || { label: '1.1.0+2', history: [] };
 
 const tag = (id, group, zh, en, order, adult = false, conflictGroup = '') => ({
   id, group, zh, en, order, adult, conflictGroup, builtIn: true
@@ -313,6 +315,8 @@ function negativeChinese() { return splitTags(state.negative).map(item => negati
 function snapshot() { return { ...state, selected: [...state.selected], peopleSlots: state.peopleSlots.map(slot => ({ ...slot })) }; }
 function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot())); }
 function toast(message) { const element = $('#toast'); if (!element) return; element.textContent = message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => element.classList.remove('show'), 1900); }
+function renderVersionInfo() { const label = $('#app-version'); if (label) label.textContent = `v${APP_VERSION.label}`; const history = $('#version-history'); if (history) history.innerHTML = (APP_VERSION.history || []).map(item => `<article class="version-entry"><b>${esc(item.label)} · ${esc(item.date)}</b><p>${esc(item.notes)}</p></article>`).join(''); }
+function checkForVersionUpdate() { const previous = localStorage.getItem(VERSION_STORAGE_KEY); localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION.label); if (previous && previous !== APP_VERSION.label) { setTimeout(() => { toast(`已更新至 ${APP_VERSION.label}`); $('#version-dialog')?.showModal(); }, 350); } }
 function restore() { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (!saved) return; Object.assign(state, saved); state.selected = new Set(saved.selected || []); state.peopleSlots = (saved.peopleSlots || []).map(slot => ({ ...newSlot(), ...slot })); if (!state.peopleSlots.length) state.peopleSlots = [newSlot()]; state.customTags = saved.customTags || []; state.customCharacters = saved.customCharacters || []; state.recentCharacterIds = saved.recentCharacterIds || []; state.presets = saved.presets || []; state.count = state.peopleSlots.length; state.gender = state.peopleSlots[0].gender; } catch { toast('記憶資料無法讀取，已使用預設值。'); } }
 
 function setPeopleCount(value) { const count = Math.max(1, Math.min(6, Number(value) || 1)); while (state.peopleSlots.length < count) state.peopleSlots.push(newSlot()); while (state.peopleSlots.length > count) state.peopleSlots.pop(); state.count = count; state.gender = state.peopleSlots[0].gender; }
@@ -414,4 +418,9 @@ $('#custom-form').addEventListener('submit', event => { event.preventDefault(); 
 $('#character-form').addEventListener('submit', event => { event.preventDefault(); const animeZh = $('#character-anime-zh').value.trim(), animeEn = $('#character-anime-en').value.trim(), characterZh = $('#character-zh').value.trim(), characterEn = $('#character-en').value.trim(); if (!animeZh || !animeEn || !characterZh || !characterEn) return; const c = { id: `custom_character_${Date.now()}`, animeZh, animeEn, animeTag: clean($('#character-anime-tag').value) || slug(animeEn), characterZh, characterEn, characterTag: clean($('#character-tag').value) || slug(characterEn), traits: splitTags($('#character-traits-en').value).map((en, index) => ({ en, zh: splitTags($('#character-traits-zh').value)[index] || en })) }; state.customCharacters.push(c); const emptySlot = state.peopleSlots.find(slot => slot.mode === '動漫角色' && !slot.characterId); if (emptySlot) emptySlot.characterId = c.id; state.recentCharacterIds = [c.id, ...state.recentCharacterIds].slice(0, 10); $('#character-dialog').close(); render(); toast('角色資料已儲存'); });
 
 restore(); render();
+renderVersionInfo();
+checkForVersionUpdate();
+$('#version-btn').addEventListener('click', () => $('#version-dialog').showModal());
+$('#version-close').addEventListener('click', () => $('#version-dialog').close());
+$('#version-ok').addEventListener('click', () => $('#version-dialog').close());
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});

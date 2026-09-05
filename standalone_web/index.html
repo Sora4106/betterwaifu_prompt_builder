@@ -12,8 +12,9 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">✦</span><span>Prompt Atelier</span><small>BetterWaifu · Amanatsu 1.1</small></div>
+    <div class="brand"><span class="brand-mark">✦</span><span>Prompt Atelier</span><small>BetterWaifu · Amanatsu 1.1 · <b id="app-version">v1.1.0+2</b></small></div>
     <div class="top-actions">
+      <button class="ghost" id="version-btn">版本</button>
       <button class="ghost" id="export-btn">匯出備份</button>
       <button class="ghost" id="import-btn">匯入備份</button>
       <input id="import-file" type="file" accept="application/json,.json" hidden>
@@ -120,6 +121,14 @@
       <div class="dialog-actions"><button value="cancel" class="ghost">取消</button><button id="character-submit" value="default" class="primary">儲存角色</button></div>
     </form>
   </dialog>
+  <dialog id="version-dialog">
+    <section class="dialog-card">
+      <div class="panel-heading"><div><p class="eyebrow">VERSION HISTORY</p><h2>版本更新紀錄</h2></div><button id="version-close" class="icon-button">×</button></div>
+      <div id="version-history" class="version-history"></div>
+      <div class="dialog-actions"><button id="version-ok" class="primary">知道了</button></div>
+    </section>
+  </dialog>
+  <script src="version.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
