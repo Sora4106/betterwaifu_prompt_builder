@@ -449,6 +449,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<Preset> _presets = <Preset>[];
   final Map<String, TextEditingController> _personSearchControllers =
       <String, TextEditingController>{};
+  final Map<int, GlobalKey> _stepKeys = <int, GlobalKey>{};
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _negative = TextEditingController(
@@ -1105,6 +1106,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .showSnackBar(SnackBar(content: Text('$label已複製')));
   }
 
+  Future<void> _clearAllTags() async {
+    final clear = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('清除所有標籤？'),
+        content: const Text(
+            '這會清除目前組合的正向標籤、負向標籤、人物角色、人物細節、額外文字與提示前綴，回到一位女性且不需細節的乾淨狀態。\n\n'
+            '自訂標籤、角色資料、已儲存組合與版本記錄不會被刪除。'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('確定清除')),
+        ],
+      ),
+    );
+    if (clear != true) return;
+    setState(() {
+      _selectedIds.clear();
+      _personSelectedIds.clear();
+      _personTagQueries.clear();
+      _personActiveGroups.clear();
+      for (final controller in _personSearchControllers.values) {
+        controller.clear();
+      }
+      _personSlots
+        ..clear()
+        ..add(PersonSlot()..detailed = false);
+      _peopleCount = 1;
+      _gender = '女性';
+      _stepIndex = 0;
+      _activeGroup = '全部';
+      _search.clear();
+      _extraPositive.clear();
+      _negative.clear();
+      _preprompt.clear();
+      _persist();
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('目前組合已清除')));
+    _scrollToStep(0);
+  }
+
   void _downloadBackup() {
     final blob = html.Blob([jsonEncode(_snapshot())], 'application/json');
     final url = html.Url.createObjectUrlFromBlob(blob);
@@ -1462,12 +1508,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
       return;
     }
+    final nextStep = _stepIndex < 7 ? _stepIndex + 1 : _stepIndex;
     setState(() {
-      if (_stepIndex < 7) _stepIndex++;
+      _stepIndex = nextStep;
       _activeGroup = '全部';
       _search.clear();
       _persist();
     });
+    _scrollToStep(nextStep);
   }
 
   void _addCustomTag() {
@@ -1911,10 +1959,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  GlobalKey _stepKey(int index) =>
+      _stepKeys.putIfAbsent(index, () => GlobalKey(debugLabel: 'step-$index'));
+
+  void _scrollToStep(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _stepKey(index).currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        alignment: 0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  void _openStep(int index) {
+    setState(() => _stepIndex = index);
+    _scrollToStep(index);
+  }
+
   Widget _stepHeader(int index, String title, String summary, IconData icon) {
     final expanded = _stepIndex == index;
     return InkWell(
-      onTap: () => setState(() => _stepIndex = index),
+      onTap: () => _openStep(index),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
         child: Row(children: [
@@ -1948,6 +2018,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _stepCard(
       int index, String title, String summary, IconData icon, Widget child) {
     return Card(
+      key: _stepKey(index),
       margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
       child: Column(children: [
@@ -2779,6 +2850,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   onPressed: _savePreset,
                   icon: const Icon(Icons.bookmark_add_outlined),
                 ),
+                IconButton(
+                  tooltip: '清除所有標籤',
+                  onPressed: _clearAllTags,
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -3030,7 +3106,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       body: Stack(
         children: [
           ListView(
-            padding: const EdgeInsets.fromLTRB(78, 16, 16, 38),
+            padding: const EdgeInsets.fromLTRB(58, 16, 16, 38),
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1120),
@@ -3054,32 +3130,49 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           Positioned(
-            left: 8,
+            left: 6,
             top: 12,
             child: SafeArea(
-              child: Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
-                  child: Column(
-                    children: [
-                      const Text('複製',
-                          style: TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      IconButton.filled(
-                          tooltip: '複製正向英文標籤',
-                          onPressed: () => _copy(_positiveText, '正向英文標籤'),
-                          icon: const Text('正',
-                              style: TextStyle(fontWeight: FontWeight.w800))),
-                      const SizedBox(height: 4),
-                      IconButton.filled(
-                          tooltip: '複製負面英文標籤',
-                          onPressed: () => _copy(_negativeText, '負面英文標籤'),
-                          icon: const Text('負',
-                              style: TextStyle(fontWeight: FontWeight.w800))),
-                    ],
+              child: SizedBox(
+                width: 42,
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 3, vertical: 7),
+                    child: Column(
+                      children: [
+                        const Text('複製',
+                            style: TextStyle(
+                                fontSize: 9, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 6),
+                        IconButton.filled(
+                            constraints: const BoxConstraints.tightFor(
+                                width: 32, height: 32),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 16,
+                            tooltip: '複製正向英文標籤',
+                            onPressed: () => _copy(_positiveText, '正向英文標籤'),
+                            icon: const Text('正',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800))),
+                        const SizedBox(height: 4),
+                        IconButton.filled(
+                            constraints: const BoxConstraints.tightFor(
+                                width: 32, height: 32),
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 16,
+                            tooltip: '複製負面英文標籤',
+                            onPressed: () => _copy(_negativeText, '負面英文標籤'),
+                            icon: const Text('負',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800))),
+                      ],
+                    ),
                   ),
                 ),
               ),
