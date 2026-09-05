@@ -1,7 +1,8 @@
-const appVersion = '1.1.12';
-const appBuildNumber = 14;
-const appVersionLabel = '1.1.12+14';
+const appVersion = '1.1.13';
+const appBuildNumber = 15;
+const appVersionLabel = '1.1.13+15';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: translate extra positive tags and expand expression catalog'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: make tag controls responsive'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand pose detail skirt lengths and anime aliases'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand hairstyles actions and objects'},

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.12",
-  "build": 14,
-  "label": "1.1.12+14",
+  "version": "1.1.13",
+  "build": 15,
+  "label": "1.1.13+15",
   "history": [
+    {
+      "version": "1.1.13",
+      "build": 15,
+      "label": "1.1.13+15",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: translate extra positive tags and expand expression catalog"
+    },
     {
       "version": "1.1.12",
       "build": 14,
