@@ -957,9 +957,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.group == '上衣顏色') return 'top_color';
     if (tag.group == '下身顏色') return 'bottom_color';
     if (tag.group == '服裝顏色') return 'clothing_color';
-    if (['上衣', '胸罩'].contains(tag.group)) return 'top';
-    if (['褲子', '裙子', '內褲'].contains(tag.group)) return 'bottom';
-    if (tag.group == '服裝') return 'one_piece';
+    if (tag.group == '上衣') return 'top';
+    if (['褲子', '裙子'].contains(tag.group)) return 'bottom';
+    if (tag.group == '胸罩') return 'bra';
+    if (['內衣', '內褲'].contains(tag.group)) return 'underwear';
+    if (['服裝', '服裝風格'].contains(tag.group)) return 'one_piece';
     if (tag.group == '姿勢') return 'pose';
     if (tag.group == '性姿勢') return 'sex_position';
     if (tag.group == '場景') return 'scene';
@@ -985,14 +987,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (firstGroup != null && firstGroup == secondGroup) {
       return firstGroup != 'clothing_color';
     }
-    final clothingLayers = {
-      'top',
-      'bottom',
-      'bra',
-      'underwear',
-      'top_color',
-      'bottom_color'
-    };
+    final clothingLayers = {'top', 'bottom', 'top_color', 'bottom_color'};
     if ((firstGroup == 'one_piece' && clothingLayers.contains(secondGroup)) ||
         (secondGroup == 'one_piece' && clothingLayers.contains(firstGroup))) {
       return true;
@@ -1576,6 +1571,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '服裝風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
@@ -1652,6 +1648,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '服裝風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
@@ -1903,6 +1900,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '配件',
     ];
     const details = [
+      '服裝風格',
       '上衣顏色',
       '下身顏色',
       '服裝顏色',
@@ -2471,6 +2469,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '服裝風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
