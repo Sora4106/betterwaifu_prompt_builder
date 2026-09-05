@@ -98,6 +98,22 @@ class TagItem {
       );
 }
 
+class _GeneratedOutputTag {
+  const _GeneratedOutputTag({
+    required this.zh,
+    required this.en,
+    this.tagId,
+    this.personIndex,
+    this.characterTag = false,
+  });
+
+  final String zh;
+  final String en;
+  final String? tagId;
+  final int? personIndex;
+  final bool characterTag;
+}
+
 class Preset {
   Preset({required this.name, required this.payload});
 
@@ -808,6 +824,23 @@ List<TagItem> _seedTags() => [
       _tag('object_key', '物件', '鑰匙', 'key', 4),
       _tag('object_gift', '物件', '禮物', 'present', 4),
 
+      // Adult-only accessories and toys; hidden until 18+ categories are enabled.
+      _tag('adult_vibrator', '成人道具', '按摩器（成年角色）', 'vibrator', 5, adult: true),
+      _tag('adult_wand_vibrator', '成人道具', '魔法棒型按摩器（成年角色）', 'wand vibrator', 5,
+          adult: true),
+      _tag('adult_dildo', '成人道具', '假陰莖（成年角色）', 'dildo', 5, adult: true),
+      _tag('adult_strap_on', '成人道具', '穿戴式假陰莖（成年角色）', 'strap-on dildo', 5,
+          adult: true),
+      _tag('adult_butt_plug', '成人道具', '肛塞（成年角色）', 'butt plug', 5, adult: true),
+      _tag('adult_anal_beads', '成人道具', '肛珠（成年角色）', 'anal beads', 5,
+          adult: true),
+      _tag('adult_love_egg', '成人道具', '跳蛋（成年角色）', 'love egg', 5, adult: true),
+      _tag('adult_remote_vibrator', '成人道具', '遙控按摩器（成年角色）',
+          'remote-controlled vibrator', 5,
+          adult: true),
+      _tag('adult_handcuffs', '成人道具', '手銬（成年角色）', 'handcuffs', 5, adult: true),
+      _tag('adult_blindfold', '成人道具', '眼罩（成年角色）', 'blindfold', 5, adult: true),
+
       // Breasts and nudity groups based on the supplied Danbooru references.
       _tag('body_flat_chest', '胸部', '平胸', 'flat chest', 5),
       _tag('body_small_breasts', '胸部', '小胸', 'small breasts', 5),
@@ -1003,6 +1036,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       supplementalTags.map(_catalogTag).toList();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
+  final Map<int, Set<String>> _removedCharacterTags = <int, Set<String>>{};
   final Map<int, String> _personTagQueries = <int, String>{};
   final Map<String, String> _personActiveGroups = <String, String>{};
   final List<TagItem> _customTags = <TagItem>[];
@@ -1093,6 +1127,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '性姿勢': 43,
       '動作': 44,
       '物件': 45,
+      '成人道具': 46,
       '場景': 60,
       '畫面': 61,
     };
@@ -1292,6 +1327,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               (entry.value as List? ?? []).map((id) => '$id').toSet();
         }
       }
+      final removedCharacterTags = data['removedCharacterTags'] as Map?;
+      if (removedCharacterTags != null) {
+        for (final entry in removedCharacterTags.entries) {
+          final index = int.tryParse('${entry.key}');
+          if (index == null) continue;
+          _removedCharacterTags[index] =
+              (entry.value as List? ?? []).map((tag) => '$tag').toSet();
+        }
+      }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _stepIndex =
           ((data['stepIndex'] as num?)?.toInt() ?? 0).clamp(0, 6).toInt();
@@ -1320,6 +1364,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'selectedIds': _selectedIds.toList(),
         'personSelectedIds': _personSelectedIds.map(
           (index, ids) => MapEntry('$index', ids.toList()),
+        ),
+        'removedCharacterTags': _removedCharacterTags.map(
+          (index, tags) => MapEntry('$index', tags.toList()),
         ),
         'customTags': _customTags.map((tag) => tag.toJson()).toList(),
         'customCharacters':
@@ -1436,13 +1483,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .expand((tag) => _traitOverrideGroups(tag.en))
       .toSet();
 
+  Set<String> _removedCharacterTagSet(int index) =>
+      _removedCharacterTags.putIfAbsent(index, () => <String>{});
+
+  bool _isRemovedCharacterTag(int index, String english) =>
+      _removedCharacterTagSet(index).contains(_cleanTag(english).toLowerCase());
+
   List<CatalogTagData> _characterTraitsForSlot(PersonSlot slot, int index) {
     final character = _characterForNew(slot);
     if (character == null) return const <CatalogTagData>[];
     final replaced = _personOverrideGroups(index);
     return character.traits
         .where((trait) =>
-            _traitOverrideGroups(trait.en).intersection(replaced).isEmpty)
+            _traitOverrideGroups(trait.en).intersection(replaced).isEmpty &&
+            !_isRemovedCharacterTag(index, trait.en))
         .toList();
   }
 
@@ -1452,39 +1506,105 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final character = _characterForNew(slot);
       if (character == null) return [];
       return [
-        character.animeTag,
-        character.characterTag,
+        if (!_isRemovedCharacterTag(index, character.animeTag))
+          character.animeTag,
+        if (!_isRemovedCharacterTag(index, character.characterTag))
+          character.characterTag,
         ..._characterTraitsForSlot(slot, index).map((item) => item.en),
       ];
     }
     final own = <String>[];
-    if (_cleanTag(slot.originalAnimeTag).isNotEmpty) {
+    if (_cleanTag(slot.originalAnimeTag).isNotEmpty &&
+        !_isRemovedCharacterTag(index, slot.originalAnimeTag)) {
       own.add(_cleanTag(slot.originalAnimeTag));
     }
-    if (_cleanTag(slot.originalCharacterTag).isNotEmpty) {
+    if (_cleanTag(slot.originalCharacterTag).isNotEmpty &&
+        !_isRemovedCharacterTag(index, slot.originalCharacterTag)) {
       own.add(_cleanTag(slot.originalCharacterTag));
     }
-    own.addAll(_extraTags(slot.originalTraits));
+    own.addAll(_extraTags(slot.originalTraits)
+        .where((tag) => !_isRemovedCharacterTag(index, tag)));
     return own.isEmpty ? ['original'] : own;
+  }
+
+  List<_GeneratedOutputTag> _characterOutputTagsForSlot(
+      PersonSlot slot, int index) {
+    if (!slot.detailed) return const <_GeneratedOutputTag>[];
+    if (slot.mode == '動漫角色') {
+      final character = _characterForNew(slot);
+      if (character == null) return const <_GeneratedOutputTag>[];
+      final result = <_GeneratedOutputTag>[];
+      if (!_isRemovedCharacterTag(index, character.animeTag)) {
+        result.add(_GeneratedOutputTag(
+          zh: character.animeZh,
+          en: character.animeTag,
+          personIndex: index,
+          characterTag: true,
+        ));
+      }
+      if (!_isRemovedCharacterTag(index, character.characterTag)) {
+        result.add(_GeneratedOutputTag(
+          zh: character.characterZh,
+          en: character.characterTag,
+          personIndex: index,
+          characterTag: true,
+        ));
+      }
+      for (final trait in _characterTraitsForSlot(slot, index)) {
+        result.add(_GeneratedOutputTag(
+          zh: trait.zh,
+          en: trait.en,
+          personIndex: index,
+          characterTag: true,
+        ));
+      }
+      return result;
+    }
+    final result = <_GeneratedOutputTag>[];
+    final animeTag = _cleanTag(slot.originalAnimeTag);
+    final characterTag = _cleanTag(slot.originalCharacterTag);
+    if (animeTag.isNotEmpty && !_isRemovedCharacterTag(index, animeTag)) {
+      result.add(_GeneratedOutputTag(
+        zh: slot.originalAnimeZh.trim().isEmpty
+            ? animeTag
+            : slot.originalAnimeZh.trim(),
+        en: animeTag,
+        personIndex: index,
+        characterTag: true,
+      ));
+    }
+    if (characterTag.isNotEmpty &&
+        !_isRemovedCharacterTag(index, characterTag)) {
+      result.add(_GeneratedOutputTag(
+        zh: slot.originalCharacterZh.trim().isEmpty
+            ? characterTag
+            : slot.originalCharacterZh.trim(),
+        en: characterTag,
+        personIndex: index,
+        characterTag: true,
+      ));
+    }
+    for (final trait in _extraTags(slot.originalTraits)) {
+      final english = _positiveEnglishTag(trait);
+      if (_isRemovedCharacterTag(index, english)) continue;
+      result.add(_GeneratedOutputTag(
+        zh: _positiveChineseTag(trait),
+        en: english,
+        personIndex: index,
+        characterTag: true,
+      ));
+    }
+    return result;
   }
 
   List<String> _characterChineseForSlot(PersonSlot slot, int index) {
     if (!slot.detailed) return ['此角色不設定細節'];
-    if (slot.mode == '動漫角色') {
-      final character = _characterForNew(slot);
-      if (character == null) return ['尚未選擇動漫角色'];
-      return [
-        '${character.animeZh}／${character.characterZh}',
-        ..._characterTraitsForSlot(slot, index).map((item) => item.zh),
-      ];
+    if (slot.mode == '動漫角色' && _characterForNew(slot) == null) {
+      return ['尚未選擇動漫角色'];
     }
-    return [
-      slot.originalCharacterZh.trim().isEmpty
-          ? '原創角色'
-          : slot.originalCharacterZh.trim(),
-      if (slot.originalTraits.trim().isNotEmpty)
-        '原創特徵：${slot.originalTraits.trim()}',
-    ];
+    final tags = _characterOutputTagsForSlot(slot, index);
+    if (tags.isNotEmpty) return tags.map((tag) => tag.zh).toList();
+    return ['原創角色'];
   }
 
   List<String> _characterTokensNew() {
@@ -1501,6 +1621,38 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       result.addAll(_characterChineseForSlot(_personSlots[index], index));
     }
     return result;
+  }
+
+  List<_GeneratedOutputTag> _generatedPositiveTags() {
+    final result = <_GeneratedOutputTag>[];
+    for (var index = 0; index < _personSlots.length; index++) {
+      final slot = _personSlots[index];
+      result.addAll(_characterOutputTagsForSlot(slot, index));
+      result.addAll(_selectedTagsForPerson(index).map((tag) =>
+          _GeneratedOutputTag(
+              zh: tag.zh, en: tag.en, tagId: tag.id, personIndex: index)));
+    }
+    result.addAll(_selectedTags.map(
+        (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
+    return result;
+  }
+
+  void _removeGeneratedOutputTag(_GeneratedOutputTag outputTag) {
+    setState(() {
+      if (outputTag.characterTag) {
+        if (outputTag.personIndex != null) {
+          _removedCharacterTagSet(outputTag.personIndex!)
+              .add(_cleanTag(outputTag.en).toLowerCase());
+        }
+      } else if (outputTag.tagId != null) {
+        if (outputTag.personIndex == null) {
+          _selectedIds.remove(outputTag.tagId);
+        } else {
+          _personTagIds(outputTag.personIndex!).remove(outputTag.tagId);
+        }
+      }
+      _persist();
+    });
   }
 
   String _cleanTag(String value) => value
@@ -1652,7 +1804,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slot.mode == '動漫角色') {
       final character = _characterForNew(slot);
       if (character != null) {
-        for (final trait in character.traits) {
+        for (final trait in _characterTraitsForSlot(slot, index)) {
           final originalLength = _hairLengthTag(trait.en);
           if (originalLength != null) return originalLength;
         }
@@ -2241,6 +2393,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _selectedIds.clear();
       _personSelectedIds.clear();
+      _removedCharacterTags.clear();
       _personTagQueries.clear();
       _personActiveGroups.clear();
       for (final controller in _personSearchControllers.values) {
@@ -2290,6 +2443,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           setState(() {
             _selectedIds.clear();
             _personSelectedIds.clear();
+            _removedCharacterTags.clear();
             _customTags.clear();
             _presets.clear();
             _restore();
@@ -2379,6 +2533,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       while (_personSlots.length < count) _personSlots.add(PersonSlot());
       while (_personSlots.length > count) _personSlots.removeLast();
       _personSelectedIds.removeWhere((index, _) => index >= count);
+      _removedCharacterTags.removeWhere((index, _) => index >= count);
       _personTagQueries.removeWhere((index, _) => index >= count);
       _personActiveGroups.removeWhere((key, _) =>
           int.tryParse(key.split(':').first) != null &&
@@ -2955,6 +3110,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.animeQuery = '';
       slot.query = '';
       slot.characterId = '';
+      _removedCharacterTags.remove(slotIndex);
       _clearPersonSearchController(slotIndex, 'anime');
       _clearPersonSearchController(slotIndex, 'character');
       _persist();
@@ -2970,6 +3126,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.animeTag = character.animeTag;
       slot.animeQuery = '';
       slot.query = '';
+      _removedCharacterTags.remove(slotIndex);
       _clearPersonSearchController(slotIndex, 'anime');
       _clearPersonSearchController(slotIndex, 'character');
       _recentCharacterIds.remove(character.id);
@@ -3222,6 +3379,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '姿勢',
                     '動作',
                     '物件',
+                    '成人道具',
                     '場景',
                     '其他',
                   ]
@@ -3310,6 +3468,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '姿勢',
                     '動作',
                     '物件',
+                    '成人道具',
                   };
                   if (personalGroups.contains(group)) {
                     _personTagIds(0).add(tag.id);
@@ -4172,18 +4331,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：姿勢', instruction: '請分別設定每位人物的表情。')),
       _stepCard(
           5,
-          '姿勢、動作與物件',
+          '姿勢、動作、物件與成人道具',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where(
-                  (tag) => ['姿勢', '動作', '物件', '性行為', '性姿勢'].contains(tag.group))
+              .where((tag) =>
+                  ['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'].contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
-          _stepPersonTagPicker(['姿勢', '動作', '物件', '性行為', '性姿勢'],
+          _stepPersonTagPicker(['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'],
               nextLabel: '下一步：品質與負面',
-              instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件與性姿勢；不同人物可以使用不同姿勢。')),
+              instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件、成人道具與性姿勢；不同人物可以使用不同姿勢。')),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
@@ -4403,6 +4562,98 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _chineseOutputField() {
+    final generated = _generatedPositiveTags();
+    final extra = _extraPositive.text.trim();
+    final preprompt = _preprompt.text.trim();
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '中文翻譯與記憶欄位',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                tooltip: '複製',
+                onPressed: _positiveZh.isEmpty
+                    ? null
+                    : () => _copy(_positiveZh, '中文欄位'),
+                icon: const Icon(Icons.copy_all_outlined),
+              ),
+            ],
+          ),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 150),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).inputDecorationTheme.fillColor ??
+                  Theme.of(context).colorScheme.surface,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '人物數量：${_peopleZh()}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (generated.isNotEmpty) ...[
+                    const SizedBox(height: 9),
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: generated.map((tag) {
+                        return Tooltip(
+                          message: tag.en,
+                          child: InputChip(
+                            label: Text(tag.zh),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () => _removeGeneratedOutputTag(tag),
+                            backgroundColor: _buttonSurface,
+                            side: const BorderSide(color: _buttonBorder),
+                            labelStyle: const TextStyle(color: Colors.white),
+                            deleteIconColor: Colors.white,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  if (extra.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      '額外正向敘述：${_extraTags(extra).map(_positiveChineseTag).join('、')}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                  if (preprompt.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Amanatsu 品質前綴：$preprompt',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _outputPanel() {
     final selectedCount = _selectedTags.length + _personSelectedCount;
     return Card(
@@ -4459,11 +4710,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   onCopy: () => _copy(_positiveText, '英文正向標籤'),
                   maxLines: 6,
                 );
-                final chinese = _outputField(
-                  '中文翻譯與記憶欄位',
-                  _positiveZh,
-                  onCopy: () => _copy(_positiveZh, '中文欄位'),
-                );
+                final chinese = _chineseOutputField();
                 return narrow
                     ? Column(
                         children: [

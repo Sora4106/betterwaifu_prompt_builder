@@ -62,7 +62,7 @@
           <div class="panel-heading"><div><p class="eyebrow">03 / OUTPUT</p><h2>輸出結果</h2><small class="version-inline">v<span id="output-version">1.1.2+4</span></small></div><div class="output-actions"><button class="icon-button" id="save-preset" title="儲存組合">▣</button><button class="icon-button" id="clear-all" title="清除目前組合的所有標籤">清除</button><button class="primary small" id="copy-positive">複製英文</button></div></div>
           <p class="panel-caption" id="selected-summary">已選 0 個資料庫標籤 · 英文每個標籤以句點結尾</p>
           <label>English prompt · 可直接貼上<textarea id="positive-output" class="output-text" readonly rows="8"></textarea></label>
-          <label>中文翻譯與記憶欄位<textarea id="chinese-output" class="output-text" readonly rows="5"></textarea></label>
+          <div class="output-block"><div class="output-label">中文翻譯與記憶欄位</div><div id="chinese-output" class="output-tag-field"></div></div>
           <label>Negative prompt · 負面標籤<textarea id="negative-output" class="output-text" readonly rows="4"></textarea></label>
           <label>Negative prompt · 中文翻譯<textarea id="negative-chinese" class="output-text" readonly rows="4"></textarea></label>
           <div class="order-note">↳ <span id="order-summary"></span></div>
@@ -95,7 +95,7 @@
       <div class="panel-heading"><div><p class="eyebrow">CUSTOM TAG</p><h2>新增自訂標籤</h2></div><button value="cancel" class="icon-button">×</button></div>
       <label>中文名稱<input id="custom-zh" required placeholder="例如：藍色外套"></label>
       <label>English tag<input id="custom-en" required placeholder="例如：blue jacket"></label>
-      <label>分類與輸出順序<select id="custom-group"><option>自訂角色</option><option>自訂特徵</option><option>髮型</option><option>上衣</option><option>褲子</option><option>裙子</option><option>內衣</option><option>胸罩</option><option>內褲</option><option>襪子</option><option>鞋子</option><option>服裝</option><option>配件</option><option>配件顏色</option><option>服裝風格</option><option>上衣風格</option><option>下身風格</option><option>上衣顏色</option><option>下身顏色</option><option>服裝顏色</option><option>服裝細節</option><option>服裝材質</option><option>穿脫狀態</option><option>表情</option><option>姿勢</option><option>動作</option><option>物件</option><option>場景</option><option>其他</option></select></label>
+      <label>分類與輸出順序<select id="custom-group"><option>自訂角色</option><option>自訂特徵</option><option>髮型</option><option>上衣</option><option>褲子</option><option>裙子</option><option>內衣</option><option>胸罩</option><option>內褲</option><option>襪子</option><option>鞋子</option><option>服裝</option><option>配件</option><option>配件顏色</option><option>服裝風格</option><option>上衣風格</option><option>下身風格</option><option>上衣顏色</option><option>下身顏色</option><option>服裝顏色</option><option>服裝細節</option><option>服裝材質</option><option>穿脫狀態</option><option>表情</option><option>姿勢</option><option>動作</option><option>物件</option><option>成人道具</option><option>場景</option><option>其他</option></select></label>
       <p class="dialog-hint">自訂內容只儲存在此瀏覽器，不會上傳。</p>
       <div class="dialog-actions"><button value="cancel" class="ghost">取消</button><button id="custom-submit" value="default" class="primary">加入並選取</button></div>
     </form>
