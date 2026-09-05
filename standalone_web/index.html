@@ -30,6 +30,8 @@
       <div class="hero-note"><span>●</span> 已啟用本機記憶<br><small>localStorage · 不連線生成</small></div>
     </section>
 
+    <section id="wizard" class="wizard" aria-label="漸進式提示詞設定"></section>
+
     <section class="grid-layout">
       <div class="main-column">
         <article class="panel setup-panel">
@@ -70,6 +72,7 @@
           <label>English prompt · 可直接貼上<textarea id="positive-output" class="output-text" readonly rows="8"></textarea></label>
           <label>中文翻譯與記憶欄位<textarea id="chinese-output" class="output-text" readonly rows="5"></textarea></label>
           <label>Negative prompt · 負面標籤<textarea id="negative-output" class="output-text" readonly rows="4"></textarea></label>
+          <label>Negative prompt · 中文翻譯<textarea id="negative-chinese" class="output-text" readonly rows="4"></textarea></label>
           <div class="order-note">↳ <span id="order-summary"></span></div>
         </article>
 
@@ -92,6 +95,8 @@
     </details>
   </main>
 
+  <div class="copy-rail" aria-label="固定複製列"><span>複製</span><button id="sticky-copy-positive" title="複製正向英文標籤">正</button><button id="sticky-copy-negative" title="複製負面英文標籤">負</button></div>
+
   <div id="toast" class="toast" role="status"></div>
   <dialog id="custom-dialog">
     <form method="dialog" id="custom-form" class="dialog-card">
@@ -101,6 +106,18 @@
       <label>分類與輸出順序<select id="custom-group"><option>自訂角色</option><option>自訂特徵</option><option>上衣</option><option>褲子</option><option>裙子</option><option>胸罩</option><option>內褲</option><option>襪子</option><option>鞋子</option><option>服裝</option><option>配件</option><option>表情</option><option>姿勢</option><option>場景</option><option>其他</option></select></label>
       <p class="dialog-hint">自訂內容只儲存在此瀏覽器，不會上傳。</p>
       <div class="dialog-actions"><button value="cancel" class="ghost">取消</button><button id="custom-submit" value="default" class="primary">加入並選取</button></div>
+    </form>
+  </dialog>
+  <dialog id="character-dialog">
+    <form method="dialog" id="character-form" class="dialog-card">
+      <div class="panel-heading"><div><p class="eyebrow">CUSTOM CHARACTER</p><h2>新增動漫／角色資料</h2></div><button value="cancel" class="icon-button">×</button></div>
+      <div class="dialog-grid"><label>動漫中文名稱<input id="character-anime-zh" required></label><label>Anime English name<input id="character-anime-en" required></label></div>
+      <label>Anime tag<input id="character-anime-tag" placeholder="留白會由英文名稱產生"></label>
+      <div class="dialog-grid"><label>角色中文名稱<input id="character-zh" required></label><label>Character English name<input id="character-en" required></label></div>
+      <label>Character tag<input id="character-tag" required placeholder="例如: my_original_character"></label>
+      <div class="dialog-grid"><label>角色特徵中文<input id="character-traits-zh" placeholder="粉紅頭髮, 呆毛, 綠眼睛"></label><label>Character traits English<input id="character-traits-en" placeholder="pink hair, ahoge, green eyes"></label></div>
+      <p class="dialog-hint">特徵依逗號順序配對，儲存在本機並可在之後查詢。</p>
+      <div class="dialog-actions"><button value="cancel" class="ghost">取消</button><button id="character-submit" value="default" class="primary">儲存角色</button></div>
     </form>
   </dialog>
   <script src="app.js"></script>

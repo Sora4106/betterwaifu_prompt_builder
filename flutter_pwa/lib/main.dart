@@ -3,7 +3,13 @@ import 'dart:html' as html;
 
 import 'package:flutter/material.dart';
 
+import 'catalog_data.dart';
+
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
+
+extension _StringFallback on String {
+  String ifEmpty(String fallback) => trim().isEmpty ? fallback : this;
+}
 
 class TagItem {
   const TagItem({
@@ -14,6 +20,7 @@ class TagItem {
     required this.order,
     this.adult = false,
     this.builtIn = true,
+    this.conflictGroup,
   });
 
   final String id;
@@ -23,6 +30,7 @@ class TagItem {
   final int order;
   final bool adult;
   final bool builtIn;
+  final String? conflictGroup;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -32,6 +40,7 @@ class TagItem {
         'order': order,
         'adult': adult,
         'builtIn': builtIn,
+        'conflictGroup': conflictGroup,
       };
 
   factory TagItem.fromJson(Map<String, dynamic> json) => TagItem(
@@ -42,6 +51,7 @@ class TagItem {
         order: (json['order'] as num?)?.toInt() ?? 1,
         adult: json['adult'] == true,
         builtIn: false,
+        conflictGroup: json['conflictGroup'] as String?,
       );
 }
 
@@ -58,6 +68,72 @@ class Preset {
         payload: Map<String, dynamic>.from(json['payload'] as Map? ?? {}),
       );
 }
+
+class PersonSlot {
+  PersonSlot({this.gender = '女性'});
+
+  String gender;
+  bool detailed = true;
+  String mode = '原創';
+  String characterId = '';
+  String query = '';
+  String originalAnimeZh = '';
+  String originalAnimeEn = '';
+  String originalAnimeTag = '';
+  String originalCharacterZh = '';
+  String originalCharacterEn = '';
+  String originalCharacterTag = '';
+  String originalTraits = '';
+
+  Map<String, dynamic> toJson() => {
+        'gender': gender,
+        'detailed': detailed,
+        'mode': mode,
+        'characterId': characterId,
+        'query': query,
+        'originalAnimeZh': originalAnimeZh,
+        'originalAnimeEn': originalAnimeEn,
+        'originalAnimeTag': originalAnimeTag,
+        'originalCharacterZh': originalCharacterZh,
+        'originalCharacterEn': originalCharacterEn,
+        'originalCharacterTag': originalCharacterTag,
+        'originalTraits': originalTraits,
+      };
+
+  factory PersonSlot.fromJson(Map<String, dynamic> json) => PersonSlot(
+        gender: '${json['gender'] ?? '女性'}',
+      )
+        ..detailed = json['detailed'] != false
+        ..mode = '${json['mode'] ?? '原創'}'
+        ..characterId = '${json['characterId'] ?? ''}'
+        ..query = '${json['query'] ?? ''}'
+        ..originalAnimeZh = '${json['originalAnimeZh'] ?? ''}'
+        ..originalAnimeEn = '${json['originalAnimeEn'] ?? ''}'
+        ..originalAnimeTag = '${json['originalAnimeTag'] ?? ''}'
+        ..originalCharacterZh = '${json['originalCharacterZh'] ?? ''}'
+        ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
+        ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
+        ..originalTraits = '${json['originalTraits'] ?? ''}';
+}
+
+TagItem _catalogTag(CatalogTagData data, {String prefix = 'catalog'}) =>
+    TagItem(
+      id: '${prefix}_${data.id}',
+      group: data.group,
+      zh: data.zh,
+      en: data.en,
+      order: data.order,
+      adult: data.adult,
+      conflictGroup: data.conflictGroup,
+    );
+
+TagItem _characterTag(String id, String zh, String en) => TagItem(
+      id: 'character_$id',
+      group: '角色標籤',
+      zh: zh,
+      en: en,
+      order: 1,
+    );
 
 TagItem _tag(
   String id,
@@ -352,8 +428,13 @@ class PromptBuilderApp extends StatefulWidget {
 
 class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _builtIns = _seedTags();
+  final List<TagItem> _supplemental =
+      supplementalTags.map(_catalogTag).toList();
   final Set<String> _selectedIds = <String>{};
   final List<TagItem> _customTags = <TagItem>[];
+  final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
+  final List<PersonSlot> _personSlots = <PersonSlot>[PersonSlot()];
+  final List<String> _recentCharacterIds = <String>[];
   final List<Preset> _presets = <Preset>[];
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
@@ -375,10 +456,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _cfg = '5.0';
   String _clipSkip = '2';
   int _peopleCount = 1;
+  int _stepIndex = 0;
   bool _showAdult = false;
   bool _showInfo = true;
 
-  List<TagItem> get _allTags => [..._builtIns, ..._customTags];
+  List<TagItem> get _allTags =>
+      [..._builtIns, ..._supplemental, ..._customTags];
+
+  List<CatalogCharacter> get _allCharacters =>
+      [...catalogCharacters, ..._customCharacters];
 
   List<TagItem> get _selectedTags {
     final tags =
@@ -421,6 +507,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           (item) => TagItem.fromJson(Map<String, dynamic>.from(item as Map)),
         ),
       );
+      _customCharacters.addAll(
+        (data['customCharacters'] as List? ?? []).map(
+          (item) =>
+              CatalogCharacter.fromJson(Map<String, dynamic>.from(item as Map)),
+        ),
+      );
+      _personSlots
+        ..clear()
+        ..addAll(
+          (data['personSlots'] as List? ?? []).map(
+            (item) =>
+                PersonSlot.fromJson(Map<String, dynamic>.from(item as Map)),
+          ),
+        );
+      if (_personSlots.isEmpty) _personSlots.add(PersonSlot());
+      _recentCharacterIds.addAll(
+        (data['recentCharacterIds'] as List? ?? []).map((id) => '$id'),
+      );
       _presets.addAll(
         (data['presets'] as List? ?? []).map(
           (item) => Preset.fromJson(Map<String, dynamic>.from(item as Map)),
@@ -430,6 +534,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         (data['selectedIds'] as List? ?? []).map((id) => '$id'),
       );
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
+      _stepIndex = (data['stepIndex'] as num?)?.toInt() ?? 0;
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -440,6 +545,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
+      _peopleCount = _personSlots.length;
     } catch (_) {
       // A malformed local record should never stop the builder from opening.
     }
@@ -448,8 +554,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Map<String, dynamic> _snapshot() => {
         'selectedIds': _selectedIds.toList(),
         'customTags': _customTags.map((tag) => tag.toJson()).toList(),
+        'customCharacters':
+            _customCharacters.map((item) => item.toJson()).toList(),
+        'personSlots': _personSlots.map((item) => item.toJson()).toList(),
+        'recentCharacterIds': _recentCharacterIds,
         'presets': _presets.map((preset) => preset.toJson()).toList(),
         'peopleCount': _peopleCount,
+        'stepIndex': _stepIndex,
         'gender': _gender,
         'model': _model,
         'sampler': _sampler,
@@ -483,6 +594,88 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return '$_peopleCount 人$type';
   }
 
+  List<String> _peopleTokensNew() {
+    final female = _personSlots.where((slot) => slot.gender == '女性').length;
+    final male = _personSlots.where((slot) => slot.gender == '男性').length;
+    final other = _personSlots.length - female - male;
+    final result = <String>[];
+    if (female > 0) result.add(female == 1 ? '1girl' : '${female}girls');
+    if (male > 0) result.add(male == 1 ? '1boy' : '${male}boys');
+    if (other > 0) result.add(other == 1 ? '1other' : '${other}others');
+    return result.isEmpty ? ['1person'] : result;
+  }
+
+  String _peopleTagNew() => _peopleTokensNew().join(', ');
+
+  String _peopleZhNew() {
+    final female = _personSlots.where((slot) => slot.gender == '女性').length;
+    final male = _personSlots.where((slot) => slot.gender == '男性').length;
+    final other = _personSlots.length - female - male;
+    final result = <String>[];
+    if (female > 0) result.add('$female 位女性角色');
+    if (male > 0) result.add('$male 位男性角色');
+    if (other > 0) result.add('$other 位其他/異種角色');
+    return result.join('、');
+  }
+
+  CatalogCharacter? _characterForNew(PersonSlot slot) {
+    if (slot.characterId.isEmpty) return null;
+    for (final character in _allCharacters) {
+      if (character.id == slot.characterId) return character;
+    }
+    return null;
+  }
+
+  List<String> _characterTokensNew() {
+    final result = <String>[];
+    for (final slot in _personSlots) {
+      if (!slot.detailed) continue;
+      if (slot.mode == '動漫角色') {
+        final character = _characterForNew(slot);
+        if (character != null) {
+          result.add(character.animeTag);
+          result.add(character.characterTag);
+          result.addAll(character.traits.map((item) => item.en));
+        }
+      } else {
+        final own = <String>[];
+        if (_cleanTag(slot.originalAnimeTag).isNotEmpty)
+          own.add(_cleanTag(slot.originalAnimeTag));
+        if (_cleanTag(slot.originalCharacterTag).isNotEmpty)
+          own.add(_cleanTag(slot.originalCharacterTag));
+        own.addAll(_extraTags(slot.originalTraits));
+        result.addAll(own.isEmpty ? ['original'] : own);
+      }
+    }
+    return result;
+  }
+
+  List<String> _characterChineseNew() {
+    final result = <String>[];
+    for (final slot in _personSlots) {
+      if (!slot.detailed) {
+        result.add('此角色不設定細節');
+        continue;
+      }
+      if (slot.mode == '動漫角色') {
+        final character = _characterForNew(slot);
+        if (character == null) {
+          result.add('尚未選擇動漫角色');
+        } else {
+          result.add('${character.animeZh}／${character.characterZh}');
+          result.addAll(character.traits.map((item) => item.zh));
+        }
+      } else {
+        result.add(slot.originalCharacterZh.trim().isEmpty
+            ? '原創角色'
+            : slot.originalCharacterZh.trim());
+        if (slot.originalTraits.trim().isNotEmpty)
+          result.add('原創特徵：${slot.originalTraits.trim()}');
+      }
+    }
+    return result;
+  }
+
   String _cleanTag(String value) => value
       .trim()
       .replaceAll(RegExp(r'^[,，\s]+|[,，\s]+$'), '')
@@ -495,7 +688,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .toList();
 
   List<String> get _positiveTokens {
-    final tokens = <String>[_peopleTag()];
+    final tokens = <String>[..._peopleTokensNew()];
+    tokens.addAll(_characterTokensNew());
     tokens.addAll(_selectedTags.map((tag) => tag.en));
     tokens.addAll(_extraTags(_extraPositive.text));
     tokens.addAll(_extraTags(_preprompt.text));
@@ -506,7 +700,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String get _positiveText => _positiveTokens.map((tag) => '$tag.').join(' ');
 
   String get _positiveZh {
-    final tokens = <String>[_peopleZh()];
+    final tokens = <String>[_peopleZhNew(), ..._characterChineseNew()];
     tokens.addAll(_selectedTags.map((tag) => tag.zh));
     if (_extraPositive.text.trim().isNotEmpty)
       tokens.add('額外英文標籤：${_extraPositive.text.trim()}');
@@ -515,16 +709,132 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tokens.join('。 ');
   }
 
+  String _negativeTranslation(String tag) {
+    const translations = {
+      'lowres': '低解析度',
+      'worst quality': '最差品質',
+      'bad quality': '低品質',
+      'bad anatomy': '解剖結構錯誤',
+      'bad hands': '手部錯誤',
+      'extra digits': '多餘手指',
+      'fewer digits': '手指數量不足',
+      'multiple views': '多視角',
+      'extra limbs': '多餘肢體',
+      'missing fingers': '缺少手指',
+      'deformed': '變形',
+      'poorly drawn face': '臉部繪製不佳',
+      'text': '文字',
+      'error': '錯誤',
+      'jpeg artifacts': 'JPEG 壓縮痕跡',
+      'watermark': '浮水印',
+      'logo': '標誌',
+      'signature': '簽名',
+      'unfinished': '未完成',
+      'displeasing': '令人不適的畫面',
+      'username': '使用者名稱',
+      'scan artifacts': '掃描痕跡',
+      'sketch': '草稿',
+      'monochrome': '單色',
+      'greyscale': '灰階',
+      'guro': '血腥獵奇',
+      'artist name': '藝術家名稱',
+      'old': '老舊風格',
+      'early': '早期風格',
+      'chromatic aberration': '色差',
+      'artistic error': '藝術錯誤',
+    };
+    return translations[tag.toLowerCase()] ??
+        (RegExp(r'[\u4e00-\u9fff]').hasMatch(tag) ? tag : '未內建翻譯：$tag');
+  }
+
+  String get _negativeZh => _extraTags(_negative.text)
+      .map((tag) => '${_negativeTranslation(tag)}。')
+      .join(' ');
+
   String get _negativeText =>
       _extraTags(_negative.text).map((tag) => '$tag.').join(' ');
 
-  void _toggle(TagItem tag) {
-    setState(() {
-      if (_selectedIds.contains(tag.id)) {
+  String? _conflictGroup(TagItem tag) {
+    if (tag.conflictGroup != null) return tag.conflictGroup;
+    if (['上衣', '胸罩'].contains(tag.group)) return 'top';
+    if (['褲子', '裙子', '內褲'].contains(tag.group)) return 'bottom';
+    if (tag.group == '服裝') return 'one_piece';
+    if (tag.group == '姿勢') return 'pose';
+    if (tag.group == '性姿勢') return 'sex_position';
+    if (tag.group == '場景') return 'scene';
+    if (tag.group == '穿脫狀態') return 'wear_state';
+    if (tag.group == '胸部' &&
+        [
+          'flat chest',
+          'small breasts',
+          'medium breasts',
+          'large breasts',
+          'huge breasts'
+        ].contains(tag.en)) return 'breast_size';
+    if (tag.group == '表情' && ['closed mouth', 'open mouth'].contains(tag.en))
+      return 'mouth';
+    if (tag.group == '表情' && ['wink', 'closed eyes'].contains(tag.en))
+      return 'eyes';
+    return null;
+  }
+
+  bool _tagsConflict(TagItem first, TagItem second) {
+    final firstGroup = _conflictGroup(first);
+    final secondGroup = _conflictGroup(second);
+    // Basic poses can belong to different people in a multi-person scene.
+    // Keep the replacement warning for a single person, but allow e.g.
+    // sitting + standing when the prompt contains multiple character slots.
+    if (firstGroup == 'pose' &&
+        secondGroup == 'pose' &&
+        _personSlots.length > 1) return false;
+    if (firstGroup != null && firstGroup == secondGroup) return true;
+    final firstNude =
+        first.en == 'nude' || first.en == 'topless' || first.en == 'bottomless';
+    final secondNude = second.en == 'nude' ||
+        second.en == 'topless' ||
+        second.en == 'bottomless';
+    if (firstNude || secondNude) {
+      final clothing = {'top', 'bottom', 'one_piece'};
+      if ((firstNude && clothing.contains(secondGroup)) ||
+          (secondNude && clothing.contains(firstGroup))) return true;
+    }
+    return false;
+  }
+
+  Future<void> _toggle(TagItem tag) async {
+    if (_selectedIds.contains(tag.id)) {
+      setState(() {
         _selectedIds.remove(tag.id);
-      } else {
-        _selectedIds.add(tag.id);
+        _persist();
+      });
+      return;
+    }
+    final conflicts =
+        _selectedTags.where((item) => _tagsConflict(item, tag)).toList();
+    if (conflicts.isNotEmpty) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('標籤可能互相衝突'),
+          content: Text(
+              '目前已有「${conflicts.map((item) => item.zh).join('、')}」。\n加入「${tag.zh}」會移除原標籤，是否更換？'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('保留原標籤')),
+            FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('移除原標籤並更換')),
+          ],
+        ),
+      );
+      if (replace != true) return;
+    }
+    setState(() {
+      for (final conflict in conflicts) {
+        _selectedIds.remove(conflict.id);
       }
+      _selectedIds.add(tag.id);
       _persist();
     });
   }
@@ -639,6 +949,219 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
+      _persist();
+    });
+  }
+
+  void _setPeopleCount(int count) {
+    setState(() {
+      while (_personSlots.length < count) _personSlots.add(PersonSlot());
+      while (_personSlots.length > count) _personSlots.removeLast();
+      _peopleCount = count;
+      _persist();
+    });
+  }
+
+  List<CatalogCharacter> _matchingCharacters(String query) {
+    final lower = query.trim().toLowerCase();
+    final source = _allCharacters.where((item) {
+      if (lower.isEmpty) return true;
+      return '${item.animeZh} ${item.animeEn} ${item.characterZh} ${item.characterEn} ${item.animeTag} ${item.characterTag}'
+          .toLowerCase()
+          .contains(lower);
+    }).toList();
+    if (lower.isEmpty && _recentCharacterIds.isNotEmpty) {
+      source.sort((a, b) {
+        final aIndex = _recentCharacterIds.indexOf(a.id);
+        final bIndex = _recentCharacterIds.indexOf(b.id);
+        return (aIndex < 0 ? 999 : aIndex).compareTo(bIndex < 0 ? 999 : bIndex);
+      });
+    }
+    return source.take(18).toList();
+  }
+
+  void _selectCharacter(int slotIndex, CatalogCharacter character) {
+    if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
+    setState(() {
+      final slot = _personSlots[slotIndex];
+      slot.characterId = character.id;
+      slot.mode = '動漫角色';
+      _recentCharacterIds.remove(character.id);
+      _recentCharacterIds.insert(0, character.id);
+      if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
+      _persist();
+    });
+  }
+
+  bool _charactersComplete() {
+    for (final slot in _personSlots) {
+      if (!slot.detailed) continue;
+      if (slot.mode == '動漫角色' && _characterForNew(slot) == null) return false;
+      if (slot.mode == '原創' &&
+          (slot.originalCharacterEn.trim().isEmpty ||
+              slot.originalCharacterTag.trim().isEmpty)) return false;
+    }
+    return true;
+  }
+
+  String _slug(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9_ -]'), '')
+      .replaceAll(RegExp(r'\s+'), '_');
+
+  void _addCustomCharacter() {
+    final animeZh = TextEditingController();
+    final animeEn = TextEditingController();
+    final animeTag = TextEditingController();
+    final characterZh = TextEditingController();
+    final characterEn = TextEditingController();
+    final characterTag = TextEditingController();
+    final traitsZh = TextEditingController();
+    final traitsEn = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('新增動漫／角色資料'),
+        content: SizedBox(
+          width: 560,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(children: [
+                  Expanded(
+                      child: TextField(
+                          controller: animeZh,
+                          decoration:
+                              const InputDecoration(labelText: '動漫中文名稱'))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: TextField(
+                          controller: animeEn,
+                          decoration: const InputDecoration(
+                              labelText: 'Anime English name')))
+                ]),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: animeTag,
+                    decoration: const InputDecoration(
+                        labelText: 'Anime tag', hintText: '留白會由英文名稱產生')),
+                const SizedBox(height: 10),
+                Row(children: [
+                  Expanded(
+                      child: TextField(
+                          controller: characterZh,
+                          decoration:
+                              const InputDecoration(labelText: '角色中文名稱'))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: TextField(
+                          controller: characterEn,
+                          decoration: const InputDecoration(
+                              labelText: 'Character English name')))
+                ]),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: characterTag,
+                    decoration: const InputDecoration(
+                        labelText: 'Character tag', hintText: '留白會由英文名稱產生')),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: traitsZh,
+                    decoration: const InputDecoration(
+                        labelText: '角色特徵中文', hintText: '粉紅頭髮, 呆毛, 綠眼睛')),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: traitsEn,
+                    decoration: const InputDecoration(
+                        labelText: 'Character traits English',
+                        hintText: 'pink hair, ahoge, green eyes')),
+                const SizedBox(height: 8),
+                const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('中文與英文特徵依逗號順序配對；資料只會儲存在本機。',
+                        style: TextStyle(fontSize: 12))),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消')),
+          FilledButton(
+            onPressed: () {
+              final cEn = characterEn.text.trim();
+              final cTag = _cleanTag(characterTag.text).isEmpty
+                  ? _slug(cEn)
+                  : _cleanTag(characterTag.text);
+              if (animeZh.text.trim().isEmpty ||
+                  animeEn.text.trim().isEmpty ||
+                  characterZh.text.trim().isEmpty ||
+                  cEn.isEmpty ||
+                  cTag.isEmpty) return;
+              final zhList = _extraTags(traitsZh.text);
+              final enList = _extraTags(traitsEn.text);
+              final traits = <CatalogTagData>[];
+              final total =
+                  zhList.length > enList.length ? zhList.length : enList.length;
+              for (var index = 0; index < total; index++) {
+                final zh =
+                    index < zhList.length ? zhList[index] : enList[index];
+                final en = index < enList.length ? enList[index] : _slug(zh);
+                traits.add(CatalogTagData(
+                    id: 'custom_trait_${DateTime.now().microsecondsSinceEpoch}_$index',
+                    group: '角色標籤',
+                    zh: zh,
+                    en: en,
+                    order: 1));
+              }
+              final character = CatalogCharacter(
+                  id:
+                      'custom_character_${DateTime.now().microsecondsSinceEpoch}',
+                  animeZh: animeZh.text.trim(),
+                  animeEn: animeEn.text.trim(),
+                  animeTag: _cleanTag(animeTag.text).isEmpty
+                      ? _slug(animeEn.text)
+                      : _cleanTag(animeTag.text),
+                  characterZh: characterZh.text.trim(),
+                  characterEn: cEn,
+                  characterTag: cTag,
+                  traits: traits);
+              final slotIndex = _personSlots.indexWhere(
+                  (slot) => slot.mode == '動漫角色' && slot.characterId.isEmpty);
+              final targetIndex = slotIndex < 0 ? 0 : slotIndex;
+              _customCharacters.add(character);
+              final target = _personSlots[targetIndex];
+              target.mode = '動漫角色';
+              target.characterId = character.id;
+              _recentCharacterIds
+                ..remove(character.id)
+                ..insert(0, character.id);
+              if (_recentCharacterIds.length > 10) {
+                _recentCharacterIds.removeLast();
+              }
+              setState(_persist);
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('儲存角色'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _advanceStep() {
+    if (_stepIndex == 2 && !_charactersComplete()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
+      return;
+    }
+    setState(() {
+      if (_stepIndex < 7) _stepIndex++;
+      _activeGroup = '全部';
+      _search.clear();
       _persist();
     });
   }
@@ -790,6 +1313,536 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       selectedColor: Theme.of(context).colorScheme.primaryContainer,
       onSelected: (_) => _toggle(tag),
     );
+  }
+
+  List<TagItem> _stepVisibleTags(List<String> groups) {
+    final query = _search.text.trim().toLowerCase();
+    return _allTags.where((tag) {
+      final inGroup = groups.contains(tag.group);
+      final adultMatch = _showAdult || !tag.adult;
+      final queryMatch = query.isEmpty ||
+          tag.zh.toLowerCase().contains(query) ||
+          tag.en.toLowerCase().contains(query);
+      return inGroup && adultMatch && queryMatch;
+    }).toList();
+  }
+
+  Widget _stepTagPicker(List<String> groups, {required String nextLabel}) {
+    final currentGroup =
+        groups.contains(_activeGroup) ? _activeGroup : groups.first;
+    final visible = _stepVisibleTags(groups);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+            controller: _search,
+            decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: '搜尋此步驟的中文或英文標籤…',
+                filled: true,
+                suffixIcon: _search.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: _search.clear,
+                        icon: const Icon(Icons.clear)))),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: groups.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (_, index) {
+              final group = groups[index];
+              return ChoiceChip(
+                  label: Text(group),
+                  selected: group == currentGroup,
+                  onSelected: (_) => setState(() => _activeGroup = group));
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (visible.isEmpty)
+          const Text('此分類沒有符合的標籤，可以先完成此步驟或新增自訂標籤。')
+        else
+          Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: visible.map(_tagChip).toList()),
+        const SizedBox(height: 14),
+        Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+                onPressed: _advanceStep,
+                icon: const Icon(Icons.arrow_forward),
+                label: Text(nextLabel))),
+      ],
+    );
+  }
+
+  Widget _stepHeader(int index, String title, String summary, IconData icon) {
+    final expanded = _stepIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _stepIndex = index),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+        child: Row(children: [
+          CircleAvatar(radius: 15, child: Text('${index + 1}')),
+          const SizedBox(width: 12),
+          Icon(icon,
+              size: 20,
+              color: expanded
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: 9),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(summary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant))
+              ])),
+          Icon(expanded ? Icons.expand_less : Icons.expand_more),
+        ]),
+      ),
+    );
+  }
+
+  Widget _stepCard(
+      int index, String title, String summary, IconData icon, Widget child) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: [
+        _stepHeader(index, title, summary, icon),
+        if (_stepIndex == index) const Divider(height: 1),
+        if (_stepIndex == index)
+          Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18), child: child),
+      ]),
+    );
+  }
+
+  Widget _stepPeople() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('先決定畫面中有幾位角色；之後可以逐一指定女性、男性或其他/異種。',
+            style: TextStyle(fontSize: 13)),
+        const SizedBox(height: 14),
+        DropdownButtonFormField<int>(
+          value: _personSlots.length,
+          decoration: const InputDecoration(
+              labelText: '人物數量（必填）', prefixIcon: Icon(Icons.groups_outlined)),
+          items: List.generate(6, (index) => index + 1)
+              .map((value) =>
+                  DropdownMenuItem(value: value, child: Text('$value 人')))
+              .toList(),
+          onChanged: (value) => _setPeopleCount(value ?? 1),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: _model,
+          decoration: const InputDecoration(
+              labelText: '目標模型', prefixIcon: Icon(Icons.auto_awesome)),
+          items: const ['Amanatsu 1.1', 'Amanatsu（自訂設定）', '通用 Danbooru']
+              .map(
+                  (value) => DropdownMenuItem(value: value, child: Text(value)))
+              .toList(),
+          onChanged: (value) => setState(() {
+            _model = value ?? _model;
+            _persist();
+          }),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          Expanded(
+              child: DropdownButtonFormField<String>(
+                  value: _sampler,
+                  decoration: const InputDecoration(labelText: 'Sampler'),
+                  items: const [
+                    'Euler a',
+                    'DPM++ 2M Karras',
+                    'DPM++ SDE Karras',
+                    'DDIM'
+                  ]
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) => setState(() {
+                        _sampler = value ?? _sampler;
+                        _persist();
+                      }))),
+          const SizedBox(width: 9),
+          Expanded(
+              child: DropdownButtonFormField<int>(
+                  value: _steps,
+                  decoration: const InputDecoration(labelText: 'Steps'),
+                  items: const [20, 24, 28, 32, 35, 40]
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text('$value')))
+                      .toList(),
+                  onChanged: (value) => setState(() {
+                        _steps = value ?? _steps;
+                        _persist();
+                      }))),
+          const SizedBox(width: 9),
+          Expanded(
+              child: DropdownButtonFormField<String>(
+                  value: _cfg,
+                  decoration: const InputDecoration(labelText: 'CFG'),
+                  items: const ['4.5', '5.0', '5.5', '6.0', '7.0']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) => setState(() {
+                        _cfg = value ?? _cfg;
+                        _persist();
+                      }))),
+          const SizedBox(width: 9),
+          Expanded(
+              child: DropdownButtonFormField<String>(
+                  value: _clipSkip,
+                  decoration: const InputDecoration(labelText: 'Clip skip'),
+                  items: const ['1', '2']
+                      .map((value) =>
+                          DropdownMenuItem(value: value, child: Text(value)))
+                      .toList(),
+                  onChanged: (value) => setState(() {
+                        _clipSkip = value ?? _clipSkip;
+                        _persist();
+                      }))),
+        ]),
+        const SizedBox(height: 5),
+        Text('參考起始設定：Euler a · 28 steps · CFG 5 · Clip skip 2。',
+            style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 14),
+        Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+                onPressed: _advanceStep,
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('下一步：場景'))),
+      ],
+    );
+  }
+
+  Widget _stepCharacters() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+            '每個人物都要選擇「動漫角色」、「原創角色」，或明確選擇「不需細節」。動漫角色會自動帶入動漫英文 tag、角色英文 tag 與角色特徵。'),
+        const SizedBox(height: 12),
+        ..._personSlots.asMap().entries.map((entry) {
+          final index = entry.key;
+          final slot = entry.value;
+          final matches = _matchingCharacters(slot.query);
+          return Card(
+            color:
+                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.35),
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Text('人物 ${index + 1}',
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                          width: 130,
+                          child: DropdownButtonFormField<String>(
+                              value: slot.gender,
+                              decoration:
+                                  const InputDecoration(labelText: '性別/類型'),
+                              items: const ['女性', '男性', '其他/異種']
+                                  .map((value) => DropdownMenuItem(
+                                      value: value, child: Text(value)))
+                                  .toList(),
+                              onChanged: (value) => setState(() {
+                                    slot.gender = value ?? slot.gender;
+                                    _persist();
+                                  }))),
+                      const Spacer(),
+                      Switch(
+                          value: slot.detailed,
+                          onChanged: (value) => setState(() {
+                                slot.detailed = value;
+                                _persist();
+                              })),
+                      const Text('需要細節')
+                    ]),
+                    if (!slot.detailed)
+                      const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text('此人物只輸出人數/性別 tag，不加入動漫名稱、角色名稱或特徵。')),
+                    if (slot.detailed) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                          spacing: 8,
+                          children: ['動漫角色', '原創', '不需細節']
+                              .map((mode) => ChoiceChip(
+                                  label: Text(mode),
+                                  selected: slot.mode == mode,
+                                  onSelected: (_) => setState(() {
+                                        slot.mode = mode;
+                                        if (mode == '不需細節')
+                                          slot.detailed = false;
+                                        _persist();
+                                      })))
+                              .toList()),
+                      if (slot.mode == '動漫角色') ...[
+                        const SizedBox(height: 10),
+                        TextField(
+                            decoration: const InputDecoration(
+                                labelText: '查詢動漫或角色',
+                                prefixIcon: Icon(Icons.search)),
+                            onChanged: (value) =>
+                                setState(() => slot.query = value)),
+                        const SizedBox(height: 9),
+                        if (matches.isNotEmpty)
+                          Wrap(
+                              spacing: 7,
+                              runSpacing: 7,
+                              children: matches
+                                  .map((character) => ChoiceChip(
+                                      label: Text(
+                                          '${character.animeZh} · ${character.characterZh}'),
+                                      selected:
+                                          slot.characterId == character.id,
+                                      onSelected: (_) =>
+                                          _selectCharacter(index, character)))
+                                  .toList())
+                        else
+                          const Text('查無資料，可新增自己的動漫/角色。'),
+                        const SizedBox(height: 9),
+                        OutlinedButton.icon(
+                            onPressed: _addCustomCharacter,
+                            icon: const Icon(Icons.person_add_alt_1),
+                            label: const Text('新增自訂動漫與角色')),
+                        if (_characterForNew(slot) != null)
+                          Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                  '已帶入：${_characterForNew(slot)!.animeEn} · ${_characterForNew(slot)!.characterEn} · ${_characterForNew(slot)!.traits.map((item) => item.en).join(', ')}',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary))),
+                      ],
+                      if (slot.mode == '原創') ...[
+                        const SizedBox(height: 10),
+                        TextFormField(
+                            initialValue: slot.originalAnimeZh,
+                            decoration: const InputDecoration(
+                                labelText: '原創作品/世界觀中文（可選）'),
+                            onChanged: (value) {
+                              slot.originalAnimeZh = value;
+                              _persist();
+                            }),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            initialValue: slot.originalAnimeEn,
+                            decoration: const InputDecoration(
+                                labelText: 'Original work English（可選）'),
+                            onChanged: (value) {
+                              slot.originalAnimeEn = value;
+                              _persist();
+                            }),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            initialValue: slot.originalCharacterZh,
+                            decoration:
+                                const InputDecoration(labelText: '原創角色中文名稱'),
+                            onChanged: (value) {
+                              slot.originalCharacterZh = value;
+                              _persist();
+                            }),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            initialValue: slot.originalCharacterEn,
+                            decoration: const InputDecoration(
+                                labelText:
+                                    'Original character English name（必填）'),
+                            onChanged: (value) {
+                              slot.originalCharacterEn = value;
+                              slot.originalCharacterTag =
+                                  slot.originalCharacterTag.isEmpty
+                                      ? _slug(value)
+                                      : slot.originalCharacterTag;
+                              _persist();
+                            }),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            initialValue: slot.originalCharacterTag,
+                            decoration: const InputDecoration(
+                                labelText: 'Character tag（必填）'),
+                            onChanged: (value) {
+                              slot.originalCharacterTag = value;
+                              _persist();
+                            }),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                            initialValue: slot.originalTraits,
+                            decoration: const InputDecoration(
+                                labelText: '原創角色特徵（中英文皆可，逗號分隔）'),
+                            onChanged: (value) {
+                              slot.originalTraits = value;
+                              _persist();
+                            }),
+                      ],
+                    ],
+                  ]),
+            ),
+          );
+        }),
+        Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+                onPressed: _advanceStep,
+                icon: const Icon(Icons.arrow_forward),
+                label: const Text('完成角色：下一步場景'))),
+      ],
+    );
+  }
+
+  Widget _stepFinal() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      TextField(
+          controller: _preprompt,
+          maxLines: 2,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+              labelText: 'Amanatsu 品質前綴（可修改）',
+              helperText: '每個輸出 token 都會以英文句點結尾。')),
+      const SizedBox(height: 10),
+      TextField(
+          controller: _extraPositive,
+          maxLines: 2,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+              labelText: '額外正向標籤', hintText: '中文或英文，逗號/換行分隔')),
+      const SizedBox(height: 10),
+      TextField(
+          controller: _negative,
+          maxLines: 4,
+          onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(
+              labelText: '負面標籤 English',
+              prefixIcon: Icon(Icons.block_outlined))),
+      const SizedBox(height: 10),
+      Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: Theme.of(context)
+                  .colorScheme
+                  .secondaryContainer
+                  .withOpacity(.35),
+              borderRadius: BorderRadius.circular(10)),
+          child: Text('負面標籤中文翻譯：\n$_negativeZh')),
+      const SizedBox(height: 12),
+      SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: _showAdult,
+          title: const Text('顯示 18+ 標籤'),
+          subtitle: const Text('只使用成年角色，並遵守 BetterWaifu 內容規範。'),
+          onChanged: (value) => setState(() {
+                _showAdult = value;
+                _persist();
+              })),
+    ]);
+  }
+
+  Widget _progressiveBuilder() {
+    final clothing = [
+      '上衣',
+      '褲子',
+      '裙子',
+      '胸罩',
+      '內褲',
+      '襪子',
+      '鞋子',
+      '服裝',
+      '配件',
+      '服裝顏色',
+      '服裝細節',
+      '服裝材質',
+      '穿脫狀態'
+    ];
+    return Column(children: [
+      _stepCard(0, '人物數量與模型', '${_peopleTokensNew().join('、')} · $_model',
+          Icons.groups_outlined, _stepPeople()),
+      _stepCard(
+          1,
+          '場景與畫面',
+          _selectedTags
+              .where((tag) => ['場景', '畫面'].contains(tag.group))
+              .map((tag) => tag.zh)
+              .join('、')
+              .ifEmpty('尚未選擇'),
+          Icons.landscape_outlined,
+          _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料')),
+      _stepCard(
+          2,
+          '角色資料',
+          _characterChineseNew().join('、').ifEmpty('每個人物都要設定或選擇不需細節'),
+          Icons.badge_outlined,
+          _stepCharacters()),
+      _stepCard(
+          3,
+          '角色特徵',
+          _selectedTags
+              .where((tag) => ['外觀特徵', '臉部特徵', '胸部', '裸露'].contains(tag.group))
+              .map((tag) => tag.zh)
+              .join('、')
+              .ifEmpty('尚未選擇'),
+          Icons.face_retouching_natural,
+          _stepTagPicker(['外觀特徵', '臉部特徵', '胸部', '裸露'], nextLabel: '下一步：服裝')),
+      _stepCard(
+          4,
+          '服裝與穿脫狀態',
+          _selectedTags
+              .where((tag) => clothing.contains(tag.group))
+              .map((tag) => tag.zh)
+              .join('、')
+              .ifEmpty('尚未選擇'),
+          Icons.checkroom_outlined,
+          _stepTagPicker(clothing, nextLabel: '下一步：表情')),
+      _stepCard(
+          5,
+          '表情',
+          _selectedTags
+              .where((tag) => tag.group == '表情')
+              .map((tag) => tag.zh)
+              .join('、')
+              .ifEmpty('尚未選擇'),
+          Icons.mood_outlined,
+          _stepTagPicker(['表情'], nextLabel: '下一步：姿勢')),
+      _stepCard(
+          6,
+          '姿勢與 18+ 姿勢',
+          _selectedTags
+              .where((tag) => ['姿勢', '性行為', '性姿勢'].contains(tag.group))
+              .map((tag) => tag.zh)
+              .join('、')
+              .ifEmpty('尚未選擇'),
+          Icons.accessibility_new,
+          _stepTagPicker(['姿勢', '性行為', '性姿勢'], nextLabel: '下一步：品質與負面')),
+      _stepCard(7, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
+          _stepFinal()),
+    ]);
   }
 
   Widget _builderPanel() {
@@ -1191,6 +2244,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               maxLines: 3,
             ),
             const SizedBox(height: 12),
+            _outputField(
+              'Negative prompt · 中文翻譯',
+              _negativeZh,
+              onCopy: () => _copy(_negativeZh, '負面中文翻譯'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -1369,56 +2429,65 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SizedBox(width: 8),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1100;
-          final content = wide
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 7, child: _builderPanel()),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        children: [
-                          _setupPanel(),
-                          const SizedBox(height: 16),
-                          _memoryPanel(),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _setupPanel(),
-                    const SizedBox(height: 16),
-                    _builderPanel(),
-                    const SizedBox(height: 16),
-                    _memoryPanel(),
-                  ],
-                );
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 38),
+      body: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.fromLTRB(78, 16, 16, 38),
             children: [
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1480),
-                child: Center(child: content),
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: _progressiveBuilder(),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1480),
+                constraints: const BoxConstraints(maxWidth: 1120),
                 child: _outputPanel(),
               ),
               const SizedBox(height: 16),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1480),
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: _memoryPanel(),
+              ),
+              const SizedBox(height: 16),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1120),
                 child: _infoPanel(),
               ),
             ],
-          );
-        },
+          ),
+          Positioned(
+            left: 8,
+            top: 12,
+            child: SafeArea(
+              child: Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 8),
+                  child: Column(
+                    children: [
+                      const Text('複製',
+                          style: TextStyle(
+                              fontSize: 10, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      IconButton.filled(
+                          tooltip: '複製正向英文標籤',
+                          onPressed: () => _copy(_positiveText, '正向英文標籤'),
+                          icon: const Text('正',
+                              style: TextStyle(fontWeight: FontWeight.w800))),
+                      const SizedBox(height: 4),
+                      IconButton.filled(
+                          tooltip: '複製負面英文標籤',
+                          onPressed: () => _copy(_negativeText, '負面英文標籤'),
+                          icon: const Text('負',
+                              style: TextStyle(fontWeight: FontWeight.w800))),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
