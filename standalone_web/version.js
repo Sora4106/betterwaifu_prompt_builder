@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.8",
-  "build": 10,
-  "label": "1.1.8+10",
+  "version": "1.1.9",
+  "build": 11,
+  "label": "1.1.9+11",
   "history": [
+    {
+      "version": "1.1.9",
+      "build": 11,
+      "label": "1.1.9+11",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add automatic hair length negative guards"
+    },
     {
       "version": "1.1.8",
       "build": 10,

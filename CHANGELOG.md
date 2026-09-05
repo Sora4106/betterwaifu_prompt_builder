@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.9+11 - 2026-09-05
+
+- 自動偵測：feat: add automatic hair length negative guards
+
+
 ## 1.1.8+10 - 2026-09-05
 
 - 自動偵測：feat: derive people count from character cards
