@@ -3445,46 +3445,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   setState(() => _personTagQueries[personIndex] = value),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 48,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: groups.map((group) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: ChoiceChip(
-                      label: Text(
-                        _wizardGroupLabel(group),
-                        softWrap: false,
-                        overflow: TextOverflow.visible,
-                        style: TextStyle(
-                          color: group == currentGroup
-                              ? _buttonSelectedText
-                              : Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      selected: group == currentGroup,
-                      backgroundColor: _buttonSurface,
-                      selectedColor: _buttonSelectedSurface,
-                      side: BorderSide(
-                        color: group == currentGroup
-                            ? const Color(0xfff0eaff)
-                            : _buttonBorder,
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      onSelected: (_) => setState(() {
-                            if (personIndex == null) {
-                              _activeGroup = group;
-                            } else {
-                              _personActiveGroups[groupKey!] = group;
-                            }
-                          })),
-                );
-              }).toList(),
-            ),
-          ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: groups.map((group) {
+            return ChoiceChip(
+                label: Text(
+                  _wizardGroupLabel(group),
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
+                  style: TextStyle(
+                    color: group == currentGroup
+                        ? _buttonSelectedText
+                        : Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                selected: group == currentGroup,
+                backgroundColor: _buttonSurface,
+                selectedColor: _buttonSelectedSurface,
+                side: BorderSide(
+                  color: group == currentGroup
+                      ? const Color(0xfff0eaff)
+                      : _buttonBorder,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                onSelected: (_) => setState(() {
+                      if (personIndex == null) {
+                        _activeGroup = group;
+                      } else {
+                        _personActiveGroups[groupKey!] = group;
+                      }
+                    }));
+          }).toList(),
         ),
         const SizedBox(height: 12),
         if (visible.isEmpty)
@@ -4243,41 +4236,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 48,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _groups.map((group) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 7),
-                      child: ChoiceChip(
-                        label: Text(
-                          group,
-                          softWrap: false,
-                          overflow: TextOverflow.visible,
-                          style: TextStyle(
-                            color: _activeGroup == group
-                                ? _buttonSelectedText
-                                : Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        selected: _activeGroup == group,
-                        backgroundColor: _buttonSurface,
-                        selectedColor: _buttonSelectedSurface,
-                        side: BorderSide(
-                          color: _activeGroup == group
-                              ? const Color(0xfff0eaff)
-                              : _buttonBorder,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        onSelected: (_) => setState(() => _activeGroup = group),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: _groups.map((group) {
+                return ChoiceChip(
+                  label: Text(
+                    group,
+                    softWrap: false,
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                      color: _activeGroup == group
+                          ? _buttonSelectedText
+                          : Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  selected: _activeGroup == group,
+                  backgroundColor: _buttonSurface,
+                  selectedColor: _buttonSelectedSurface,
+                  side: BorderSide(
+                    color: _activeGroup == group
+                        ? const Color(0xfff0eaff)
+                        : _buttonBorder,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  onSelected: (_) => setState(() => _activeGroup = group),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 12),
             if (visible.isEmpty)
