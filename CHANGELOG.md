@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.5+7 - 2026-09-05
+
+- 自動偵測：feat: add gothic styles and innerwear layering
+
+
 ## 1.1.4+6 - 2026-09-05
 
 - 自動偵測：feat: split clothing colors and enforce outfit layers

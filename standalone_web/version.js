@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.4",
-  "build": 6,
-  "label": "1.1.4+6",
+  "version": "1.1.5",
+  "build": 7,
+  "label": "1.1.5+7",
   "history": [
+    {
+      "version": "1.1.5",
+      "build": 7,
+      "label": "1.1.5+7",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add gothic styles and innerwear layering"
+    },
     {
       "version": "1.1.4",
       "build": 6,
