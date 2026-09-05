@@ -9,6 +9,42 @@ import 'catalog_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
+const _defaultNegativeText =
+    'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, '
+    'multiple views, fewer digits, extra limbs, missing fingers, deformed, text, '
+    'error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
+
+const _negativeCatalog = <Map<String, String>>[
+  {'en': 'lowres', 'zh': '低解析度'},
+  {'en': 'blurry', 'zh': '模糊'},
+  {'en': 'worst quality', 'zh': '最差品質'},
+  {'en': 'bad quality', 'zh': '低品質'},
+  {'en': 'bad anatomy', 'zh': '錯誤的人體結構'},
+  {'en': 'bad hands', 'zh': '錯誤的手部'},
+  {'en': 'bad feet', 'zh': '錯誤的腳部'},
+  {'en': 'extra digits', 'zh': '多餘手指'},
+  {'en': 'fewer digits', 'zh': '手指數量不足'},
+  {'en': 'extra limbs', 'zh': '多餘肢體'},
+  {'en': 'missing fingers', 'zh': '缺少手指'},
+  {'en': 'multiple views', 'zh': '多重視角'},
+  {'en': 'deformed', 'zh': '變形'},
+  {'en': 'poorly drawn face', 'zh': '臉部繪製不佳'},
+  {'en': 'duplicate', 'zh': '重複內容'},
+  {'en': 'text', 'zh': '文字'},
+  {'en': 'error', 'zh': '錯誤'},
+  {'en': 'jpeg artifacts', 'zh': 'JPEG 壓縮瑕疵'},
+  {'en': 'watermark', 'zh': '浮水印'},
+  {'en': 'logo', 'zh': '標誌'},
+  {'en': 'signature', 'zh': '簽名'},
+  {'en': 'username', 'zh': '使用者名稱'},
+  {'en': 'unfinished', 'zh': '未完成'},
+  {'en': 'displeasing', 'zh': '令人不悅'},
+  {'en': 'scan artifacts', 'zh': '掃描瑕疵'},
+  {'en': 'sketch', 'zh': '草稿'},
+  {'en': 'monochrome', 'zh': '單色'},
+  {'en': 'greyscale', 'zh': '灰階'},
+  {'en': 'artist name', 'zh': '藝術家名稱'},
+];
 
 extension _StringFallback on String {
   String ifEmpty(String fallback) => trim().isEmpty ? fallback : this;
@@ -454,11 +490,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _negative = TextEditingController(
-    text:
-        'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, '
-        'multiple views, fewer digits, extra limbs, missing fingers, deformed, text, '
-        'error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts',
+    text: _defaultNegativeText,
   );
+  final Map<String, String> _customNegativeTranslations = <String, String>{};
   final TextEditingController _preprompt = TextEditingController(
     text: 'masterpiece, best quality, newest, absurdres, highres',
   );
@@ -676,6 +710,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
+      _customNegativeTranslations
+        ..clear()
+        ..addAll(Map<String, dynamic>.from(
+          data['customNegativeTranslations'] as Map? ?? <String, dynamic>{},
+        ).map((key, value) => MapEntry(key.toLowerCase(), '$value')));
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
       _peopleCount = _personSlots.length;
     } catch (_) {
@@ -705,6 +744,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'showAdult': _showAdult,
         'extraPositive': _extraPositive.text,
         'negative': _negative.text,
+        'customNegativeTranslations': _customNegativeTranslations,
         'preprompt': _preprompt.text,
       };
 
@@ -907,6 +947,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String _negativeTranslation(String tag) {
+    final custom = _customNegativeTranslations[tag.toLowerCase()];
+    if (custom != null && custom.trim().isNotEmpty) return custom;
     const translations = {
       'lowres': '低解析度',
       'worst quality': '最差品質',
@@ -950,6 +992,109 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String get _negativeText =>
       _extraTags(_negative.text).map((tag) => '$tag.').join(' ');
+
+  void _toggleNegativeTag(String english, String chinese) {
+    final tags = _extraTags(_negative.text);
+    final index = tags.indexWhere(
+      (item) => item.toLowerCase() == english.toLowerCase(),
+    );
+    setState(() {
+      if (index >= 0) {
+        tags.removeAt(index);
+      } else {
+        tags.add(english);
+      }
+      _customNegativeTranslations[english.toLowerCase()] = chinese;
+      _negative.text = tags.join(', ');
+      _persist();
+    });
+  }
+
+  Future<void> _addNegativeTag() async {
+    final englishController = TextEditingController();
+    final chineseController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('新增負面標籤'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: englishController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: '英文標籤',
+                  hintText: '例如 blurry 或 bad composition',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: chineseController,
+                decoration: const InputDecoration(
+                  labelText: '中文翻譯',
+                  hintText: '例如 模糊 或 構圖不佳',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('加入'),
+            ),
+          ],
+        ),
+      );
+    final english = _cleanTag(englishController.text);
+    final chinese = _cleanTag(chineseController.text).ifEmpty(english);
+    englishController.dispose();
+    chineseController.dispose();
+    if (confirmed != true || english.isEmpty) return;
+    final tags = _extraTags(_negative.text);
+    if (!tags.any((item) => item.toLowerCase() == english.toLowerCase())) {
+      tags.add(english);
+    }
+    setState(() {
+      _negative.text = tags.join(', ');
+      _customNegativeTranslations[english.toLowerCase()] = chinese;
+      _persist();
+    });
+  }
+
+  Widget _negativeTagPicker() {
+    final selected = _extraTags(_negative.text)
+        .map((item) => item.toLowerCase())
+        .toSet();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: _negativeCatalog.map((item) {
+            final english = item['en']!;
+            final chinese = item['zh']!;
+            return FilterChip(
+              label: Text('$chinese / $english'),
+              selected: selected.contains(english.toLowerCase()),
+              onSelected: (_) => _toggleNegativeTag(english, chinese),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _addNegativeTag,
+          icon: const Icon(Icons.add),
+          label: const Text('新增負面標籤（中英文）'),
+        ),
+      ],
+    );
+  }
 
   String? _conflictGroup(TagItem tag) {
     if (tag.conflictGroup != null) return tag.conflictGroup;
@@ -1247,7 +1392,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _activeGroup = '全部';
       _search.clear();
       _extraPositive.clear();
-      _negative.clear();
+      _negative.text = _defaultNegativeText;
       _preprompt.clear();
       _persist();
     });
@@ -1356,6 +1501,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
+      _customNegativeTranslations
+        ..clear()
+        ..addAll(Map<String, dynamic>.from(
+          data['customNegativeTranslations'] as Map? ?? <String, dynamic>{},
+        ).map((key, value) => MapEntry(key.toLowerCase(), '$value')));
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
       _persist();
     });
@@ -2510,6 +2660,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               borderRadius: BorderRadius.circular(10)),
           child: Text('負面標籤中文翻譯：\n$_negativeZh')),
       const SizedBox(height: 12),
+      _negativeTagPicker(),
+      const SizedBox(height: 12),
       SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           value: _showAdult,
@@ -2897,6 +3049,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 prefixIcon: Icon(Icons.block_outlined),
               ),
             ),
+            const SizedBox(height: 8),
+            _negativeTagPicker(),
           ],
         ),
       ),
