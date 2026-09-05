@@ -682,7 +682,7 @@ const negativeCatalog = [
   { en: 'monochrome', zh: '單色' }, { en: 'greyscale', zh: '灰階' }, { en: 'artist name', zh: '藝術家名稱' },
 ];
 const newSlot = () => ({ gender: '女性', detailed: true, mode: '原創', characterId: '', animeQuery: '', animeTag: '', query: '', originalAnimeZh: '', originalAnimeEn: '', originalAnimeTag: '', originalCharacterZh: '', originalCharacterEn: '', originalCharacterTag: '', originalTraitsZh: '', originalTraitsEn: '' });
-const state = { selected: new Set(), personSelected: {}, personQueries: {}, wizardGroups: {}, removedCharacterTags: {}, customTags: [], customCharacters: [], recentCharacterIds: [], presets: [], group: '全部', query: '', step: 0, peopleSlots: [newSlot()], gender: '女性', count: 1, model: 'Amanatsu 1.1', sampler: 'Euler a', steps: 28, cfg: '5.0', clipSkip: '2', showAdult: false, preprompt: 'masterpiece, best quality, newest, absurdres, highres', extra: '', negative: defaultNegative, negativeTranslations: {} };
+const state = { selected: new Set(), personSelected: {}, personQueries: {}, wizardGroups: {}, removedCharacterTags: {}, groupPeoplePrompt: true, customTags: [], customCharacters: [], recentCharacterIds: [], presets: [], group: '全部', query: '', step: 0, peopleSlots: [newSlot()], gender: '女性', count: 1, model: 'Amanatsu 1.1', sampler: 'Euler a', steps: 28, cfg: '5.0', clipSkip: '2', showAdult: false, preprompt: 'masterpiece, best quality, newest, absurdres, highres', extra: '', negative: defaultNegative, negativeTranslations: {} };
 const lookupState = { query: '', target: 0, anime: [], characters: [], selectedAnime: null, loading: false, error: '' };
 
 // AniList does not index every Chinese distribution title. Try common aliases
@@ -1094,7 +1094,7 @@ function peopleStep() { return `<div class="wizard-controls"><label>人物數量
 function charactersStep() { return `${remoteLookupStep()}${state.peopleSlots.map((slot, index) => peopleCharacterCard(slot, index)).join('')}${nextButton('完成角色設定')}`; }
 function charactersStep() { return `${remoteLookupStep()}${state.peopleSlots.map((slot, index) => peopleCharacterCard(slot, index)).join('')}${nextButton('完成角色設定')}`; }
 function tagsStep(groups) { return `${renderTagPicker(groups, 'wizard')}${nextButton()}`; }
-function finalStep() { return `<div class="wizard-fields"><label>Amanatsu 品質前綴<textarea data-setting="preprompt" rows="2">${esc(state.preprompt)}</textarea></label><label>額外正向標籤<textarea data-setting="extra" rows="2" placeholder="可用中文或英文，以逗號或換行分隔">${esc(state.extra)}</textarea></label></div><label style="margin-top:12px">負面標籤（英文或中文）<textarea data-setting="negative" rows="4">${esc(state.negative)}</textarea></label>${negativeToolsMarkup()}<p class="wizard-note">自動髮長防衝突：長髮會在負面輸出加入 short hair；改選短髮後則加入 long hair。自動詞不會改寫上方可編輯欄位。</p><label class="switch-row"><input type="checkbox" data-setting="showAdult" ${state.showAdult ? 'checked' : ''}><span class="switch"></span><span><b>顯示 18+ 標籤分類</b><small>只建立成年角色內容，開啟後可在前面分類選取成人向標籤。</small></span></label><p class="wizard-note">所有英文輸出標籤會以英文句點結尾；負面標籤也會同步顯示中文翻譯。</p>`; }
+  function finalStep() { return `<div class="wizard-fields"><label>Amanatsu 品質前綴<textarea data-setting="preprompt" rows="2">${esc(state.preprompt)}</textarea></label><label>額外正向標籤<textarea data-setting="extra" rows="2" placeholder="可用中文或英文，以逗號或換行分隔">${esc(state.extra)}</textarea></label></div><label style="margin-top:12px">負面標籤（英文或中文）<textarea data-setting="negative" rows="4">${esc(state.negative)}</textarea></label>${negativeToolsMarkup()}<p class="wizard-note">自動髮長防衝突：長髮會在負面輸出加入 short hair；改選短髮後則加入 long hair。自動詞不會改寫上方可編輯欄位。</p><label class="switch-row"><input type="checkbox" data-setting="showAdult" ${state.showAdult ? 'checked' : ''}><span class="switch"></span><span><b>顯示 18+ 標籤分類</b><small>只建立成年角色內容，開啟後可在前面分類選取成人向標籤。</small></span></label><label class="switch-row"><input type="checkbox" data-setting="groupPeoplePrompt" ${state.groupPeoplePrompt ? 'checked' : ''}><span class="switch"></span><span><b>多人角色分組加強（括號權重）</b><small>兩人以上時，將每位人物的角色、特徵、服裝、表情與動作放入獨立的（…:1.15）區塊。</small></span></label><p class="wizard-note">所有英文輸出標籤會以英文句點結尾；負面標籤也會同步顯示中文翻譯。</p>`; }
 function renderWizard() { $('#wizard').innerHTML = [stepCard(0, '人物數量', '先選人物數量與性別比例；模型參數請在 AI 生成網站設定', '①', peopleStep()), stepCard(1, '場景與畫面', '背景、時間、鏡頭與構圖', '⌂', tagsStep(['場景', '畫面'])), stepCard(2, '人物與角色資料', '先選動漫作品，再選該作品的角色', '♙', charactersStep()), stepCard(3, '角色特徵', '每位人物各自設定外觀、臉部、胸部與裸露', '✦', personTagsStep(['外觀特徵', '臉部特徵', '胸部', '裸露'], '以下標籤會分別套用到各人物，不會讓兩個人物共用。')), stepCard(4, '服裝與穿脫狀態', '先選服裝類型，再分開選顏色、蕾絲、材質與穿脫狀態', '◇', clothingStep()), stepCard(5, '表情', '每位人物各自設定表情', '☺', personTagsStep(['表情'], '請分別設定每位人物的表情。')), stepCard(6, '姿勢與 18+ 姿勢', '每位人物各自設定姿勢；不同人物可以使用不同姿勢', '♧', personTagsStep(['姿勢', '性行為', '性姿勢'], '請分別設定每位人物的基本姿勢、性行為與性姿勢。')), stepCard(7, '品質與負面標籤', '全圖共用的品質、額外與負面標籤', '✓', finalStep())].join(''); }
 
 function personTagsStep(groups, instruction) { return `<p class="wizard-note">${instruction}</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span></div>${slot.detailed ? renderTagPicker(groups, `person-${index}`, index) : '<p class="wizard-note">此人物設定為不需細節，不加入這一類標籤。</p>'}</article>`; }).join('')}${nextButton()}`; }
@@ -1259,7 +1259,7 @@ document.addEventListener('change', event => {
   const count = event.target.closest('[data-people-count]'); if (count) { setPeopleCount(count.value); render(); return; }
   const gender = event.target.closest('[data-slot-gender]'); if (gender) { state.peopleSlots[Number(gender.dataset.slotGender)].gender = gender.value.split('／')[0]; state.gender = state.peopleSlots[0].gender; persist(); renderOutput(); return; }
   const detailed = event.target.closest('[data-slot-detailed]'); if (detailed) { state.peopleSlots[Number(detailed.dataset.slotDetailed)].detailed = detailed.checked; persist(); render(); return; }
-  const setting = event.target.closest('[data-setting]'); if (setting) { const key = setting.dataset.setting; if (key === 'showAdult') state.showAdult = setting.checked; else if (key === 'steps') state.steps = Number(setting.value); else state[key] = setting.value; persist(); render(); }
+  const setting = event.target.closest('[data-setting]'); if (setting) { const key = setting.dataset.setting; if (key === 'showAdult' || key === 'groupPeoplePrompt') state[key] = setting.checked; else if (key === 'steps') state.steps = Number(setting.value); else state[key] = setting.value; persist(); render(); }
 });
 
 $('#search').addEventListener('input', event => { state.query = event.target.value; render(); });
@@ -1370,6 +1370,41 @@ function tokens() {
     ...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en),
     ...splitTags(state.extra).map(autoTranslatePositiveTag), ...splitTags(state.preprompt)
   ]);
+}
+function personPromptTokens(index) {
+  const slot = state.peopleSlots[index];
+  return [...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)];
+}
+function sharedPositiveTokens() {
+  return [
+    ...selectedTags().map(item => item.en),
+    ...splitTags(state.extra).map(autoTranslatePositiveTag),
+    ...splitTags(state.preprompt)
+  ];
+}
+function groupedPositiveText() {
+  const output = [];
+  const used = new Set();
+  const addTokens = values => values.forEach(value => {
+    const key = clean(value).toLowerCase();
+    if (!key || used.has(key)) return;
+    used.add(key);
+    output.push(`${value}.`);
+  });
+  addTokens(peopleTokens());
+  state.peopleSlots.forEach((slot, index) => {
+    const personal = personPromptTokens(index).filter(value => !used.has(clean(value).toLowerCase()));
+    if (!personal.length) return;
+    personal.forEach(value => used.add(clean(value).toLowerCase()));
+    output.push(`(${personal.join(', ')}:1.15).`);
+  });
+  addTokens(sharedPositiveTokens());
+  return output.join(' ');
+}
+function positiveText() {
+  return state.groupPeoplePrompt && state.peopleSlots.length > 1
+    ? groupedPositiveText()
+    : tokens().map(item => `${item}.`).join(' ');
 }
 function chineseText() {
   const list = [personSummary()];

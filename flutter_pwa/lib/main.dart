@@ -1074,6 +1074,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _peopleCount = 1;
   int _stepIndex = 0;
   bool _showAdult = false;
+  bool _groupPeoplePrompt = true;
   bool _showInfo = true;
 
   List<TagItem> get _allTags =>
@@ -1346,6 +1347,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _cfg = '${data['cfg'] ?? '5.0'}';
       _clipSkip = '${data['clipSkip'] ?? '2'}';
       _showAdult = data['showAdult'] == true;
+      _groupPeoplePrompt = data['groupPeoplePrompt'] != false;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
@@ -1383,6 +1385,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'cfg': _cfg,
         'clipSkip': _clipSkip,
         'showAdult': _showAdult,
+        'groupPeoplePrompt': _groupPeoplePrompt,
         'extraPositive': _extraPositive.text,
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
@@ -1864,7 +1867,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tokens.where((token) => seen.add(token.toLowerCase())).toList();
   }
 
-  String get _positiveText => _positiveTokens.map((tag) => '$tag.').join(' ');
+  List<String> _personPromptTokens(int index) => [
+        ..._characterTokensForSlot(_personSlots[index], index),
+        ..._selectedTagsForPerson(index).map((tag) => tag.en),
+      ];
+
+  List<String> get _sharedPositiveTokens => [
+        ..._selectedTags.map((tag) => tag.en),
+        ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
+        ..._extraTags(_preprompt.text),
+      ];
+
+  String _groupedPositiveText() {
+    final output = <String>[];
+    final used = <String>{};
+    void addTokens(Iterable<String> values) {
+      output.addAll(values
+          .where((value) => used.add(_cleanTag(value).toLowerCase()))
+          .map((value) => '$value.'));
+    }
+
+    addTokens(_peopleTokensNew());
+    for (var index = 0; index < _personSlots.length; index++) {
+      final personal = _personPromptTokens(index)
+          .where((value) => !used.contains(_cleanTag(value).toLowerCase()))
+          .toList();
+      if (personal.isEmpty) continue;
+      personal.forEach((value) => used.add(_cleanTag(value).toLowerCase()));
+      output.add('(${personal.join(', ')}:1.15).');
+    }
+    addTokens(_sharedPositiveTokens);
+    return output.join(' ');
+  }
+
+  String get _positiveText => _groupPeoplePrompt && _personSlots.length > 1
+      ? _groupedPositiveText()
+      : _positiveTokens.map((tag) => '$tag.').join(' ');
 
   String get _positiveZh {
     final tokens = <String>[_peopleZhNew()];
@@ -4203,7 +4241,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
               labelText: 'Amanatsu 品質前綴（可修改）',
-              helperText: '每個輸出 token 都會以英文句點結尾。')),
+              helperText: '一般英文標籤會以英文句點分隔；多人分組加強會用括號區塊輸出。')),
       const SizedBox(height: 10),
       TextField(
           controller: _extraPositive,
@@ -4246,6 +4284,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           subtitle: const Text('只使用成年角色，並遵守 BetterWaifu 內容規範。'),
           onChanged: (value) => setState(() {
                 _showAdult = value;
+                _persist();
+              })),
+      SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: _groupPeoplePrompt,
+          title: const Text('多人角色分組加強（括號權重）'),
+          subtitle: const Text(
+              '兩人以上時，會將每位人物的角色、特徵、服裝、表情與動作分成獨立的 (…:1.15) 區塊；場景與共同標籤維持在區塊外。'),
+          onChanged: (value) => setState(() {
+                _groupPeoplePrompt = value;
                 _persist();
               })),
     ]);
