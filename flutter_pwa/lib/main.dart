@@ -954,6 +954,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.conflictGroup != null) return tag.conflictGroup;
     final traitGroups = _traitOverrideGroups(tag.en);
     if (traitGroups.isNotEmpty) return traitGroups.first;
+    if (tag.group == '上衣顏色') return 'top_color';
+    if (tag.group == '下身顏色') return 'bottom_color';
     if (tag.group == '服裝顏色') return 'clothing_color';
     if (['上衣', '胸罩'].contains(tag.group)) return 'top';
     if (['褲子', '裙子', '內褲'].contains(tag.group)) return 'bottom';
@@ -983,7 +985,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (firstGroup != null && firstGroup == secondGroup) {
       return firstGroup != 'clothing_color';
     }
-    final clothingLayers = {'top', 'bottom', 'bra', 'underwear'};
+    final clothingLayers = {
+      'top',
+      'bottom',
+      'bra',
+      'underwear',
+      'top_color',
+      'bottom_color'
+    };
     if ((firstGroup == 'one_piece' && clothingLayers.contains(secondGroup)) ||
         (secondGroup == 'one_piece' && clothingLayers.contains(firstGroup))) {
       return true;
@@ -994,7 +1003,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         second.en == 'topless' ||
         second.en == 'bottomless';
     if (firstNude || secondNude) {
-      final clothing = {'top', 'bottom', 'one_piece'};
+      final clothing = {
+        'top',
+        'bottom',
+        'top_color',
+        'bottom_color',
+        'one_piece'
+      };
       if ((firstNude && clothing.contains(secondGroup)) ||
           (secondNude && clothing.contains(firstGroup))) return true;
     }
@@ -1561,6 +1576,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '上衣顏色',
+                    '下身顏色',
                     '服裝顏色',
                     '服裝細節',
                     '服裝材質',
@@ -1635,6 +1652,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '上衣顏色',
+                    '下身顏色',
                     '服裝顏色',
                     '服裝細節',
                     '服裝材質',
@@ -1702,6 +1721,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _wizardGroupLabel(String group) {
     if (group == '褲子') return '下身／褲子';
     if (group == '服裝') return '連身裙／整套服裝';
+    if (group == '服裝顏色') return '連身裝顏色';
     return group;
   }
 
@@ -1883,6 +1903,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '配件',
     ];
     const details = [
+      '上衣顏色',
+      '下身顏色',
       '服裝顏色',
       '服裝細節',
       '服裝材質',
@@ -2449,6 +2471,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子',
                     '服裝',
                     '配件',
+                    '上衣顏色',
+                    '下身顏色',
                     '服裝顏色',
                     '服裝細節',
                     '服裝材質',
