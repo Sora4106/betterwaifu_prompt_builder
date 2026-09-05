@@ -1491,7 +1491,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .replaceAll(RegExp(r'\s+'), ' ');
 
   List<String> _extraTags(String value) => value
-      .split(RegExp(r'[,，\n]+'))
+      .split(RegExp(r'[,，、。\n]+'))
       .map(_cleanTag)
       .where((item) => item.isNotEmpty)
       .toList();
