@@ -736,6 +736,17 @@ List<TagItem> _seedTags() => [
       _tag('camera_from_above', '畫面', '俯視', 'from above', 10),
       _tag('camera_from_below', '畫面', '仰視', 'from below', 10),
       _tag('camera_pov', '畫面', '第一人稱視角', 'pov', 10),
+      _tag('camera_birds_eye', '畫面', '鳥瞰視角', 'birds-eye', 10),
+      _tag('camera_wide_shot', '畫面', '遠景鏡頭', 'wide shot', 10),
+      _tag('camera_isometric', '畫面', '等角視角', 'isometric', 10),
+      _tag('camera_high_angle', '畫面', '高角度視角', 'high-angle view', 10),
+      _tag('camera_low_angle', '畫面', '低角度視角', 'low-angle view', 10),
+      _tag('camera_eye_level', '畫面', '平視角度', 'eye-level shot', 10),
+      _tag('camera_front_view', '畫面', '正面視角', 'front view', 10),
+      _tag('camera_side_view', '畫面', '側面視角', 'side view', 10),
+      _tag('camera_rear_view', '畫面', '背面視角', 'rear view', 10),
+      _tag('camera_three_quarter', '畫面', '三分之四視角', 'three-quarter view', 10),
+      _tag('camera_over_shoulder', '畫面', '越肩視角', 'over-the-shoulder view', 10),
       _tag('quality_masterpiece', '品質', '傑作', 'masterpiece', 11),
       _tag('quality_best_quality', '品質', '最佳品質', 'best quality', 11),
       _tag('quality_newest', '品質', '最新風格', 'newest', 11),
@@ -1559,6 +1570,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (tag.group == '性姿勢') return 'sex_position';
     if (tag.group == '場景') return 'scene';
+    if (tag.group == '畫面') {
+      const framing = {
+        'portrait',
+        'full body',
+        'upper body',
+        'close-up',
+        'cowboy shot',
+        'wide shot',
+      };
+      return framing.contains(tag.en) ? 'framing' : 'camera';
+    }
     if (tag.group == '穿脫狀態') return 'wear_state';
     if (tag.group == '胸部' &&
         [
