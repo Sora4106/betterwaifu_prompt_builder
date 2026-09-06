@@ -1,7 +1,8 @@
-const appVersion = '1.1.25';
-const appBuildNumber = 27;
-const appVersionLabel = '1.1.25+27';
+const appVersion = '1.1.26';
+const appBuildNumber = 28;
+const appVersionLabel = '1.1.26+28';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand prompt tags and split hair colors'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: preserve characters during reverse prompt import'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: repair category chip widget syntax'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: reverse composed prompt tags'},

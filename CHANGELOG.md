@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.26+28 - 2026-09-06
+
+- 自動偵測：feat: expand prompt tags and split hair colors
+
+
 ## 1.1.25+27 - 2026-09-06
 
 - 自動偵測：feat: preserve characters during reverse prompt import
