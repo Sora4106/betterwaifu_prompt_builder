@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.38",
-  "build": 40,
-  "label": "1.1.38+40",
+  "version": "1.1.39",
+  "build": 41,
+  "label": "1.1.39+41",
   "history": [
+    {
+      "version": "1.1.39",
+      "build": 41,
+      "label": "1.1.39+41",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: prioritize combination editor upper panel"
+    },
     {
       "version": "1.1.38",
       "build": 40,
