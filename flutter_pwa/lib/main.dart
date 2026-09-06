@@ -6651,14 +6651,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final groups = _combinationGroups();
           final options = _combinationOptions(activeGroup, search.text);
           return AlertDialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             title: Text(existing == null
                 ? '\u65B0\u589E\u7D44\u5408\u6A19\u7C64'
                 : '\u7DE8\u8F2F\u7D44\u5408\u6A19\u7C64'),
             content: SizedBox(
-              width:
-                  (MediaQuery.of(context).size.width * .88).clamp(360.0, 820.0),
-              height: (MediaQuery.of(context).size.height * .78)
-                  .clamp(420.0, 720.0),
+              width: (MediaQuery.of(context).size.width * .94)
+                  .clamp(360.0, 980.0)
+                  .toDouble(),
+              height: (MediaQuery.of(context).size.height - 96)
+                  .clamp(480.0, 900.0)
+                  .toDouble(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -6750,33 +6755,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   const SizedBox(height: 8),
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Wrap(
-                        spacing: 7,
-                        runSpacing: 7,
-                        children: options.take(240).map((tag) {
-                          final isSelected = selected.contains(tag.id);
-                          return FilterChip(
-                            selected: isSelected,
-                            label: Text(
-                              tag.zh.isEmpty ? tag.en : '${tag.zh} · ${tag.en}',
-                            ),
-                            tooltip: tag.en,
-                            onSelected: (_) => setDialogState(() {
-                              if (isSelected) {
-                                selected.remove(tag.id);
-                              } else {
-                                final conflicts = _allTags
-                                    .where((item) => selected.contains(item.id))
-                                    .where((item) => _tagsConflict(item, tag))
-                                    .map((item) => item.id)
-                                    .toList();
-                                selected.removeAll(conflicts);
-                                selected.add(tag.id);
-                              }
-                            }),
-                          );
-                        }).toList(),
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Wrap(
+                          spacing: 7,
+                          runSpacing: 7,
+                          children: options.take(240).map((tag) {
+                            final isSelected = selected.contains(tag.id);
+                            return FilterChip(
+                              selected: isSelected,
+                              label: Text(
+                                tag.zh.isEmpty
+                                    ? tag.en
+                                    : '${tag.zh} · ${tag.en}',
+                              ),
+                              tooltip: tag.en,
+                              onSelected: (_) => setDialogState(() {
+                                if (isSelected) {
+                                  selected.remove(tag.id);
+                                } else {
+                                  final conflicts = _allTags
+                                      .where(
+                                          (item) => selected.contains(item.id))
+                                      .where((item) => _tagsConflict(item, tag))
+                                      .map((item) => item.id)
+                                      .toList();
+                                  selected.removeAll(conflicts);
+                                  selected.add(tag.id);
+                                }
+                              }),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
