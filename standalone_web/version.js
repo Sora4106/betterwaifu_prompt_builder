@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.27",
-  "build": 29,
-  "label": "1.1.27+29",
+  "version": "1.1.28",
+  "build": 30,
+  "label": "1.1.28+30",
   "history": [
+    {
+      "version": "1.1.28",
+      "build": 30,
+      "label": "1.1.28+30",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add trim colors accessory placement and masturbation tags"
+    },
     {
       "version": "1.1.27",
       "build": 29,

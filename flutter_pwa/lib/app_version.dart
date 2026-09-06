@@ -1,7 +1,8 @@
-const appVersion = '1.1.27';
-const appBuildNumber = 29;
-const appVersionLabel = '1.1.27+29';
+const appVersion = '1.1.28';
+const appBuildNumber = 30;
+const appVersionLabel = '1.1.28+30';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add trim colors accessory placement and masturbation tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add scoped randomization and avatar preview'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: expand prompt tags and split hair colors'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: preserve characters during reverse prompt import'},
