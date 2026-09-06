@@ -9,7 +9,7 @@ import 'catalog_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
-const _stepLayoutVersion = 2;
+const _stepLayoutVersion = 3;
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -107,6 +107,7 @@ class _GeneratedOutputTag {
     this.tagIds = const <String>[],
     this.personIndex,
     this.characterTag = false,
+    this.combinationId,
   });
 
   final String zh;
@@ -115,6 +116,7 @@ class _GeneratedOutputTag {
   final List<String> tagIds;
   final int? personIndex;
   final bool characterTag;
+  final String? combinationId;
 }
 
 class Preset {
@@ -128,6 +130,35 @@ class Preset {
   factory Preset.fromJson(Map<String, dynamic> json) => Preset(
         name: '${json['name'] ?? '未命名組合'}',
         payload: Map<String, dynamic>.from(json['payload'] as Map? ?? {}),
+      );
+}
+
+class PromptCombination {
+  PromptCombination({
+    required this.id,
+    required this.name,
+    required this.tagIds,
+    required this.extraPositive,
+  });
+
+  final String id;
+  final String name;
+  final List<String> tagIds;
+  final String extraPositive;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'tagIds': tagIds,
+        'extraPositive': extraPositive,
+      };
+
+  factory PromptCombination.fromJson(Map<String, dynamic> json) =>
+      PromptCombination(
+        id: '${json['id'] ?? ''}',
+        name: '${json['name'] ?? ''}',
+        tagIds: (json['tagIds'] as List? ?? []).map((id) => '$id').toList(),
+        extraPositive: '${json['extraPositive'] ?? ''}',
       );
 }
 
@@ -361,12 +392,32 @@ List<TagItem> _createScopedClothingTags() {
     bool adult = false,
     String? conflictGroup,
   }) {
+    final interactionIds = {
+      'holding',
+      'clothes_pull',
+      'shirt_pull',
+      'collar_pull',
+      'pants_pull',
+      'skirt_pull',
+      'adjusting_clothes',
+    };
+    final visibilityIds = {
+      'off_shoulder',
+      'single_off_shoulder',
+      'bra_visible',
+      'panties_visible',
+      'waistband',
+    };
     final defaultConflict = kind == 'style'
         ? '${slot}_style'
         : kind == 'detail_color'
             ? '${slot}_detail_color'
             : kind == 'wear'
-                ? '${slot}_wear'
+                ? visibilityIds.contains(id)
+                    ? '${slot}_visibility'
+                    : interactionIds.contains(id)
+                        ? '${slot}_interaction'
+                        : '${slot}_wear'
                 : conflictGroup;
     tags.add(_tag(
       '${_scopedClothingPrefix}${slot}_${kind}_$id',
@@ -673,6 +724,26 @@ List<TagItem> _createScopedClothingTags() {
     ['holding', '\u624B\u62FF\u4E0A\u8863', 'holding clothes'],
     ['on_floor', '\u4E0A\u8863\u6389\u5728\u65C1\u908A', 'clothes on floor'],
   ]);
+  addMany('top', 'wear', [
+    ['partially_undressed', '\u90E8\u5206\u8131\u8863', 'partially undressed'],
+    [
+      'off_shoulder',
+      '\u8863\u670D\u6ED1\u843D\u5230\u80A9\u4E0B',
+      'off-shoulder'
+    ],
+    [
+      'single_off_shoulder',
+      '\u55AE\u5074\u8863\u670D\u6ED1\u843D',
+      'single off shoulder'
+    ],
+    ['clothes_pull', '\u624B\u62C9\u8863\u670D', 'clothes pull'],
+    ['shirt_pull', '\u624B\u62C9\u896F\u886B', 'shirt pull'],
+    ['collar_pull', '\u624B\u62C9\u9818\u53E3', 'collar pull'],
+    ['unzipped', '\u62C9\u934A\u62C9\u958B', 'unzipped'],
+    ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
+    ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
+    ['adjusting_clothes', '\u8ABF\u6574\u8863\u670D', 'adjusting clothes'],
+  ]);
   addMany('pants', 'wear', [
     ['unbuttoned', '\u8932\u5B50\u89E3\u958B', 'unbuttoned'],
     ['half_removed', '\u8932\u5B50\u812B\u4E00\u534A', 'half-removed clothes'],
@@ -682,6 +753,12 @@ List<TagItem> _createScopedClothingTags() {
     ['removed', '\u8131\u6389\u8932\u5B50', 'clothes removed'],
     ['holding', '\u624B\u62FF\u8932\u5B50', 'holding clothes'],
     ['on_floor', '\u8932\u5B50\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('pants', 'wear', [
+    ['partially_undressed', '\u90E8\u5206\u8131\u8932', 'partially undressed'],
+    ['pants_pull', '\u624B\u62C9\u8932\u5B50', 'pants pull'],
+    ['unzipped', '\u8932\u5B50\u62C9\u934A\u62C9\u958B', 'unzipped'],
+    ['adjusting_clothes', '\u8ABF\u6574\u8932\u5B50', 'adjusting clothes'],
   ]);
   addMany('skirt', 'wear', [
     ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
@@ -696,6 +773,11 @@ List<TagItem> _createScopedClothingTags() {
     ['undressing', '\u812B\u88D9\u5B50\u4E2D', 'undressing'],
     ['holding', '\u624B\u62FF\u88D9\u5B50', 'holding clothes'],
     ['on_floor', '\u88D9\u5B50\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('skirt', 'wear', [
+    ['partially_undressed', '\u90E8\u5206\u8131\u88D9', 'partially undressed'],
+    ['skirt_pull', '\u624B\u62C9\u88D9\u5B50', 'skirt pull'],
+    ['adjusting_clothes', '\u8ABF\u6574\u88D9\u5B50', 'adjusting clothes'],
   ]);
   addMany('onepiece', 'wear', [
     ['open', '\u6253\u958B\u9023\u8EAB\u88DD', 'open clothes'],
@@ -719,6 +801,18 @@ List<TagItem> _createScopedClothingTags() {
     ],
     ['lifted', '\u9023\u8EAB\u88DD\u88AB\u63C0\u8D77', 'dress lifted'],
   ]);
+  addMany('onepiece', 'wear', [
+    [
+      'partially_undressed',
+      '\u9023\u8EAB\u88DD\u90E8\u5206\u8131\u843D',
+      'partially undressed'
+    ],
+    [
+      'adjusting_clothes',
+      '\u8ABF\u6574\u9023\u8EAB\u88DD',
+      'adjusting clothes'
+    ],
+  ]);
   addMany('underwear', 'wear', [
     ['open', '\u6253\u958B\u5167\u8863', 'open underwear'],
     [
@@ -736,6 +830,14 @@ List<TagItem> _createScopedClothingTags() {
     ['undressing', '\u812B\u5167\u8863\u4E2D', 'undressing'],
     ['holding', '\u624B\u62FF\u5167\u8863', 'holding clothes'],
     ['on_floor', '\u5167\u8863\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('underwear', 'wear', [
+    [
+      'partially_undressed',
+      '\u5167\u8863\u90E8\u5206\u8131\u843D',
+      'partially undressed'
+    ],
+    ['adjusting_clothes', '\u8ABF\u6574\u5167\u8863', 'adjusting clothes'],
   ]);
   addMany(
       'bra',
@@ -764,6 +866,18 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany(
+      'bra',
+      'wear',
+      [
+        [
+          'partially_undressed',
+          '\u80F8\u7F69\u90E8\u5206\u8131\u843D',
+          'partially undressed'
+        ],
+        ['adjusting_clothes', '\u8ABF\u6574\u80F8\u7F69', 'adjusting clothes'],
+      ],
+      adult: true);
+  addMany(
       'panties',
       'wear',
       [
@@ -789,6 +903,20 @@ List<TagItem> _createScopedClothingTags() {
         ['holding', '\u624B\u62FF\u5167\u8932', 'holding clothes'],
       ],
       adult: true);
+  addMany(
+      'panties',
+      'wear',
+      [
+        [
+          'partially_undressed',
+          '\u5167\u8932\u90E8\u5206\u812B\u843D',
+          'partially undressed'
+        ],
+        ['panties_visible', '\u9732\u51FA\u5167\u8932', 'panties visible'],
+        ['waistband', '\u9732\u51FA\u5167\u8932\u8932\u982D', 'waistband'],
+        ['adjusting_clothes', '\u8ABF\u6574\u5167\u8932', 'adjusting clothes'],
+      ],
+      adult: true);
   addMany('socks', 'wear', [
     ['down', '\u896A\u5B50\u892A\u4E0B', 'socks down'],
     ['one_removed', '\u55AE\u96BB\u896A\u5B50\u812B\u843D', 'one sock removed'],
@@ -799,6 +927,9 @@ List<TagItem> _createScopedClothingTags() {
     ['undressing', '\u812B\u896A\u5B50\u4E2D', 'undressing'],
     ['holding', '\u624B\u62FF\u896A\u5B50', 'holding clothes'],
   ]);
+  addMany('socks', 'wear', [
+    ['adjusting_clothes', '\u8ABF\u6574\u896A\u5B50', 'adjusting clothes'],
+  ]);
   addMany('shoes', 'wear', [
     ['one_removed', '\u55AE\u96BB\u978B\u812B\u843D', 'one shoe removed'],
     ['removed', '\u978B\u5B50\u812B\u843D', 'shoes removed'],
@@ -808,6 +939,9 @@ List<TagItem> _createScopedClothingTags() {
     ['untied', '\u978B\u5E36\u89E3\u958B', 'untied shoelaces'],
     ['undressing', '\u812B\u978B\u4E2D', 'undressing'],
     ['one_foot_out', '\u55AE\u8173\u812B\u978B', 'one foot out'],
+  ]);
+  addMany('shoes', 'wear', [
+    ['adjusting_clothes', '\u8ABF\u6574\u978B\u5B50', 'adjusting clothes'],
   ]);
   addMany('accessory', 'wear', [
     ['removed', '\u914D\u4EF6\u812B\u843D', 'accessory removed'],
@@ -2339,6 +2473,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<PersonSlot> _personSlots = <PersonSlot>[PersonSlot()];
   final List<String> _recentCharacterIds = <String>[];
   final List<Preset> _presets = <Preset>[];
+  final List<PromptCombination> _combinations = <PromptCombination>[];
+  final Map<int, Set<String>> _personCombinationIds = <int, Set<String>>{};
   final Map<String, TextEditingController> _personSearchControllers =
       <String, TextEditingController>{};
   final Map<int, GlobalKey> _stepKeys = <int, GlobalKey>{};
@@ -3323,17 +3459,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  List<_GeneratedOutputTag> _combinationExtraOutputTagsForPerson(
+      int personIndex) {
+    final appliedIds = _personCombinationIds[personIndex] ?? const <String>{};
+    return _combinations
+        .where((combination) => appliedIds.contains(combination.id))
+        .expand((combination) => _extraTags(combination.extraPositive).map(
+              (value) => _GeneratedOutputTag(
+                zh: _positiveChineseTag(value),
+                en: _positiveEnglishTag(value),
+                personIndex: personIndex,
+                combinationId: combination.id,
+              ),
+            ))
+        .toList();
+  }
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
     final hair = _hairOutputTagsForPerson(index);
     final extra = _extraFeatureOutputTagsForPerson(index);
     final objectInteractions = _objectInteractionOutputTagsForPerson(index);
+    final combinationExtra = _combinationExtraOutputTagsForPerson(index);
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
       ...hair.expand((tag) => tag.tagIds),
       ...extra.expand((tag) => tag.tagIds),
       ...objectInteractions.expand((tag) => tag.tagIds),
+      ...combinationExtra.expand((tag) => tag.tagIds),
     };
     final other = selected
         .where(
@@ -3365,6 +3519,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...clothing,
       ...afterClothing,
       ...objectInteractions,
+      ...combinationExtra,
     ];
   }
 
@@ -3547,6 +3702,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           (item) => Preset.fromJson(Map<String, dynamic>.from(item as Map)),
         ),
       );
+      _combinations.addAll(
+        (data['combinations'] as List? ?? []).map(
+          (item) => PromptCombination.fromJson(
+              Map<String, dynamic>.from(item as Map)),
+        ),
+      );
       _selectedIds.addAll(
         (data['selectedIds'] as List? ?? []).map((id) => '$id'),
       );
@@ -3570,6 +3731,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               (entry.value as List? ?? []).map((id) => '$id').toSet();
         }
       }
+      final personCombinations = data['personCombinationIds'] as Map?;
+      if (personCombinations != null) {
+        for (final entry in personCombinations.entries) {
+          final index = int.tryParse('${entry.key}');
+          if (index == null) continue;
+          _personCombinationIds[index] =
+              (entry.value as List? ?? []).map((id) => '$id').toSet();
+        }
+      }
       final removedCharacterTags = data['removedCharacterTags'] as Map?;
       if (removedCharacterTags != null) {
         for (final entry in removedCharacterTags.entries) {
@@ -3581,7 +3751,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       var savedStep = (data['stepIndex'] as num?)?.toInt() ?? 0;
-      if ((data['stepLayoutVersion'] as num?)?.toInt() != _stepLayoutVersion) {
+      final savedLayoutVersion =
+          (data['stepLayoutVersion'] as num?)?.toInt() ?? 1;
+      if (savedLayoutVersion < 2) {
         // The old layout had a separate expression step at index 4. It now
         // lives inside character features, so map saved progress safely.
         if (savedStep == 4) {
@@ -3590,7 +3762,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           savedStep -= 1;
         }
       }
-      _stepIndex = savedStep.clamp(0, 5).toInt();
+      if (savedLayoutVersion < _stepLayoutVersion && savedStep >= 2) {
+        // Version 3 inserted the reusable-combinations step after characters.
+        savedStep += 1;
+      }
+      _stepIndex = savedStep.clamp(0, 6).toInt();
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -3631,6 +3807,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'personSlots': _personSlots.map((item) => item.toJson()).toList(),
         'recentCharacterIds': _recentCharacterIds,
         'presets': _presets.map((preset) => preset.toJson()).toList(),
+        'combinations':
+            _combinations.map((combination) => combination.toJson()).toList(),
+        'personCombinationIds': _personCombinationIds.map(
+          (index, ids) => MapEntry('$index', ids.toList()),
+        ),
         'peopleCount': _peopleCount,
         'stepIndex': _stepIndex,
         'stepLayoutVersion': _stepLayoutVersion,
@@ -4051,12 +4232,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     result.addAll(_selectedTags.map(
         (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
+    return _deduplicateGeneratedOutputTags(result);
+  }
+
+  List<_GeneratedOutputTag> _deduplicateGeneratedOutputTags(
+      List<_GeneratedOutputTag> tags) {
+    final result = <_GeneratedOutputTag>[];
+    final positions = <String, int>{};
+    for (final tag in tags) {
+      final key =
+          '${tag.personIndex ?? -1}|${tag.characterTag}|${tag.combinationId ?? ''}|${_cleanTag(tag.en).toLowerCase()}';
+      final position = positions[key];
+      if (position == null) {
+        positions[key] = result.length;
+        result.add(tag);
+        continue;
+      }
+      final previous = result[position];
+      result[position] = _GeneratedOutputTag(
+        zh: previous.zh,
+        en: previous.en,
+        tagId: previous.tagId ?? tag.tagId,
+        tagIds: {...previous.tagIds, ...tag.tagIds}.toList(),
+        personIndex: previous.personIndex,
+        characterTag: previous.characterTag,
+        combinationId: previous.combinationId,
+      );
+    }
     return result;
   }
 
   void _removeGeneratedOutputTag(_GeneratedOutputTag outputTag) {
     setState(() {
-      if (outputTag.characterTag) {
+      if (outputTag.combinationId != null && outputTag.personIndex != null) {
+        _personCombinationIds[outputTag.personIndex!]
+            ?.remove(outputTag.combinationId);
+      } else if (outputTag.characterTag) {
         if (outputTag.personIndex != null) {
           _removedCharacterTagSet(outputTag.personIndex!)
               .add(_cleanTag(outputTag.en).toLowerCase());
@@ -4334,9 +4545,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String get _positiveZh {
     final tokens = <String>[_peopleZhNew()];
     for (var index = 0; index < _personSlots.length; index++) {
+      final personalTags =
+          _deduplicateGeneratedOutputTags(_personPromptTags(index));
       final personal = [
         ..._characterChineseForSlot(_personSlots[index], index),
-        ..._personPromptTags(index).map((tag) => tag.zh),
+        ...personalTags.map((tag) => tag.zh),
       ];
       tokens.add('人物 ${index + 1}：${personal.join('、')}');
     }
@@ -5429,6 +5642,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _selectedIds.clear();
       _personSelectedIds.clear();
+      _personCombinationIds.clear();
       _removedCharacterTags.clear();
       _personTagQueries.clear();
       _personActiveGroups.clear();
@@ -5480,9 +5694,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           setState(() {
             _selectedIds.clear();
             _personSelectedIds.clear();
+            _personCombinationIds.clear();
             _removedCharacterTags.clear();
             _customTags.clear();
             _presets.clear();
+            _combinations.clear();
             _restore();
           });
           ScaffoldMessenger.of(context)
@@ -5545,6 +5761,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               int.parse('${entry.key}'):
                   (entry.value as List? ?? []).map((id) => '$id').toSet(),
         });
+      _personCombinationIds
+        ..clear()
+        ..addAll({
+          for (final entry
+              in (data['personCombinationIds'] as Map? ?? {}).entries)
+            if (int.tryParse('${entry.key}') != null)
+              int.parse('${entry.key}'):
+                  (entry.value as List? ?? []).map((id) => '$id').toSet(),
+        });
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _gender = '${data['gender'] ?? _gender}';
       _model = '${data['model'] ?? _model}';
@@ -5571,6 +5796,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       while (_personSlots.length < count) _personSlots.add(PersonSlot());
       while (_personSlots.length > count) _personSlots.removeLast();
       _personSelectedIds.removeWhere((index, _) => index >= count);
+      _personCombinationIds.removeWhere((index, _) => index >= count);
       _removedCharacterTags.removeWhere((index, _) => index >= count);
       _personTagQueries.removeWhere((index, _) => index >= count);
       _personActiveGroups.removeWhere((key, _) =>
@@ -6370,7 +6596,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
       return;
     }
-    final nextStep = _stepIndex < 5 ? _stepIndex + 1 : _stepIndex;
+    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
     setState(() {
       _stepIndex = nextStep;
       _activeGroup = '全部';
@@ -6378,6 +6604,440 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _persist();
     });
     _scrollToStep(nextStep);
+  }
+
+  bool _isCombinationCandidate(TagItem tag) =>
+      tag.order > 0 && (_showAdult || !tag.adult);
+
+  List<String> _combinationGroups() => _allTags
+      .where(_isCombinationCandidate)
+      .map((tag) => tag.group)
+      .toSet()
+      .toList()
+    ..sort((a, b) => _wizardGroupLabel(a).compareTo(_wizardGroupLabel(b)));
+
+  List<TagItem> _combinationOptions(String group, String query) {
+    final normalizedQuery = query.trim().toLowerCase();
+    final options = _allTags.where((tag) {
+      if (!_isCombinationCandidate(tag)) return false;
+      if (group.isNotEmpty && tag.group != group) return false;
+      if (normalizedQuery.isEmpty) return true;
+      return tag.zh.toLowerCase().contains(normalizedQuery) ||
+          tag.en.toLowerCase().contains(normalizedQuery);
+    }).toList();
+    options.sort((a, b) {
+      final groupOrder =
+          _wizardGroupLabel(a.group).compareTo(_wizardGroupLabel(b.group));
+      if (groupOrder != 0) return groupOrder;
+      return a.en.compareTo(b.en);
+    });
+    return options;
+  }
+
+  Future<void> _editCombination({PromptCombination? existing}) async {
+    final name = TextEditingController(text: existing?.name ?? '');
+    final extra = TextEditingController(text: existing?.extraPositive ?? '');
+    final search = TextEditingController();
+    final selected = <String>{...?existing?.tagIds};
+    var activeGroup = '';
+    PromptCombination? result;
+
+    result = await showDialog<PromptCombination?>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final selectedTags =
+              _allTags.where((tag) => selected.contains(tag.id)).toList();
+          final groups = _combinationGroups();
+          final options = _combinationOptions(activeGroup, search.text);
+          return AlertDialog(
+            title: Text(existing == null
+                ? '\u65B0\u589E\u7D44\u5408\u6A19\u7C64'
+                : '\u7DE8\u8F2F\u7D44\u5408\u6A19\u7C64'),
+            content: SizedBox(
+              width:
+                  (MediaQuery.of(context).size.width * .88).clamp(360.0, 820.0),
+              height: (MediaQuery.of(context).size.height * .78)
+                  .clamp(420.0, 720.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: name,
+                    autofocus: existing == null,
+                    decoration: const InputDecoration(
+                      labelText: '\u7D44\u5408\u4E2D\u6587\u540D\u7A31',
+                      hintText:
+                          '\u4F8B\u5982\u5750\u5728\u6905\u5B50\u4E0A\u63A1\u88D9',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: extra,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText:
+                          '\u984D\u5916\u6B63\u5411\u6A19\u7C64\uFF08\u4E2D\u6587\u6216\u82F1\u6587\uFF09',
+                      hintText:
+                          'custom prompt, \u6216\u7528\u9017\u865F\u5206\u9694',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '\u5DF2\u9078\u6A19\u7C64\uFF1A${selectedTags.length} \u500B\uFF08\u76F8\u540C\u885D\u7A81\u985E\u5225\u6703\u5728\u5957\u7528\u6642\u63D0\u793A\u66FF\u63DB\uFF09',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  if (selectedTags.isNotEmpty)
+                    SizedBox(
+                      height: 72,
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: selectedTags
+                              .map((tag) => InputChip(
+                                    label: Text(tag.en),
+                                    onDeleted: () => setDialogState(
+                                        () => selected.remove(tag.id)),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: 76,
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('\u5168\u90E8\u5206\u985E'),
+                            selected: activeGroup.isEmpty,
+                            onSelected: (_) =>
+                                setDialogState(() => activeGroup = ''),
+                          ),
+                          ...groups.map((group) => ChoiceChip(
+                                label: Text(_wizardGroupLabel(group)),
+                                selected: activeGroup == group,
+                                onSelected: (_) =>
+                                    setDialogState(() => activeGroup = group),
+                              )),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: search,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      labelText:
+                          '\u641C\u5C0B\u53EF\u52A0\u5165\u7684\u6A19\u7C64',
+                      suffixIcon: search.text.isEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                search.clear();
+                                setDialogState(() {});
+                              },
+                              icon: const Icon(Icons.clear),
+                            ),
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
+                        children: options.take(240).map((tag) {
+                          final isSelected = selected.contains(tag.id);
+                          return FilterChip(
+                            selected: isSelected,
+                            label: Text(
+                              tag.zh.isEmpty ? tag.en : '${tag.zh} · ${tag.en}',
+                            ),
+                            tooltip: tag.en,
+                            onSelected: (_) => setDialogState(() {
+                              if (isSelected) {
+                                selected.remove(tag.id);
+                              } else {
+                                final conflicts = _allTags
+                                    .where((item) => selected.contains(item.id))
+                                    .where((item) => _tagsConflict(item, tag))
+                                    .map((item) => item.id)
+                                    .toList();
+                                selected.removeAll(conflicts);
+                                selected.add(tag.id);
+                              }
+                            }),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  if (options.length > 240)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 6),
+                      child: Text(
+                          '\u7D50\u679C\u8F03\u591A\uFF0C\u8ACB\u4F7F\u7528\u641C\u5C0B\u6216\u5206\u985E\u7E2E\u5C0F\u7BC4\u570D'),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('\u53D6\u6D88'),
+              ),
+              FilledButton.icon(
+                onPressed: () {
+                  final trimmedName = name.text.trim();
+                  if (trimmedName.isEmpty ||
+                      (selected.isEmpty && extra.text.trim().isEmpty)) {
+                    return;
+                  }
+                  Navigator.pop(
+                    dialogContext,
+                    PromptCombination(
+                      id: existing?.id ??
+                          'combination_${DateTime.now().microsecondsSinceEpoch}',
+                      name: trimmedName,
+                      tagIds: selected.toList(),
+                      extraPositive: extra.text.trim(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.save_outlined),
+                label: const Text('\u5132\u5B58\u7D44\u5408'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    name.dispose();
+    extra.dispose();
+    search.dispose();
+    if (result == null) return;
+    setState(() {
+      final index = _combinations.indexWhere((item) => item.id == result!.id);
+      if (index < 0) {
+        _combinations.insert(0, result!);
+      } else {
+        _combinations[index] = result!;
+      }
+      _persist();
+    });
+  }
+
+  Future<void> _deleteCombination(PromptCombination combination) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('\u522A\u9664\u7D44\u5408\u6A19\u7C64\uFF1F'),
+        content: Text(
+            '\u522A\u9664\u300C${combination.name}\u300D\u5F8C\uFF0C\u5DF2\u5957\u7528\u5230\u4EBA\u7269\u7684\u7D44\u5408\u984D\u5916\u6B63\u5411\u8A5E\u4E5F\u6703\u79FB\u9664\u3002'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('\u53D6\u6D88')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('\u522A\u9664')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() {
+      _combinations.removeWhere((item) => item.id == combination.id);
+      for (final ids in _personCombinationIds.values) {
+        ids.remove(combination.id);
+      }
+      _persist();
+    });
+  }
+
+  Future<void> _applyCombination(
+      PromptCombination combination, int personIndex) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final target = _personTagIds(personIndex);
+    final tags = combination.tagIds
+        .map((id) => _allTags.cast<TagItem?>().firstWhere(
+              (tag) => tag?.id == id,
+              orElse: () => null,
+            ))
+        .whereType<TagItem>()
+        .where((tag) => _showAdult || !tag.adult)
+        .toList();
+    final skippedAdult = combination.tagIds.length > tags.length;
+    final conflicts = <String, TagItem>{};
+    for (final tag in tags) {
+      for (final current in _selectedTagsForPerson(personIndex)) {
+        if (current.id != tag.id && _tagsConflict(current, tag)) {
+          conflicts[current.id] = current;
+        }
+      }
+    }
+    if (conflicts.isNotEmpty) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('\u7D44\u5408\u6709\u885D\u7A81\u6A19\u7C64'),
+          content: Text(
+              '\u300C${combination.name}\u300D\u6703\u66F4\u63DB\uFF1A${conflicts.values.map((tag) => tag.en).join(', ')}\u3002\n\n\u662F\u5426\u7E7C\u7E8C\u5957\u7528\uFF1F'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('\u53D6\u6D88')),
+            FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('\u66FF\u63DB\u4E26\u5957\u7528')),
+          ],
+        ),
+      );
+      if (replace != true) return;
+    }
+    var added = 0;
+    for (final tag in tags) {
+      if (target.contains(tag.id)) continue;
+      if (!await _confirmCharacterOverride(tag, personIndex)) continue;
+      final current = _selectedTagsForPerson(personIndex);
+      final currentConflicts =
+          current.where((item) => _tagsConflict(item, tag)).toList();
+      for (final conflict in currentConflicts) {
+        if (_isCurrentCharacterTrait(personIndex, conflict)) {
+          for (final trait
+              in _characterForNew(_personSlots[personIndex])?.traits ??
+                  const <CatalogTagData>[]) {
+            if (_characterTraitUsesTag(trait, conflict.id)) {
+              _removedCharacterTagSet(personIndex)
+                  .add(_cleanTag(trait.en).toLowerCase());
+            }
+          }
+        }
+        target.remove(conflict.id);
+      }
+      target.add(tag.id);
+      added++;
+    }
+    _personCombinationIds
+        .putIfAbsent(personIndex, () => <String>{})
+        .add(combination.id);
+    setState(() {
+      _persist();
+    });
+    final suffix = skippedAdult ? '\uFF1B\u672A\u958B\u555F 18+，部分成人標籤未套用' : '';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            '\u5DF2\u5C07\u300C${combination.name}\u300D\u5957\u7528\u5230\u4EBA\u7269 ${personIndex + 1}\uFF08${added} \u500B\u6A19\u7C64\uFF09$suffix')));
+  }
+
+  Widget _stepCombinations() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+            '\u5C07\u5E38\u7528\u7684\u8868\u60C5\u3001\u59FF\u52E2\u3001\u670D\u88DD\u6216\u52D5\u4F5C\u5132\u5B58\u6210\u4E00\u5957\uFF0C\u4E4B\u5F8C\u53EF\u76F4\u63A5\u5957\u7528\u5230\u6307\u5B9A\u4EBA\u7269\u3002'),
+        const SizedBox(height: 10),
+        FilledButton.icon(
+          onPressed: () => _editCombination(),
+          icon: const Icon(Icons.add),
+          label: const Text('\u65B0\u589E\u7D44\u5408'),
+        ),
+        const SizedBox(height: 12),
+        if (_combinations.isEmpty)
+          const Text(
+              '\u5C1A\u7121\u7D44\u5408\u3002\u53EF\u5EFA\u7ACB\u5982\u300C\u5750\u5728\u6905\u5B50\u4E0A\u300D\u3001\u300C\u904B\u52D5\u59FF\u52E2\u300D\u7B49\u5FEB\u901F\u5957\u7528\u3002')
+        else
+          ..._combinations.map((combination) {
+            final tags = combination.tagIds
+                .map((id) => _allTags.cast<TagItem?>().firstWhere(
+                      (tag) => tag?.id == id,
+                      orElse: () => null,
+                    ))
+                .whereType<TagItem>()
+                .toList();
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(combination.name,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                        IconButton(
+                          tooltip: '\u7DE8\u8F2F\u7D44\u5408',
+                          onPressed: () =>
+                              _editCombination(existing: combination),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                        IconButton(
+                          tooltip: '\u522A\u9664\u7D44\u5408',
+                          onPressed: () => _deleteCombination(combination),
+                          icon: const Icon(Icons.delete_outline),
+                        ),
+                      ],
+                    ),
+                    if (tags.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: tags
+                            .map((tag) => Chip(
+                                  label: Text(tag.en),
+                                  visualDensity: VisualDensity.compact,
+                                ))
+                            .toList(),
+                      ),
+                    if (combination.extraPositive.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                            '\u984D\u5916\u6B63\u5411\uFF1A${_extraTags(combination.extraPositive).map(_positiveEnglishTag).join(', ')}'),
+                      ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _personSlots.asMap().entries.map((entry) {
+                        final personIndex = entry.key;
+                        final characterNames = _characterChineseForSlot(
+                            _personSlots[personIndex], personIndex);
+                        final personLabel = characterNames.isEmpty
+                            ? '\u4EBA\u7269 ${personIndex + 1}'
+                            : characterNames.first;
+                        final applied = _personCombinationIds[personIndex]
+                                ?.contains(combination.id) ??
+                            false;
+                        return OutlinedButton.icon(
+                          onPressed: () =>
+                              _applyCombination(combination, personIndex),
+                          icon: Icon(applied
+                              ? Icons.check_circle_outline
+                              : Icons.playlist_add),
+                          label: Text(
+                              '\u5957\u7528 $personLabel${applied ? '\uFF08\u5DF2\u5957\u7528\uFF09' : ''}'),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
   }
 
   void _addCustomTag() {
@@ -7589,6 +8249,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepCharacters()),
       _stepCard(
           2,
+          '\u7D44\u5408\u6A19\u7C64',
+          _combinations.isEmpty
+              ? '\u5EFA\u7ACB\u53EF\u91CD\u8907\u5957\u7528\u7684\u670D\u88DD\u6216\u59FF\u52E2\u7D44\u5408'
+              : '${_combinations.length} \u500B\u7D44\u5408\u53EF\u5957\u7528',
+          Icons.auto_awesome_motion_outlined,
+          _stepCombinations()),
+      _stepCard(
+          3,
           '角色特徵',
           _personSelectedIds.isEmpty
               ? '每位人物分別設定'
@@ -7628,7 +8296,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：服裝',
               instruction: '請在每位人物自己的區塊內設定外觀、身體、眼睛、額外特徵、髮型與表情；髮色位於髮型分類最下方。')),
       _stepCard(
-          3,
+          4,
           '服裝與穿脫狀態',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -7660,7 +8328,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.checkroom_outlined,
           _stepClothing()),
       _stepCard(
-          4,
+          5,
           '姿勢、動作、物件與成人道具',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -7673,7 +8341,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker(['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'],
               nextLabel: '下一步：品質與負面',
               instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件、成人道具與性姿勢；不同人物可以使用不同姿勢。')),
-      _stepCard(5, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
+      _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
   }
@@ -8312,7 +8980,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
                     child: Column(
                       children: [
-                        ...List.generate(6, (index) {
+                        ...List.generate(7, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 3),
                             child: IconButton.filled(
