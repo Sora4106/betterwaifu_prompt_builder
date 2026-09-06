@@ -2754,7 +2754,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : tag.id);
 
   String? _clothingScopeForBase(TagItem tag) {
-    if (!_isClothingBaseTag(tag)) return null;
+    if (!_isClothingBaseTag(tag) && !_isLegacyClothingStyleTag(tag))
+      return null;
     if (tag.group == _clothingGroupTop) return 'top';
     if (tag.group == _clothingGroupPants) return 'pants';
     if (tag.group == _clothingGroupSkirt) return 'skirt';
@@ -2766,6 +2767,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.group == _clothingGroupShoes) return 'shoes';
     if (tag.group == _clothingGroupAccessory) return 'accessory';
     return null;
+  }
+
+  List<TagItem> _clothingDesignBases(Iterable<TagItem> tags) {
+    final selected = tags.toList();
+    final bases = selected.where(_isClothingBaseTag).toList();
+    final fallbackStyles =
+        selected.where(_isLegacyClothingStyleTag).where((tag) {
+      final scope = _clothingScopeForBase(tag);
+      return scope != null &&
+          !bases.any((base) => _clothingScopeForBase(base) == scope);
+    }).toList();
+    return [...bases, ...fallbackStyles]..sort(_compareOutputTags);
   }
 
   String? _clothingScopeForTag(TagItem tag) {
@@ -3133,7 +3146,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(personIndex)
         .where((tag) => _isClothingGroup(tag.group))
         .toList();
-    final bases = selected.where(_isClothingBaseTag).toList();
+    final bases = _clothingDesignBases(selected);
     final consumed = <String>{};
     final result = <_GeneratedOutputTag>[];
 
@@ -3171,9 +3184,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final styleGroups = _clothingStyleGroupsForBase(base);
       final styles = selected
           .where((tag) =>
-              styleGroups.contains(tag.group) ||
-              (_isLegacyClothingStyleTag(tag) &&
-                  _clothingScopeForTag(tag) == scope))
+              tag.id != base.id &&
+              (styleGroups.contains(tag.group) ||
+                  (_isLegacyClothingStyleTag(tag) &&
+                      _clothingScopeForTag(tag) == scope)))
           .toList();
       related.addAll(styles);
 
@@ -4951,8 +4965,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   void _randomizeScopedClothing(int personIndex, Random random) {
     final target = _personTagIds(personIndex);
-    final bases =
-        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
+    final bases = _clothingDesignBases(_selectedTagsForPerson(personIndex));
 
     void choose(String group) {
       final candidate = _randomClothingTag([group], random);
@@ -7537,8 +7550,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selectedFamily = _selectedColorFamily(pickerGroup, selectedIds);
     final selectedClothingScopes = personIndex == null
         ? const <String>{}
-        : _selectedTagsForPerson(personIndex)
-            .where(_isClothingBaseTag)
+        : _clothingDesignBases(_selectedTagsForPerson(personIndex))
             .map(_clothingScopeForBase)
             .whereType<String>()
             .toSet();
@@ -7763,19 +7775,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  List<String> _clothingDetailGroups(int personIndex) {
-    final bases =
-        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
+  String _activePersonPickerGroup(int personIndex, List<String> groups) {
+    if (groups.isEmpty) return '';
+    final key = '$personIndex:${groups.join('|')}';
+    final stored = _personActiveGroups[key];
+    return stored != null && groups.contains(stored) ? stored : groups.first;
+  }
+
+  List<TagItem> _clothingBasesForActiveGroup(
+      int personIndex, String? activeGroup) {
+    final bases = _clothingDesignBases(_selectedTagsForPerson(personIndex));
+    if (activeGroup == null || activeGroup.isEmpty) return bases;
+    return bases.where((base) => base.group == activeGroup).toList();
+  }
+
+  List<String> _clothingDetailGroups(int personIndex, {String? activeGroup}) {
+    final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
     return bases.expand(_clothingDetailGroupsForBase).toSet().toList();
   }
 
-  List<String> _clothingWearGroups(int personIndex) {
-    final bases =
-        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
-    final scopedWearGroups = bases.expand(_clothingWearGroupsForBase).toSet();
-    return scopedWearGroups.isEmpty
-        ? const <String>[]
-        : const <String>[_allClothingWearGroup];
+  List<String> _clothingWearGroups(int personIndex, {String? activeGroup}) {
+    final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
+    return bases.expand(_clothingWearGroupsForBase).toSet().toList();
   }
 
   // ignore: unused_element
@@ -7831,8 +7852,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final index = entry.key;
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
-          final adaptiveDetails = _clothingDetailGroups(index);
-          final adaptiveWear = _clothingWearGroups(index);
+          final activeClothingGroup = _activePersonPickerGroup(index, styles);
+          final adaptiveDetails =
+              _clothingDetailGroups(index, activeGroup: activeClothingGroup);
+          final adaptiveWear =
+              _clothingWearGroups(index, activeGroup: activeClothingGroup);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
           if (!slot.detailed) {
@@ -7888,7 +7912,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   if (adaptiveWear.isNotEmpty) ...[
                     const Divider(height: 26),
                     const Text(
-                      '\u7A7F\u812B\u72C0\u614B\uFF08\u6240\u6709\u670D\u88DD\u96C6\u4E2D\uFF09',
+                      '\u7A7F\u812B\u72C0\u614B\uFF08\u76EE\u524D\u9078\u64C7\u7684\u670D\u88DD\uFF09',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 6),
