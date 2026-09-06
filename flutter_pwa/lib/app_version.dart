@@ -1,7 +1,8 @@
-const appVersion = '1.1.37';
-const appBuildNumber = 39;
-const appVersionLabel = '1.1.37+39';
+const appVersion = '1.1.38';
+const appBuildNumber = 40;
+const appVersionLabel = '1.1.38+40';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: enlarge combination editor upper section'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: expand combination editor workspace'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add reusable prompt combinations'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: scope clothing styles and wear states'},

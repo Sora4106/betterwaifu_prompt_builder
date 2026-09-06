@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.38+40 - 2026-09-06
+
+- 自動偵測：fix: enlarge combination editor upper section
+
+
 ## 1.1.37+39 - 2026-09-06
 
 - 自動偵測：fix: expand combination editor workspace
