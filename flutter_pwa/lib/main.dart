@@ -1231,8 +1231,6 @@ List<TagItem> _seedTags() => [
       _tag('expr_heart_shaped_pupils', '眼睛', '愛心瞳孔', 'heart-shaped pupils', 2),
       _tag('expr_nose_blush', '表情', '鼻頭泛紅', 'nose blush', 3,
           conflictGroup: 'expression_face_detail'),
-      _tag('expr_sweatdrop', '表情', '汗滴', 'sweatdrop', 3,
-          conflictGroup: 'expression_face_detail'),
       _tag('expr_steam_from_nose', '表情', '鼻子冒氣', 'steam from nose', 3,
           conflictGroup: 'expression_face_detail'),
       _tag('expr_anger_vein', '表情', '青筋', 'anger vein', 3,
@@ -1807,8 +1805,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _groupPeoplePrompt = true;
   bool _showInfo = true;
 
-  List<TagItem> get _allTags =>
-      [..._builtIns, ..._supplemental, ..._customTags];
+  List<TagItem> get _allTags {
+    final unique = <String, TagItem>{};
+    for (final tag in [..._builtIns, ..._supplemental, ..._customTags]) {
+      final englishKey = _englishTagKey(tag.en);
+      final key = englishKey.isEmpty ? 'id:${tag.id}' : 'en:$englishKey';
+      unique.putIfAbsent(key, () => tag);
+    }
+    return unique.values.toList();
+  }
 
   List<CatalogCharacter> get _allCharacters =>
       [...catalogCharacters, ..._customCharacters];
@@ -1928,6 +1933,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '穿脫狀態',
       }.contains(group) ||
       group.endsWith('邊線色');
+
+  bool _isFaceExpressionTag(TagItem tag) =>
+      tag.group == '臉部特徵' || tag.group == '表情';
 
   bool _isClothingColorGroup(String group) =>
       const {
@@ -2593,7 +2601,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '全部',
         ..._allTags
             .map((tag) => tag.group)
-            .where((group) => group != '髮色')
+            .where((group) => group != '髮色' && group != '臉部特徵')
             .toSet(),
       ];
 
@@ -3820,6 +3828,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
     if (groups.contains(tag.group)) return true;
+    if (groups.contains('表情') && _isFaceExpressionTag(tag)) return true;
     return groups.contains('髮型') && tag.group == '髮色';
   }
 
@@ -3885,11 +3894,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addRandomFromGroup('髮色', min: 1);
       addRandomFromGroup('髮型', min: 1, max: 2);
     }
-    if (groupSet.contains('臉部特徵')) {
-      addRandomFromGroup('臉部特徵', max: 3);
-    }
     if (groupSet.contains('表情')) {
-      addRandomFromGroup('表情', max: 4);
+      addRandomFromGroup('臉部特徵', max: 3);
+      addRandomFromGroup('表情', max: 5);
     }
     if (groupSet.contains('胸部')) {
       addRandomFromGroup('胸部', min: 1);
@@ -5733,12 +5740,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _visibleTags(String group) {
     final query = _search.text.trim().toLowerCase();
-    final effectiveGroup = group == '髮色' ? '髮型' : group;
+    final effectiveGroup = group == '髮色'
+        ? '髮型'
+        : group == '臉部特徵'
+            ? '表情'
+            : group;
     final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
-      final groupMatch =
-          group == '全部' || tag.group == effectiveGroup || hairColorInHairGroup;
+      final faceExpressionInMergedGroup =
+          effectiveGroup == '表情' && tag.group == '臉部特徵';
+      final groupMatch = group == '全部' ||
+          tag.group == effectiveGroup ||
+          hairColorInHairGroup ||
+          faceExpressionInMergedGroup;
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -5897,10 +5912,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selectedFamily = _selectedColorFamily(pickerGroup, selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
-      final inGroup = (groups.contains(tag.group) || hairColorInHairGroup) &&
+      final faceExpressionInMergedGroup =
+          activeGroup == '表情' && tag.group == '臉部特徵';
+      final inGroup = (groups.contains(tag.group) ||
+              hairColorInHairGroup ||
+              faceExpressionInMergedGroup) &&
           (activeGroup == null ||
               tag.group == activeGroup ||
-              hairColorInHairGroup);
+              hairColorInHairGroup ||
+              faceExpressionInMergedGroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -6731,13 +6751,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '額外特徵位置',
             '額外特徵顏色',
             '髮型',
-            '臉部特徵',
             '表情',
             '胸部',
             '裸露',
           ],
               nextLabel: '下一步：服裝',
-              instruction: '請在每位人物自己的區塊內設定外觀、身體、額外特徵、髮型、臉部與表情；髮色位於髮型分類最下方。')),
+              instruction: '請在每位人物自己的區塊內設定外觀、身體、眼睛、額外特徵、髮型與表情；髮色位於髮型分類最下方。')),
       _stepCard(
           3,
           '服裝與穿脫狀態',
