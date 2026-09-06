@@ -319,6 +319,8 @@ const _legacyClothingDetailGroup = '\u670D\u88DD\u7D30\u7BC0';
 const _legacyClothingMaterialGroup = '\u670D\u88DD\u6750\u8CEA';
 const _legacyClothingWearGroup = '\u7A7F\u812B\u72C0\u614B';
 const _scopedClothingPrefix = 'clothing_scope_';
+// UI-only group: all selected clothing wear-state tags are shown together.
+const _allClothingWearGroup = 'clothing_all_wear';
 
 String _scopedClothingGroup(String slot, String kind) =>
     '$_scopedClothingPrefix${slot}_$kind';
@@ -6634,6 +6636,78 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return options;
   }
 
+  Future<void> _saveClothingCombinationFromPerson(int personIndex) async {
+    final clothingTags = _selectedTagsForPerson(personIndex)
+        .where((tag) => _isClothingGroup(tag.group))
+        .toList();
+    if (clothingTags.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              '\u8ACB\u5148\u70BA\u6B64\u4EBA\u7269\u9078\u64C7\u670D\u88DD\u6A23\u5F0F')));
+      return;
+    }
+
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('\u52A0\u5165\u7D44\u5408\u6A19\u7C64'),
+        content: SizedBox(
+          width: 420,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                  '\u5C07\u5132\u5B58\u4EBA\u7269 ${personIndex + 1} \u76EE\u524D\u7684\u670D\u88DD\u3001\u6A23\u5F0F\u3001\u984F\u8272\u3001\u7D30\u7BC0\u8207\u7A7F\u812B\u72C0\u614B\uFF08${clothingTags.length} \u500B\u6A19\u7C64\uFF09\u3002'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: '\u7D44\u5408\u4E2D\u6587\u540D\u7A31',
+                  hintText: '\u4F8B\u5982\u767D\u8272\u857E\u7D72\u6D0B\u88DD',
+                ),
+                onSubmitted: (value) =>
+                    Navigator.pop(dialogContext, value.trim()),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('\u53D6\u6D88'),
+          ),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.pop(dialogContext, nameController.text.trim()),
+            icon: const Icon(Icons.bookmark_add_outlined),
+            label: const Text('\u5132\u5B58'),
+          ),
+        ],
+      ),
+    );
+    nameController.dispose();
+
+    final trimmedName = name?.trim() ?? '';
+    if (trimmedName.isEmpty) return;
+    final combination = PromptCombination(
+      id: 'combination_${DateTime.now().microsecondsSinceEpoch}',
+      name: trimmedName,
+      tagIds: clothingTags.map((tag) => tag.id).toList(),
+      extraPositive: '',
+    );
+    setState(() {
+      _combinations.insert(0, combination);
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            '\u5DF2\u5C07\u300C$trimmedName\u300D\u5132\u5B58\u70BA\u670D\u88DD\u7D44\u5408')));
+  }
+
   Future<void> _editCombination({PromptCombination? existing}) async {
     final name = TextEditingController(text: existing?.name ?? '');
     final extra = TextEditingController(text: existing?.extraPositive ?? '');
@@ -6978,11 +7052,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         const Text(
             '\u5C07\u5E38\u7528\u7684\u8868\u60C5\u3001\u59FF\u52E2\u3001\u670D\u88DD\u6216\u52D5\u4F5C\u5132\u5B58\u6210\u4E00\u5957\uFF0C\u4E4B\u5F8C\u53EF\u76F4\u63A5\u5957\u7528\u5230\u6307\u5B9A\u4EBA\u7269\u3002'),
         const SizedBox(height: 10),
-        FilledButton.icon(
-          onPressed: () => _editCombination(),
-          icon: const Icon(Icons.add),
-          label: const Text('\u65B0\u589E\u7D44\u5408'),
-        ),
+        const Text(
+            '\u8ACB\u5728\u300C\u670D\u88DD\u300D\u4E2D\u7684\u4EBA\u7269\u5361\u7247\u6309\u300C\u52A0\u5165\u7D44\u5408\u6A19\u7C64\u300D\uFF0C\u76F4\u63A5\u5132\u5B58\u7576\u524D\u4EBA\u7269\u7684\u670D\u88DD\u8A2D\u8A08\u3002\u65E2\u6709\u7D44\u5408\u4ECD\u53EF\u7DE8\u8F2F\u6216\u5957\u7528\u3002'),
         const SizedBox(height: 12),
         if (_combinations.isEmpty)
           const Text(
@@ -7305,6 +7376,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _sortPickerTags(List<TagItem> tags, String activeGroup) {
     tags.sort((a, b) {
+      if (activeGroup == _allClothingWearGroup) {
+        const wearSlotOrder = <String>[
+          'top',
+          'onepiece',
+          'pants',
+          'skirt',
+          'underwear',
+          'bra',
+          'panties',
+          'socks',
+          'shoes',
+          'accessory',
+        ];
+        final aSlot = _scopedClothingSlot(a.group);
+        final bSlot = _scopedClothingSlot(b.group);
+        final aOrder =
+            aSlot == null ? wearSlotOrder.length : wearSlotOrder.indexOf(aSlot);
+        final bOrder =
+            bSlot == null ? wearSlotOrder.length : wearSlotOrder.indexOf(bSlot);
+        if (aOrder != bOrder) return aOrder.compareTo(bOrder);
+      }
+
       int rank(TagItem tag) {
         if (activeGroup == '髮型' && tag.group == '髮色') return 1;
         if (activeGroup == '眼睛') return _isColorPickerTag(tag) ? 0 : 1;
@@ -7417,6 +7510,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String _wizardGroupLabel(String group) {
+    if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == '褲子') return '下身／褲子';
     if (group == '服裝') return '連身裙／整套服裝';
     if (group == '服裝顏色') return '連身裝顏色';
@@ -7441,15 +7535,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selectedIds =
         personIndex == null ? _selectedIds : _personTagIds(personIndex);
     final selectedFamily = _selectedColorFamily(pickerGroup, selectedIds);
+    final selectedClothingScopes = personIndex == null
+        ? const <String>{}
+        : _selectedTagsForPerson(personIndex)
+            .where(_isClothingBaseTag)
+            .map(_clothingScopeForBase)
+            .whereType<String>()
+            .toSet();
     final tags = _allTags.where((tag) {
+      final allClothingWear = activeGroup == _allClothingWearGroup &&
+          _scopedClothingKind(tag.group) == 'wear' &&
+          (personIndex == null ||
+              selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           activeGroup == '表情' && tag.group == '臉部特徵';
       final inGroup = (groups.contains(tag.group) ||
+              allClothingWear ||
               hairColorInHairGroup ||
               faceExpressionInMergedGroup) &&
           (activeGroup == null ||
               tag.group == activeGroup ||
+              allClothingWear ||
               hairColorInHairGroup ||
               faceExpressionInMergedGroup);
       final adultMatch = _showAdult || !tag.adult;
@@ -7665,7 +7772,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> _clothingWearGroups(int personIndex) {
     final bases =
         _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
-    return bases.expand(_clothingWearGroupsForBase).toSet().toList();
+    final scopedWearGroups = bases.expand(_clothingWearGroupsForBase).toSet();
+    return scopedWearGroups.isEmpty
+        ? const <String>[]
+        : const <String>[_allClothingWearGroup];
   }
 
   // ignore: unused_element
@@ -7760,6 +7870,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          _saveClothingCombinationFromPerson(index),
+                      icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                      label: const Text('\u52A0\u5165\u7D44\u5408\u6A19\u7C64'),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   const Text('服裝類型與樣式',
                       style: TextStyle(fontWeight: FontWeight.w700)),
@@ -7769,7 +7888,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   if (adaptiveWear.isNotEmpty) ...[
                     const Divider(height: 26),
                     const Text(
-                      '\u7A7F\u812B\u72C0\u614B\uFF08\u4F9D\u670D\u88DD\u985E\u578B\uFF09',
+                      '\u7A7F\u812B\u72C0\u614B\uFF08\u6240\u6709\u670D\u88DD\u96C6\u4E2D\uFF09',
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 6),
