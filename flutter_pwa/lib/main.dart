@@ -99,223 +99,6 @@ class TagItem {
       );
 }
 
-class _PersonAvatarPreview extends StatelessWidget {
-  const _PersonAvatarPreview({required this.tags});
-
-  final List<TagItem> tags;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: 82,
-        height: 104,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: const Color(0xff25253a),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _buttonBorder),
-        ),
-        child: CustomPaint(
-          painter: _PersonAvatarPainter(tags),
-        ),
-      );
-}
-
-class _PersonAvatarPainter extends CustomPainter {
-  _PersonAvatarPainter(this.tags);
-
-  final List<TagItem> tags;
-
-  Set<String> get _words => tags.map((tag) => tag.en.toLowerCase()).toSet();
-
-  Color _tagColor({required String suffix, required Color fallback}) {
-    final colors = <MapEntry<String, Color>>[
-      ..._promptColorValues.entries,
-      const MapEntry('blonde', Color(0xffffd166)),
-    ]..sort((a, b) => b.key.length.compareTo(a.key.length));
-    for (final tag in tags) {
-      final value = tag.en.toLowerCase();
-      if (!value.contains(suffix)) continue;
-      for (final entry in colors) {
-        if (value.contains(entry.key)) return entry.value;
-      }
-    }
-    return fallback;
-  }
-
-  bool _has(String value) => _words.any((word) => word.contains(value));
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final hairColor =
-        _tagColor(suffix: 'hair', fallback: const Color(0xff6f4e37));
-    final eyeColor =
-        _tagColor(suffix: 'eye', fallback: const Color(0xff4caf50));
-    final words = _words;
-    final longHair =
-        _has('long hair') || _has('waist-length') || _has('very long');
-    final shortHair = _has('short hair') || _has('pixie');
-    final twinTails = _has('twintail') || _has('twin tails');
-    final ponytail = _has('ponytail');
-    final bun = _has('bun') || _has('odango');
-    final closedEyes = _has('closed eyes') || _has('sleepy eyes');
-    final vacantEyes =
-        _has('vacant eyes') || _has('blank eyes') || _has('dull eyes');
-    final dizzyEyes = _has('dizzy');
-    final furrowed = _has('furrowed brow') || _has('angry') || _has('frown');
-    final smiling = _has('smile') || _has('grin') || _has('smirk');
-    final sad = _has('sad') || _has('crying') || _has('tears');
-    final openMouth = _has('open mouth') || _has('parted lips');
-    final blush = _has('blush') || _has('embarrassed');
-
-    final background = Paint()..color = const Color(0xff30304b);
-    canvas.drawCircle(Offset(size.width / 2, size.height * .46),
-        size.width * .44, background);
-
-    final skin = Paint()..color = const Color(0xffffd8c2);
-    final hair = Paint()..color = hairColor;
-    final dark = Paint()
-      ..color = const Color(0xff34303c)
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final head = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height * .43),
-      width: size.width * .55,
-      height: size.height * .48,
-    );
-    final shoulders = Path()
-      ..moveTo(size.width * .16, size.height)
-      ..quadraticBezierTo(
-          size.width * .18, size.height * .72, size.width / 2, size.height * .7)
-      ..quadraticBezierTo(
-          size.width * .82, size.height * .72, size.width * .84, size.height)
-      ..close();
-    canvas.drawPath(shoulders, Paint()..color = const Color(0xff8b7cc8));
-
-    if (longHair) {
-      final longBack = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-            head.left - 7, head.top + 16, head.width + 14, size.height * .52),
-        const Radius.circular(24),
-      );
-      canvas.drawRRect(longBack, hair);
-    }
-    if (twinTails) {
-      canvas.drawOval(
-          Rect.fromLTWH(head.left - 13, head.top + 20, 17, 42), hair);
-      canvas.drawOval(
-          Rect.fromLTWH(head.right - 4, head.top + 20, 17, 42), hair);
-    } else if (ponytail) {
-      canvas.drawOval(
-          Rect.fromLTWH(head.right - 1, head.top + 8, 21, 47), hair);
-    }
-    if (bun) {
-      canvas.drawCircle(Offset(size.width / 2, head.top - 2), 12, hair);
-    }
-
-    canvas.drawOval(head, skin);
-    canvas.drawOval(
-        Rect.fromLTWH(head.left - 4, head.top - 5, head.width + 8,
-            head.height * (shortHair ? .45 : .54)),
-        hair);
-    final fringe = Path()
-      ..moveTo(head.left + 4, head.top + head.height * .2)
-      ..quadraticBezierTo(size.width / 2, head.top - 2, head.right - 4,
-          head.top + head.height * .2)
-      ..lineTo(head.right - 10, head.top + head.height * .29)
-      ..quadraticBezierTo(size.width / 2, head.top + head.height * .2,
-          head.left + 10, head.top + head.height * .29)
-      ..close();
-    canvas.drawPath(fringe, hair);
-
-    final eyePaint = Paint()..color = eyeColor;
-    final leftEye = Offset(size.width * .39, size.height * .46);
-    final rightEye = Offset(size.width * .61, size.height * .46);
-    if (dizzyEyes) {
-      for (final eye in [leftEye, rightEye]) {
-        canvas.drawLine(
-            eye + const Offset(-4, -4), eye + const Offset(4, 4), dark);
-        canvas.drawLine(
-            eye + const Offset(4, -4), eye + const Offset(-4, 4), dark);
-      }
-    } else if (closedEyes) {
-      canvas.drawArc(Rect.fromCenter(center: leftEye, width: 12, height: 8), 0,
-          pi, false, dark);
-      canvas.drawArc(Rect.fromCenter(center: rightEye, width: 12, height: 8), 0,
-          pi, false, dark);
-    } else {
-      for (final eye in [leftEye, rightEye]) {
-        canvas.drawOval(
-            Rect.fromCenter(
-                center: eye, width: vacantEyes ? 11 : 9, height: 12),
-            Paint()..color = Colors.white);
-        canvas.drawCircle(eye, vacantEyes ? 4.2 : 3, eyePaint);
-        if (!vacantEyes) {
-          canvas.drawCircle(
-              eye + const Offset(1, -1), 1, Paint()..color = Colors.white);
-        }
-      }
-    }
-
-    final browPaint = Paint()
-      ..color = const Color(0xff513a32)
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    if (furrowed) {
-      canvas.drawLine(Offset(size.width * .32, size.height * .39),
-          Offset(size.width * .45, size.height * .41), browPaint);
-      canvas.drawLine(Offset(size.width * .55, size.height * .41),
-          Offset(size.width * .68, size.height * .39), browPaint);
-    } else {
-      canvas.drawLine(Offset(size.width * .33, size.height * .4),
-          Offset(size.width * .44, size.height * .39), browPaint);
-      canvas.drawLine(Offset(size.width * .56, size.height * .39),
-          Offset(size.width * .67, size.height * .4), browPaint);
-    }
-
-    if (blush) {
-      final blushPaint = Paint()
-        ..color = const Color(0xfff18b9b).withOpacity(.55);
-      canvas.drawOval(
-          Rect.fromLTWH(head.left + 3, size.height * .55, 13, 5), blushPaint);
-      canvas.drawOval(
-          Rect.fromLTWH(head.right - 16, size.height * .55, 13, 5), blushPaint);
-    }
-    final mouth = Paint()
-      ..color = const Color(0xff8b3f4b)
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    if (openMouth) {
-      canvas.drawOval(
-          Rect.fromCenter(
-              center: Offset(size.width / 2, size.height * .61),
-              width: 10,
-              height: 8),
-          Paint()..color = const Color(0xff8b3f4b));
-    } else {
-      final mouthPath = Path()
-        ..moveTo(size.width * .44, size.height * .61)
-        ..quadraticBezierTo(
-            size.width / 2,
-            size.height *
-                (smiling
-                    ? .66
-                    : sad
-                        ? .57
-                        : .62),
-            size.width * .56,
-            size.height * .61);
-      canvas.drawPath(mouthPath, mouth);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PersonAvatarPainter oldDelegate) =>
-      oldDelegate.tags != tags;
-}
-
 class _GeneratedOutputTag {
   const _GeneratedOutputTag({
     required this.zh,
@@ -1399,6 +1182,23 @@ List<TagItem> _seedTags() => [
       _tag('action_eating', '動作', '吃東西', 'eating', 4),
       _tag('action_drinking', '動作', '喝東西', 'drinking', 4),
 
+      // Composable actions: select one of these together with an object to
+      // generate a single prompt noun, such as "hugging teddy bear".
+      _tag('action_hugging_object', '動作', '抱著物件', 'hugging object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_riding_object', '動作', '騎著物件', 'riding object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_holding_object', '動作', '拿著物件', 'holding object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_carrying_object', '動作', '抱持物件', 'carrying object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_sitting_on_object', '動作', '坐在物件上', 'sitting on object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_lying_on_object', '動作', '躺在物件上', 'lying on object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_leaning_on_object', '動作', '靠著物件', 'leaning on object', 4,
+          conflictGroup: 'object_interaction_mode'),
+
       // Common props and handheld objects.
       _tag('object_basketball', '物件', '籃球', 'basketball', 4),
       _tag('object_soccer_ball', '物件', '足球', 'soccer ball', 4),
@@ -1447,6 +1247,16 @@ List<TagItem> _seedTags() => [
       _tag('object_candle', '物件', '蠟燭', 'candle', 4),
       _tag('object_key', '物件', '鑰匙', 'key', 4),
       _tag('object_gift', '物件', '禮物', 'present', 4),
+      _tag('object_pillow', '物件', '枕頭', 'pillow', 4),
+      _tag('object_cushion', '物件', '抱枕', 'cushion', 4),
+      _tag('object_chair', '物件', '椅子', 'chair', 4),
+      _tag('object_sofa', '物件', '沙發', 'sofa', 4),
+      _tag('object_bed', '物件', '床', 'bed', 4),
+      _tag('object_table', '物件', '桌子', 'table', 4),
+      _tag('object_motorcycle', '物件', '機車', 'motorcycle', 4),
+      _tag('object_scooter', '物件', '滑板車', 'scooter', 4),
+      _tag('object_horse', '物件', '馬', 'horse', 4),
+      _tag('object_car', '物件', '汽車', 'car', 4),
 
       // Adult-only accessories and toys; hidden until 18+ categories are enabled.
       _tag('adult_vibrator', '成人道具', '按摩器（成年角色）', 'vibrator', 5, adult: true),
@@ -2333,15 +2143,81 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  List<_GeneratedOutputTag> _objectInteractionOutputTagsForPerson(
+      int personIndex) {
+    final selected = _selectedTagsForPerson(personIndex);
+    final mode = selected.cast<TagItem?>().firstWhere(
+          (tag) => tag?.conflictGroup == 'object_interaction_mode',
+          orElse: () => null,
+        );
+    if (mode == null) return const <_GeneratedOutputTag>[];
+
+    final objects = selected.where((tag) => tag.group == '物件').toList();
+    if (objects.isEmpty) return const <_GeneratedOutputTag>[];
+
+    String englishFor(TagItem object) {
+      switch (mode.id) {
+        case 'action_hugging_object':
+          return 'hugging ${object.en}';
+        case 'action_riding_object':
+          return 'riding ${object.en}';
+        case 'action_holding_object':
+          return 'holding ${object.en}';
+        case 'action_carrying_object':
+          return 'carrying ${object.en}';
+        case 'action_sitting_on_object':
+          return 'sitting on ${object.en}';
+        case 'action_lying_on_object':
+          return 'lying on ${object.en}';
+        case 'action_leaning_on_object':
+          return 'leaning on ${object.en}';
+        default:
+          return '${mode.en} ${object.en}';
+      }
+    }
+
+    String chineseFor(TagItem object) {
+      switch (mode.id) {
+        case 'action_hugging_object':
+          return '抱著${object.zh}';
+        case 'action_riding_object':
+          return '騎著${object.zh}';
+        case 'action_holding_object':
+          return '拿著${object.zh}';
+        case 'action_carrying_object':
+          return '抱持${object.zh}';
+        case 'action_sitting_on_object':
+          return '坐在${object.zh}上';
+        case 'action_lying_on_object':
+          return '躺在${object.zh}上';
+        case 'action_leaning_on_object':
+          return '靠著${object.zh}';
+        default:
+          return '${mode.zh}${object.zh}';
+      }
+    }
+
+    return objects
+        .map((object) => _GeneratedOutputTag(
+              zh: chineseFor(object),
+              en: englishFor(object),
+              tagIds: [mode.id, object.id],
+              personIndex: personIndex,
+            ))
+        .toList();
+  }
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
     final hair = _hairOutputTagsForPerson(index);
     final extra = _extraFeatureOutputTagsForPerson(index);
+    final objectInteractions = _objectInteractionOutputTagsForPerson(index);
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
       ...hair.expand((tag) => tag.tagIds),
       ...extra.expand((tag) => tag.tagIds),
+      ...objectInteractions.expand((tag) => tag.tagIds),
     };
     final other = selected
         .where(
@@ -2371,7 +2247,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...extra,
       ...hair,
       ...clothing,
-      ...afterClothing
+      ...afterClothing,
+      ...objectInteractions,
     ];
   }
 
@@ -5795,24 +5672,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         tooltip: '隨機此大項（自動避開衝突）',
                         onPressed: () => _randomizePersonGroups(index, groups),
                         icon: const Icon(Icons.shuffle),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _PersonAvatarPreview(tags: _selectedTagsForPerson(index)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '即時人物預覽：會依髮色、髮型、眼睛顏色與表情顯示簡化頭像。這是提示詞輔助預覽，不是最終生成圖。',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
                       ),
                     ],
                   ),
