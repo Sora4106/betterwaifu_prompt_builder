@@ -6652,7 +6652,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final options = _combinationOptions(activeGroup, search.text);
           return AlertDialog(
             insetPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             titlePadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             title: Text(existing == null
                 ? '\u65B0\u589E\u7D44\u5408\u6A19\u7C64'
@@ -6661,15 +6661,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               width: (MediaQuery.of(context).size.width * .94)
                   .clamp(360.0, 980.0)
                   .toDouble(),
-              height: (MediaQuery.of(context).size.height - 96)
-                  .clamp(480.0, 900.0)
+              height: (MediaQuery.of(context).size.height - 48)
+                  .clamp(520.0, 1000.0)
                   .toDouble(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    flex: 3,
-                    fit: FlexFit.loose,
+                  Expanded(
+                    flex: 7,
                     child: Scrollbar(
                       thumbVisibility: true,
                       child: SingleChildScrollView(
@@ -6710,7 +6709,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             const SizedBox(height: 6),
                             if (selectedTags.isNotEmpty)
                               SizedBox(
-                                height: 132,
+                                height: 160,
                                 child: SingleChildScrollView(
                                   child: Wrap(
                                     spacing: 6,
@@ -6728,7 +6727,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               ),
                             const SizedBox(height: 6),
                             SizedBox(
-                              height: 122,
+                              height: 170,
                               child: SingleChildScrollView(
                                 child: Wrap(
                                   spacing: 6,
@@ -6777,7 +6776,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 3,
                     child: Scrollbar(
                       thumbVisibility: true,
                       child: SingleChildScrollView(
