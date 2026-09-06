@@ -1,7 +1,8 @@
-const appVersion = '1.1.32';
-const appBuildNumber = 34;
-const appVersionLabel = '1.1.32+34';
+﻿const appVersion = '1.1.33';
+const appBuildNumber = 35;
+const appVersionLabel = '1.1.33+35';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': 'fix: merge face and expression tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: organize eye colors and special eye tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add hierarchical color selectors'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: group person prompts and expand paizuri tags'},
