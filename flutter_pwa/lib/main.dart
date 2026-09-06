@@ -274,6 +274,567 @@ TagItem _tag(
         adult: adult,
         conflictGroup: conflictGroup);
 
+const _clothingGroupOnePiece = '\u670D\u88DD';
+const _clothingGroupTop = '\u4E0A\u8863';
+const _clothingGroupPants = '\u8932\u5B50';
+const _clothingGroupSkirt = '\u88D9\u5B50';
+const _clothingGroupUnderwear = '\u5167\u8863';
+const _clothingGroupBra = '\u80F8\u7F69';
+const _clothingGroupPanties = '\u5167\u8932';
+const _clothingGroupSocks = '\u896A\u5B50';
+const _clothingGroupShoes = '\u978B\u5B50';
+const _clothingGroupAccessory = '\u914D\u4EF6';
+const _legacyClothingDetailGroup = '\u670D\u88DD\u7D30\u7BC0';
+const _legacyClothingMaterialGroup = '\u670D\u88DD\u6750\u8CEA';
+const _legacyClothingWearGroup = '\u7A7F\u812B\u72C0\u614B';
+const _scopedClothingPrefix = 'clothing_scope_';
+
+String _scopedClothingGroup(String slot, String kind) =>
+    '$_scopedClothingPrefix${slot}_$kind';
+
+bool _isScopedClothingGroup(String group) =>
+    group.startsWith(_scopedClothingPrefix);
+
+String? _scopedClothingSlot(String group) {
+  if (!_isScopedClothingGroup(group)) return null;
+  final value = group.substring(_scopedClothingPrefix.length);
+  final separator = value.lastIndexOf('_');
+  return separator < 1 ? null : value.substring(0, separator);
+}
+
+String? _scopedClothingKind(String group) {
+  if (!_isScopedClothingGroup(group)) return null;
+  final value = group.substring(_scopedClothingPrefix.length);
+  final separator = value.lastIndexOf('_');
+  return separator < 1 ? null : value.substring(separator + 1);
+}
+
+String _clothingScopeNoun(String slot) =>
+    const {
+      'top': 'top',
+      'pants': 'pants',
+      'skirt': 'skirt',
+      'onepiece': 'one-piece',
+      'underwear': 'underwear',
+      'bra': 'bra',
+      'panties': 'panties',
+      'socks': 'socks',
+      'shoes': 'shoes',
+      'accessory': 'accessory',
+    }[slot] ??
+    slot;
+
+String _clothingScopeLabel(String slot) =>
+    const {
+      'top': '\u4E0A\u8863',
+      'pants': '\u8932\u5B50',
+      'skirt': '\u88D9\u5B50',
+      'onepiece': '\u9023\u8EAB\u88DD',
+      'underwear': '\u5167\u8863',
+      'bra': '\u80F8\u7F69',
+      'panties': '\u5167\u8932',
+      'socks': '\u896A\u5B50',
+      'shoes': '\u978B\u5B50',
+      'accessory': '\u914D\u4EF6',
+    }[slot] ??
+    slot;
+
+String _clothingScopedKindLabel(String kind) =>
+    const {
+      'style': '\u98A8\u683C',
+      'detail': '\u7D30\u7BC0',
+      'material': '\u6750\u8CEA',
+      'detail_color': '\u7D30\u7BC0\u984F\u8272',
+      'wear': '\u7A7F\u812B\u72C0\u614B',
+    }[kind] ??
+    kind;
+
+List<TagItem> _createScopedClothingTags() {
+  final tags = <TagItem>[];
+
+  void add(
+    String slot,
+    String kind,
+    String id,
+    String zh,
+    String en, {
+    bool adult = false,
+    String? conflictGroup,
+  }) {
+    final defaultConflict = kind == 'style'
+        ? '${slot}_style'
+        : kind == 'detail_color'
+            ? '${slot}_detail_color'
+            : kind == 'wear'
+                ? '${slot}_wear'
+                : conflictGroup;
+    tags.add(_tag(
+      '${_scopedClothingPrefix}${slot}_${kind}_$id',
+      _scopedClothingGroup(slot, kind),
+      zh,
+      en,
+      2,
+      adult: adult,
+      conflictGroup: conflictGroup ?? defaultConflict,
+    ));
+  }
+
+  void addMany(
+    String slot,
+    String kind,
+    List<List<String>> values, {
+    bool adult = false,
+  }) {
+    for (final value in values) {
+      add(slot, kind, value[0], value[1], value[2], adult: adult);
+    }
+  }
+
+  addMany('top', 'style', [
+    [
+      'puff_sleeve',
+      '\u6CE1\u6CE1\u8896\u4E0A\u8863\u98A8\u683C',
+      'puff sleeve top'
+    ],
+    ['turtleneck', '\u9AD8\u9818\u4E0A\u8863\u98A8\u683C', 'turtleneck top'],
+    ['halter', '\u639B\u9838\u4E0A\u8863\u98A8\u683C', 'halter top'],
+    ['corset', '\u675F\u8170\u4E0A\u8863\u98A8\u683C', 'corset style top'],
+    [
+      'off_shoulder',
+      '\u9732\u80A9\u4E0A\u8863\u98A8\u683C',
+      'off-shoulder style top'
+    ],
+    ['cropped', '\u77ED\u7248\u4E0A\u8863\u98A8\u683C', 'cropped style top'],
+  ]);
+  addMany('pants', 'style', [
+    [
+      'high_waist',
+      '\u9AD8\u8170\u8932\u5B50\u98A8\u683C',
+      'high-waisted pants'
+    ],
+    ['wide_leg', '\u95CA\u817F\u8932\u98A8\u683C', 'wide-leg pants'],
+    ['cargo', '\u5DE5\u88DD\u8932\u98A8\u683C', 'cargo pants style'],
+    ['skinny', '\u7DCA\u8EAB\u8932\u98A8\u683C', 'skinny pants style'],
+    ['track', '\u904B\u52D5\u8932\u98A8\u683C', 'track pants style'],
+    ['flared', '\u5587\u53ED\u8932\u98A8\u683C', 'flared pants'],
+    ['capri', '\u4E03\u5206\u8932\u98A8\u683C', 'capri pants'],
+    ['ripped', '\u7834\u58DE\u8932\u98A8\u683C', 'ripped pants'],
+  ]);
+  addMany('skirt', 'style', [
+    ['pleated', '\u767E\u8936\u88D9\u98A8\u683C', 'pleated style skirt'],
+    ['a_line', 'A\u5B57\u88D9\u98A8\u683C', 'a-line style skirt'],
+    ['pencil', '\u925B\u7B46\u88D9\u98A8\u683C', 'pencil style skirt'],
+    ['tiered', '\u86CB\u7CD5\u88D9\u98A8\u683C', 'tiered style skirt'],
+    ['wrap', '\u88F9\u8EAB\u88D9\u98A8\u683C', 'wrap style skirt'],
+    ['slit', '\u958B\u8869\u88D9\u98A8\u683C', 'slit style skirt'],
+    ['ruffled', '\u8377\u8449\u908A\u88D9\u98A8\u683C', 'ruffled style skirt'],
+    ['denim', '\u725B\u4ED4\u88D9\u98A8\u683C', 'denim style skirt'],
+  ]);
+  addMany('onepiece', 'style', [
+    [
+      'gothic',
+      '\u54E5\u5FB7\u5F0F\u9023\u8EAB\u88DD\u98A8\u683C',
+      'gothic style one-piece'
+    ],
+    [
+      'elegant',
+      '\u512A\u96C5\u9023\u8EAB\u88DD\u98A8\u683C',
+      'elegant style one-piece'
+    ],
+    [
+      'casual',
+      '\u4F11\u9592\u9023\u8EAB\u88DD\u98A8\u683C',
+      'casual style one-piece'
+    ],
+    [
+      'sporty',
+      '\u904B\u52D5\u9023\u8EAB\u88DD\u98A8\u683C',
+      'sporty style one-piece'
+    ],
+    [
+      'sailor',
+      '\u6C34\u624B\u9023\u8EAB\u88DD\u98A8\u683C',
+      'sailor style one-piece'
+    ],
+    [
+      'victorian',
+      '\u7DAD\u591A\u5229\u4E9E\u9023\u8EAB\u88DD\u98A8\u683C',
+      'Victorian style one-piece'
+    ],
+    [
+      'maid',
+      '\u5973\u50D5\u9023\u8EAB\u88DD\u98A8\u683C',
+      'maid style one-piece'
+    ],
+  ]);
+  addMany('underwear', 'style', [
+    ['lace', '\u856D\u7D72\u5167\u8863\u98A8\u683C', 'lace style underwear'],
+    [
+      'camisole',
+      '\u540A\u5E36\u5167\u8863\u98A8\u683C',
+      'camisole style underwear'
+    ],
+    ['silk', '\u7D72\u7DB8\u5167\u8863\u98A8\u683C', 'silk style underwear'],
+    [
+      'strapless',
+      '\u7121\u80A9\u5E36\u5167\u8863\u98A8\u683C',
+      'strapless style underwear'
+    ],
+    ['long', '\u9577\u7248\u5167\u8863\u98A8\u683C', 'long underwear style'],
+    ['sheer', '\u900F\u8996\u5167\u8863\u98A8\u683C', 'sheer style underwear'],
+  ]);
+  addMany(
+      'bra',
+      'style',
+      [
+        ['lace', '\u856D\u7D72\u80F8\u7F69\u98A8\u683C', 'lace style bra'],
+        [
+          'push_up',
+          '\u96C6\u4E2D\u578B\u80F8\u7F69\u98A8\u683C',
+          'push-up style bra'
+        ],
+        ['sports', '\u904B\u52D5\u80F8\u7F69\u98A8\u683C', 'sports style bra'],
+        [
+          'strapless',
+          '\u7121\u80A9\u5E36\u80F8\u7F69\u98A8\u683C',
+          'strapless bra'
+        ],
+        [
+          'triangle',
+          '\u4E09\u89D2\u676F\u80F8\u7F69\u98A8\u683C',
+          'triangle style bra'
+        ],
+        [
+          'balconette',
+          '\u534A\u676F\u578B\u80F8\u7F69\u98A8\u683C',
+          'balconette bra'
+        ],
+        [
+          'racerback',
+          '\u5DE5\u5B57\u80CC\u80F8\u7F69\u98A8\u683C',
+          'racerback bra'
+        ],
+      ],
+      adult: true);
+  addMany(
+      'panties',
+      'style',
+      [
+        ['lace', '\u856D\u7D72\u5167\u8932\u98A8\u683C', 'lace style panties'],
+        [
+          'cotton',
+          '\u68C9\u8CEA\u5167\u8932\u98A8\u683C',
+          'cotton style panties'
+        ],
+        [
+          'high_waist',
+          '\u9AD8\u8170\u5167\u8932\u98A8\u683C',
+          'high-waisted panties'
+        ],
+        [
+          'low_rise',
+          '\u4F4E\u8170\u5167\u8932\u98A8\u683C',
+          'low-rise panties'
+        ],
+        [
+          'boyshort',
+          '\u56DB\u89D2\u5167\u8932\u98A8\u683C',
+          'boyshort style panties'
+        ],
+        [
+          'cheeky',
+          '\u534A\u9732\u81C0\u5167\u8932\u98A8\u683C',
+          'cheeky style panties'
+        ],
+        [
+          'side_tie',
+          '\u5074\u7D81\u5E36\u5167\u8932\u98A8\u683C',
+          'side-tie panties'
+        ],
+        [
+          'crotchless',
+          '\u7121\u895F\u5167\u8932\u98A8\u683C',
+          'crotchless panties'
+        ],
+      ],
+      adult: true);
+  addMany('socks', 'style', [
+    [
+      'lace',
+      '\u856D\u7D72\u9577\u897F\u88DD\u98A8\u683C',
+      'lace style stockings'
+    ],
+    ['ribbed', '\u7F85\u7D0B\u896A\u98A8\u683C', 'ribbed socks'],
+    ['striped', '\u689D\u7D0B\u896A\u98A8\u683C', 'striped socks'],
+    [
+      'thigh_high',
+      '\u5927\u817F\u9AD8\u7B52\u896A\u98A8\u683C',
+      'thigh-high stockings'
+    ],
+    ['over_knee', '\u904E\u819D\u896A\u98A8\u683C', 'over-knee socks'],
+    ['fishnet', '\u7DB2\u72C0\u896A\u98A8\u683C', 'fishnet stockings'],
+    ['garter', '\u540A\u5E36\u896A\u98A8\u683C', 'garter stockings'],
+    ['ankle', '\u77ED\u7B52\u896A\u98A8\u683C', 'ankle socks'],
+  ]);
+  addMany('shoes', 'style', [
+    ['sneaker', '\u904B\u52D5\u978B\u98A8\u683C', 'sneaker style shoes'],
+    ['high_heel', '\u9AD8\u8DDF\u978B\u98A8\u683C', 'high heel shoes'],
+    ['platform', '\u539A\u5E95\u978B\u98A8\u683C', 'platform shoes'],
+    ['mary_jane', '\u5A18\u60A3\u978B\u98A8\u683C', 'mary jane shoes'],
+    ['ankle_boot', '\u77ED\u9774\u98A8\u683C', 'ankle boot shoes'],
+    ['knee_boot', '\u904E\u819D\u9774\u98A8\u683C', 'knee-high boot shoes'],
+    ['sandals', '\u6DBC\u978B\u98A8\u683C', 'sandals style shoes'],
+    ['loafers', '\u4E50\u798F\u978B\u98A8\u683C', 'loafers'],
+  ]);
+  addMany('accessory', 'style', [
+    [
+      'gothic',
+      '\u54E5\u5FB7\u5F0F\u914D\u4EF6\u98A8\u683C',
+      'gothic accessory'
+    ],
+    ['punk', '\u9F90\u514B\u914D\u4EF6\u98A8\u683C', 'punk accessory'],
+    ['ribbon', '\u7D72\u5E36\u914D\u4EF6\u98A8\u683C', 'ribbon accessory'],
+    ['bow', '\u8774\u8776\u7D50\u914D\u4EF6\u98A8\u683C', 'bow accessory'],
+    ['lace', '\u856D\u7D72\u914D\u4EF6\u98A8\u683C', 'lace accessory'],
+    ['choker', '\u9805\u5708\u914D\u4EF6\u98A8\u683C', 'choker accessory'],
+    ['hair', '\u9AEE\u98FE\u914D\u4EF6\u98A8\u683C', 'hair accessory'],
+    ['jewelry', '\u73E0\u5BF6\u914D\u4EF6\u98A8\u683C', 'jewelry accessory'],
+  ]);
+
+  const detailNames = [
+    ['lace', '\u856D\u7D72', 'lace'],
+    ['frills', '\u8377\u8449\u908A', 'frills'],
+    ['ruffles', '\u8936\u908A', 'ruffles'],
+    ['ribbon', '\u7D72\u5E36', 'ribbon'],
+    ['bow', '\u8774\u8776\u7D50', 'bow'],
+    ['see_through', '\u900F\u8996', 'see-through'],
+    ['sheer', '\u8584\u7D17', 'sheer'],
+    ['buttons', '\u9215\u6263', 'buttons'],
+    ['zipper', '\u62C9\u934A', 'zipper'],
+    ['cutout', '\u93A4\u7A7A', 'cutout'],
+    ['striped', '\u689D\u7D0B', 'striped'],
+    ['plaid', '\u683C\u7D0B', 'plaid'],
+  ];
+  const materialNames = [
+    ['satin', '\u7DE0\u9762', 'satin'],
+    ['silk', '\u7D72\u7DB8', 'silk'],
+    ['knit', '\u91DD\u7E54', 'knit'],
+    ['latex', '\u4E73\u81A0', 'latex'],
+    ['leather', '\u76AE\u9769', 'leather'],
+    ['denim', '\u4E39\u5BE7', 'denim'],
+    ['cotton', '\u68C9\u8CEA', 'cotton'],
+    ['velvet', '\u5929\u9D5D\u7D68', 'velvet'],
+    ['wool', '\u7F8A\u6BDB', 'wool'],
+    ['mesh', '\u7DB2\u773C', 'mesh'],
+  ];
+  const slots = [
+    'top',
+    'pants',
+    'skirt',
+    'onepiece',
+    'underwear',
+    'bra',
+    'panties',
+    'socks',
+    'shoes',
+    'accessory',
+  ];
+  for (final slot in slots) {
+    final noun = _clothingScopeNoun(slot);
+    for (final detail in detailNames) {
+      add(slot, 'detail', detail[0], '${detail[1]}\u7D30\u7BC0',
+          '${detail[2]} detail $noun');
+    }
+    for (final material in materialNames) {
+      add(slot, 'material', material[0], '${material[1]}\u6750\u8CEA',
+          '${material[2]} material $noun');
+    }
+    final colorOptions = <List<String>>[
+      ..._clothingColors.map((color) => [color[0], color[1], color[0]]),
+      ..._clothingColorShades,
+    ];
+    for (final color in colorOptions) {
+      add(slot, 'detail_color', color[0], '${color[1]}\u7D30\u7BC0\u8272',
+          '${color[2]} detail color $noun');
+    }
+  }
+
+  addMany('top', 'wear', [
+    ['open', '\u6253\u958B\u4E0A\u8863', 'open clothes'],
+    ['unbuttoned', '\u4E0A\u8863\u89E3\u958B', 'unbuttoned'],
+    ['half_removed', '\u4E0A\u8863\u812B\u4E00\u534A', 'half-removed clothes'],
+    [
+      'one_sleeve_removed',
+      '\u55AE\u624B\u812B\u4E0A\u8863',
+      'one sleeve removed'
+    ],
+    ['removed', '\u8131\u6389\u4E0A\u8863', 'clothes removed'],
+    ['undressing', '\u812B\u4E0A\u8863\u4E2D', 'undressing'],
+    ['holding', '\u624B\u62FF\u4E0A\u8863', 'holding clothes'],
+    ['on_floor', '\u4E0A\u8863\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('pants', 'wear', [
+    ['unbuttoned', '\u8932\u5B50\u89E3\u958B', 'unbuttoned'],
+    ['half_removed', '\u8932\u5B50\u812B\u4E00\u534A', 'half-removed clothes'],
+    ['down', '\u8932\u5B50\u892A\u4E0B', 'pants down'],
+    ['around_ankles', '\u8932\u5B50\u5728\u8173\u8E1D', 'pants around ankles'],
+    ['one_leg_out', '\u55AE\u8173\u812B\u51FA', 'one leg out'],
+    ['removed', '\u8131\u6389\u8932\u5B50', 'clothes removed'],
+    ['holding', '\u624B\u62FF\u8932\u5B50', 'holding clothes'],
+    ['on_floor', '\u8932\u5B50\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('skirt', 'wear', [
+    ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
+    [
+      'around_one_leg',
+      '\u88D9\u5B50\u7E8F\u5728\u55AE\u8173',
+      'skirt around one leg'
+    ],
+    ['half_removed', '\u88D9\u5B50\u812B\u4E00\u534A', 'half-removed clothes'],
+    ['down', '\u88D9\u5B50\u892A\u4E0B', 'skirt down'],
+    ['removed', '\u8131\u6389\u88D9\u5B50', 'clothes removed'],
+    ['undressing', '\u812B\u88D9\u5B50\u4E2D', 'undressing'],
+    ['holding', '\u624B\u62FF\u88D9\u5B50', 'holding clothes'],
+    ['on_floor', '\u88D9\u5B50\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany('onepiece', 'wear', [
+    ['open', '\u6253\u958B\u9023\u8EAB\u88DD', 'open clothes'],
+    [
+      'half_removed',
+      '\u9023\u8EAB\u88DD\u812B\u4E00\u534A',
+      'half-removed clothes'
+    ],
+    [
+      'one_shoulder_removed',
+      '\u55AE\u80A9\u812B\u843D',
+      'one shoulder removed'
+    ],
+    ['removed', '\u8131\u6389\u9023\u8EAB\u88DD', 'clothes removed'],
+    ['undressing', '\u812B\u9023\u8EAB\u88DD\u4E2D', 'undressing'],
+    ['holding', '\u624B\u62FF\u9023\u8EAB\u88DD', 'holding clothes'],
+    [
+      'on_floor',
+      '\u9023\u8EAB\u88DD\u6389\u5728\u65C1\u908A',
+      'clothes on floor'
+    ],
+    ['lifted', '\u9023\u8EAB\u88DD\u88AB\u63C0\u8D77', 'dress lifted'],
+  ]);
+  addMany('underwear', 'wear', [
+    ['open', '\u6253\u958B\u5167\u8863', 'open underwear'],
+    [
+      'half_removed',
+      '\u5167\u8863\u812B\u4E00\u534A',
+      'half-removed underwear'
+    ],
+    [
+      'one_strap_removed',
+      '\u55AE\u908A\u80A9\u5E36\u812B\u843D',
+      'one strap removed'
+    ],
+    ['down', '\u5167\u8863\u892A\u4E0B', 'underwear down'],
+    ['removed', '\u8131\u6389\u5167\u8863', 'underwear removed'],
+    ['undressing', '\u812B\u5167\u8863\u4E2D', 'undressing'],
+    ['holding', '\u624B\u62FF\u5167\u8863', 'holding clothes'],
+    ['on_floor', '\u5167\u8863\u6389\u5728\u65C1\u908A', 'clothes on floor'],
+  ]);
+  addMany(
+      'bra',
+      'wear',
+      [
+        ['lift', '\u63C0\u8D77\u80F8\u7F69', 'bra lift'],
+        ['half_removed', '\u80F8\u7F69\u812B\u4E00\u534A', 'half-removed bra'],
+        [
+          'one_strap_removed',
+          '\u55AE\u908A\u80A9\u5E36\u812B\u843D',
+          'one bra strap removed'
+        ],
+        [
+          'around_one_arm',
+          '\u80F8\u7F69\u7E8F\u5728\u55AE\u81C2',
+          'bra around one arm'
+        ],
+        [
+          'pulled_aside',
+          '\u80F8\u7F69\u88AB\u62C9\u5230\u65C1\u908A',
+          'bra pulled aside'
+        ],
+        ['removed', '\u8131\u6389\u80F8\u7F69', 'bra removed'],
+        ['undressing', '\u812B\u80F8\u7F69\u4E2D', 'undressing'],
+        ['holding', '\u624B\u62FF\u80F8\u7F69', 'holding clothes'],
+      ],
+      adult: true);
+  addMany(
+      'panties',
+      'wear',
+      [
+        ['down', '\u5167\u8932\u892A\u4E0B', 'panties down'],
+        [
+          'half_removed',
+          '\u5167\u8932\u812B\u4E00\u534A',
+          'half-removed panties'
+        ],
+        [
+          'around_one_leg',
+          '\u5167\u8932\u7E8F\u5728\u55AE\u8173',
+          'panties around one leg'
+        ],
+        [
+          'pulled_aside',
+          '\u5167\u8932\u88AB\u62C9\u5230\u65C1\u908A',
+          'panties pulled aside'
+        ],
+        ['one_leg_out', '\u55AE\u8173\u812B\u51FA', 'one leg out'],
+        ['removed', '\u8131\u6389\u5167\u8932', 'panties removed'],
+        ['undressing', '\u812B\u5167\u8932\u4E2D', 'undressing'],
+        ['holding', '\u624B\u62FF\u5167\u8932', 'holding clothes'],
+      ],
+      adult: true);
+  addMany('socks', 'wear', [
+    ['down', '\u896A\u5B50\u892A\u4E0B', 'socks down'],
+    ['one_removed', '\u55AE\u96BB\u896A\u5B50\u812B\u843D', 'one sock removed'],
+    ['thighhighs_down', '\u9577\u7B52\u896A\u892A\u4E0B', 'thighhighs down'],
+    ['pulled_down', '\u896A\u5B50\u88AB\u62C9\u4E0B', 'stockings pulled down'],
+    ['around_ankles', '\u896A\u5B50\u5728\u8173\u8E1D', 'socks around ankles'],
+    ['removed', '\u8131\u6389\u896A\u5B50', 'socks removed'],
+    ['undressing', '\u812B\u896A\u5B50\u4E2D', 'undressing'],
+    ['holding', '\u624B\u62FF\u896A\u5B50', 'holding clothes'],
+  ]);
+  addMany('shoes', 'wear', [
+    ['one_removed', '\u55AE\u96BB\u978B\u812B\u843D', 'one shoe removed'],
+    ['removed', '\u978B\u5B50\u812B\u843D', 'shoes removed'],
+    ['shoeless', '\u8D64\u8173', 'shoeless'],
+    ['on_floor', '\u978B\u5B50\u6389\u5728\u65C1\u908A', 'shoes on floor'],
+    ['holding', '\u624B\u62FF\u978B\u5B50', 'holding shoes'],
+    ['untied', '\u978B\u5E36\u89E3\u958B', 'untied shoelaces'],
+    ['undressing', '\u812B\u978B\u4E2D', 'undressing'],
+    ['one_foot_out', '\u55AE\u8173\u812B\u978B', 'one foot out'],
+  ]);
+  addMany('accessory', 'wear', [
+    ['removed', '\u914D\u4EF6\u812B\u843D', 'accessory removed'],
+    [
+      'one_removed',
+      '\u55AE\u4EF6\u914D\u4EF6\u812B\u843D',
+      'one accessory removed'
+    ],
+    ['holding', '\u624B\u62FF\u914D\u4EF6', 'holding accessory'],
+    ['on_floor', '\u914D\u4EF6\u6389\u5728\u65C1\u908A', 'accessory on floor'],
+    [
+      'one_earring_removed',
+      '\u55AE\u908A\u8033\u74B0\u812B\u843D',
+      'one earring removed'
+    ],
+    ['choker_removed', '\u9805\u5708\u812B\u843D', 'choker removed'],
+    ['gloves_removed', '\u624B\u5957\u812B\u843D', 'gloves removed'],
+    [
+      'putting_on',
+      '\u6B63\u5728\u6234\u4E0A\u914D\u4EF6',
+      'putting on accessory'
+    ],
+  ]);
+
+  return tags;
+}
+
 const _clothingColors = <List<String>>[
   ['black', '\u9ED1\u8272'],
   ['white', '\u767D\u8272'],
@@ -1760,6 +2321,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }).toList();
   final List<TagItem> _supplemental =
       supplementalTags.map(_catalogTag).toList();
+  final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   final Map<int, Set<String>> _removedCharacterTags = <int, Set<String>>{};
@@ -1807,9 +2369,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> get _allTags {
     final unique = <String, TagItem>{};
-    for (final tag in [..._builtIns, ..._supplemental, ..._customTags]) {
+    for (final tag in [
+      ..._builtIns,
+      ..._supplemental,
+      ..._scopedClothingTags,
+      ..._customTags,
+    ]) {
       final englishKey = _englishTagKey(tag.en);
-      final key = englishKey.isEmpty ? 'id:${tag.id}' : 'en:$englishKey';
+      final key = englishKey.isEmpty
+          ? 'id:${tag.id}'
+          : _isScopedClothingGroup(tag.group)
+              ? 'en:$englishKey:${tag.group}'
+              : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
     }
     return unique.values.toList();
@@ -1894,6 +2465,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isClothingGroup(String group) =>
+      _isScopedClothingGroup(group) ||
       const {
         '服裝',
         '服裝風格',
@@ -1937,7 +2509,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isFaceExpressionTag(TagItem tag) =>
       tag.group == '臉部特徵' || tag.group == '表情';
 
+  bool _isScopedClothingColorGroup(String group) =>
+      _isScopedClothingGroup(group) &&
+      _scopedClothingKind(group) == 'detail_color';
+
   bool _isClothingColorGroup(String group) =>
+      _isScopedClothingColorGroup(group) ||
       const {
         '眼睛',
         '髮色',
@@ -1968,6 +2545,147 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '鞋子',
         '配件',
       }.contains(group);
+
+  bool _isClothingBaseTag(TagItem tag) {
+    if (!_isClothingBaseGroup(tag.group)) return false;
+    const styleOnlyIds = {
+      'bra_underwire',
+      'bra_push_up',
+      'bra_bralette',
+      'bra_triangle',
+      'bra_racerback',
+      'bra_front_clasp',
+      'lace_panties',
+      'cotton_panties',
+      'highwaist_panties',
+      'lowrise_panties',
+      'boyshorts',
+      'cheeky_panties',
+      'side_tie_panties',
+      'leg_warmers',
+      'crew_socks',
+      'over_knee_socks',
+      'toe_socks',
+      'tabi_socks',
+      'ankle_boots',
+      'knee_high_boots',
+      'mary_janes',
+      'pumps',
+      'platform_shoes',
+      'flip_flops',
+      'slippers',
+      'geta',
+      'roller_skates',
+    };
+    final tagKey = tag.id.startsWith('catalog_')
+        ? tag.id.substring('catalog_'.length)
+        : tag.id;
+    return !styleOnlyIds.contains(tagKey);
+  }
+
+  bool _isLegacyClothingStyleTag(TagItem tag) => const {
+        'bra_underwire',
+        'bra_push_up',
+        'bra_bralette',
+        'bra_triangle',
+        'bra_racerback',
+        'bra_front_clasp',
+        'lace_panties',
+        'cotton_panties',
+        'highwaist_panties',
+        'lowrise_panties',
+        'boyshorts',
+        'cheeky_panties',
+        'side_tie_panties',
+        'leg_warmers',
+        'crew_socks',
+        'over_knee_socks',
+        'toe_socks',
+        'tabi_socks',
+        'ankle_boots',
+        'knee_high_boots',
+        'mary_janes',
+        'pumps',
+        'platform_shoes',
+        'flip_flops',
+        'slippers',
+        'geta',
+        'roller_skates',
+      }.contains(tag.id.startsWith('catalog_')
+          ? tag.id.substring('catalog_'.length)
+          : tag.id);
+
+  String? _clothingScopeForBase(TagItem tag) {
+    if (!_isClothingBaseTag(tag)) return null;
+    if (tag.group == _clothingGroupTop) return 'top';
+    if (tag.group == _clothingGroupPants) return 'pants';
+    if (tag.group == _clothingGroupSkirt) return 'skirt';
+    if (tag.group == _clothingGroupOnePiece) return 'onepiece';
+    if (tag.group == _clothingGroupUnderwear) return 'underwear';
+    if (tag.group == _clothingGroupBra) return 'bra';
+    if (tag.group == _clothingGroupPanties) return 'panties';
+    if (tag.group == _clothingGroupSocks) return 'socks';
+    if (tag.group == _clothingGroupShoes) return 'shoes';
+    if (tag.group == _clothingGroupAccessory) return 'accessory';
+    return null;
+  }
+
+  String? _clothingScopeForTag(TagItem tag) {
+    if (_isScopedClothingGroup(tag.group)) {
+      return _scopedClothingSlot(tag.group);
+    }
+    if (tag.group == _legacyClothingDetailGroup ||
+        tag.group == _legacyClothingMaterialGroup ||
+        tag.group == _legacyClothingWearGroup) {
+      return null;
+    }
+    if (tag.group == _clothingGroupTop) return 'top';
+    if (tag.group == _clothingGroupPants) return 'pants';
+    if (tag.group == _clothingGroupSkirt) return 'skirt';
+    if (tag.group == _clothingGroupOnePiece) return 'onepiece';
+    if (tag.group == _clothingGroupUnderwear) return 'underwear';
+    if (tag.group == _clothingGroupBra) return 'bra';
+    if (tag.group == _clothingGroupPanties) return 'panties';
+    if (tag.group == _clothingGroupSocks) return 'socks';
+    if (tag.group == _clothingGroupShoes) return 'shoes';
+    if (tag.group == _clothingGroupAccessory) return 'accessory';
+    return _clothingScopeForBase(tag);
+  }
+
+  List<String> _clothingStyleGroupsForBase(TagItem base) {
+    final scope = _clothingScopeForBase(base);
+    if (scope == null) return const <String>[];
+    final groups = <String>[_scopedClothingGroup(scope, 'style')];
+    if (scope == 'top') groups.add('\u4E0A\u8863\u98A8\u683C');
+    if (scope == 'pants' || scope == 'skirt') {
+      groups.add('\u4E0B\u8EAB\u98A8\u683C');
+    }
+    if (scope == 'onepiece') groups.add('\u670D\u88DD\u98A8\u683C');
+    return groups;
+  }
+
+  List<String> _clothingDetailGroupsForBase(TagItem base) {
+    final scope = _clothingScopeForBase(base);
+    if (scope == null) return const <String>[];
+    final groups = <String>[
+      ..._clothingStyleGroupsForBase(base),
+      _scopedClothingGroup(scope, 'detail'),
+      _scopedClothingGroup(scope, 'material'),
+      _scopedClothingGroup(scope, 'detail_color'),
+    ];
+    final colorGroup = _clothingColorGroup(base.group);
+    final trimColorGroup = _clothingTrimColorGroup(base.group);
+    if (colorGroup != null) groups.add(colorGroup);
+    if (trimColorGroup != null) groups.add(trimColorGroup);
+    return groups;
+  }
+
+  List<String> _clothingWearGroupsForBase(TagItem base) {
+    final scope = _clothingScopeForBase(base);
+    return scope == null
+        ? const <String>[]
+        : <String>[_scopedClothingGroup(scope, 'wear')];
+  }
 
   String? _clothingColorGroup(String group) {
     if (group == '服裝' || group == '服裝風格') return '服裝顏色';
@@ -2214,6 +2932,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _clothingModifierEnglish(TagItem tag) {
     final value = tag.en.trim();
+    final scopedKind = _scopedClothingKind(tag.group);
+    final scopedSlot = _scopedClothingSlot(tag.group);
+    if (scopedKind == 'wear' || scopedKind == 'detail_color') return '';
+    if (scopedKind != null && scopedSlot != null) {
+      final noun = RegExp.escape(_clothingScopeNoun(scopedSlot));
+      if (scopedKind == 'style') {
+        return value.replaceFirst(
+            RegExp(r'\s+(?:style\s+)?' + noun + r'$', caseSensitive: false),
+            '');
+      }
+      return value.replaceFirst(
+          RegExp(
+              r'\s+' +
+                  scopedKind.replaceAll('_', r'\s+') +
+                  r'\s+' +
+                  noun +
+                  r'$',
+              caseSensitive: false),
+          '');
+    }
     const simple = <String, String>{
       'lace trim': 'lace',
       'see-through clothing': 'see-through',
@@ -2221,6 +2959,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final normalized = simple[value.toLowerCase()];
     if (normalized != null) return normalized;
+    if (_isLegacyClothingStyleTag(tag)) {
+      for (final suffix in const [
+        ' bra',
+        ' panties',
+        ' socks',
+        ' shoes',
+        ' boots'
+      ]) {
+        if (value.toLowerCase().endsWith(suffix)) {
+          return value.substring(0, value.length - suffix.length);
+        }
+      }
+    }
     if (tag.group == '上衣風格' || tag.group == '下身風格') {
       return value.replaceFirst(
           RegExp(r'\s+(?:style\s+)?(?:top|shirt|blouse|skirt|pants)$',
@@ -2244,11 +2995,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(personIndex)
         .where((tag) => _isClothingGroup(tag.group))
         .toList();
-    final bases = selected.where((tag) => _isClothingBaseGroup(tag.group));
+    final bases = selected.where(_isClothingBaseTag).toList();
     final consumed = <String>{};
     final result = <_GeneratedOutputTag>[];
 
     for (final base in bases) {
+      final scope = _clothingScopeForBase(base);
+      if (scope == null) continue;
       final related = <TagItem>[base];
       final colorGroup = _clothingColorGroup(base.group);
       final color = colorGroup == null
@@ -2277,27 +3030,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               );
       if (accessoryPosition != null) related.add(accessoryPosition);
 
-      final styleGroup = _clothingStyleGroup(base.group);
-      final styles = styleGroup == null
-          ? const <TagItem>[]
-          : selected.where((tag) => tag.group == styleGroup).toList();
+      final styleGroups = _clothingStyleGroupsForBase(base);
+      final styles = selected
+          .where((tag) =>
+              styleGroups.contains(tag.group) ||
+              (_isLegacyClothingStyleTag(tag) &&
+                  _clothingScopeForTag(tag) == scope))
+          .toList();
       related.addAll(styles);
 
       final modifiers = selected
           .where((tag) => tag.group == '服裝細節' || tag.group == '服裝材質')
           .toList();
+      modifiers.addAll(selected.where((tag) =>
+          tag.group == _scopedClothingGroup(scope, 'detail') ||
+          tag.group == _scopedClothingGroup(scope, 'material')));
       related.addAll(modifiers);
       final detailColor = selected.cast<TagItem?>().firstWhere(
             (tag) => tag?.group == '服裝細節顏色',
             orElse: () => null,
           );
-      if (detailColor != null && modifiers.isNotEmpty) {
-        related.add(detailColor);
+      final scopedDetailColor = selected.cast<TagItem?>().firstWhere(
+            (tag) => tag?.group == _scopedClothingGroup(scope, 'detail_color'),
+            orElse: () => null,
+          );
+      final effectiveDetailColor = scopedDetailColor ?? detailColor;
+      if (effectiveDetailColor != null && modifiers.isNotEmpty) {
+        related.add(effectiveDetailColor);
       }
       final baseLower = base.en.toLowerCase();
       final colorPrefix = color == null ? null : _clothingColorPrefix(color);
-      final detailColorPrefix =
-          detailColor == null ? null : _clothingColorPrefix(detailColor);
+      final detailColorPrefix = effectiveDetailColor == null
+          ? null
+          : _clothingColorPrefix(effectiveDetailColor);
       final trimEnglish = trimColor?.en.trim();
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
       final effectiveColor = colorPrefix != null &&
@@ -2320,8 +3085,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ...styles.map(_clothingModifierChinese),
         ...modifiers.map((tag) {
           final modifier = _clothingModifierChinese(tag);
-          if (detailColor == null) return modifier;
-          return '${_clothingColorChinesePrefix(detailColor)}$modifier';
+          if (effectiveDetailColor == null) return modifier;
+          return '${_clothingColorChinesePrefix(effectiveDetailColor)}$modifier';
         }),
       ].where((part) => part.trim().isNotEmpty && !base.zh.contains(part));
       final enParts = <String>[
@@ -2362,6 +3127,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    for (final tag in selected.where((tag) =>
+        tag.group == _legacyClothingWearGroup && !consumed.contains(tag.id))) {
+      consumed.add(tag.id);
+      result.add(_GeneratedOutputTag(
+        zh: tag.zh,
+        en: tag.en,
+        tagId: tag.id,
+        tagIds: [tag.id],
+        personIndex: personIndex,
+      ));
+    }
+    for (final base in bases) {
+      final scope = _clothingScopeForBase(base);
+      if (scope == null) continue;
+      for (final tag in selected
+          .where((tag) => tag.group == _scopedClothingGroup(scope, 'wear'))) {
+        consumed.add(tag.id);
+        result.add(_GeneratedOutputTag(
+          zh: tag.zh,
+          en: tag.en,
+          tagId: tag.id,
+          tagIds: [tag.id],
+          personIndex: personIndex,
+        ));
+      }
+    }
     for (final tag in selected.where((tag) => !consumed.contains(tag.id))) {
       result.add(_GeneratedOutputTag(
         zh: tag.zh,
@@ -2601,6 +3392,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '全部',
         ..._allTags
             .map((tag) => tag.group)
+            .where((group) => !_isScopedClothingGroup(group))
             .where((group) => group != '髮色' && group != '臉部特徵')
             .toSet(),
       ];
@@ -3942,9 +4734,45 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return candidates.isEmpty ? null : candidates.first;
   }
 
+  void _randomizeScopedClothing(int personIndex, Random random) {
+    final target = _personTagIds(personIndex);
+    final bases =
+        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
+
+    void choose(String group) {
+      final candidate = _randomClothingTag([group], random);
+      if (candidate == null) return;
+      final conflicts = _selectedTagsForPerson(personIndex)
+          .where((tag) => _tagsConflict(tag, candidate))
+          .map((tag) => tag.id)
+          .toList();
+      target.removeAll(conflicts);
+      target.add(candidate.id);
+    }
+
+    for (final base in bases) {
+      final scope = _clothingScopeForBase(base);
+      if (scope == null) continue;
+      choose(_scopedClothingGroup(scope, 'style'));
+      choose(_scopedClothingGroup(scope, 'material'));
+      if (random.nextBool()) choose(_scopedClothingGroup(scope, 'detail'));
+      if (random.nextBool()) {
+        choose(_scopedClothingGroup(scope, 'detail_color'));
+      }
+      if (random.nextBool()) choose(_scopedClothingGroup(scope, 'wear'));
+    }
+  }
+
   void _randomizeClothing(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) return;
     final random = Random();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _randomizeScopedClothing(personIndex, Random());
+        _persist();
+      });
+    });
     final clothingGroups = {
       '上衣',
       '褲子',
@@ -3985,10 +4813,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final target = _personTagIds(personIndex);
     final protectedTags = _selectedTagsForPerson(personIndex)
-        .where((tag) => !clothingGroups.contains(tag.group))
+        .where((tag) =>
+            !clothingGroups.contains(tag.group) &&
+            !_isScopedClothingGroup(tag.group))
         .toList();
-    target.removeWhere((id) => _allTags
-        .any((tag) => tag.id == id && clothingGroups.contains(tag.group)));
+    target.removeWhere((id) => _allTags.any((tag) =>
+        tag.id == id &&
+        (clothingGroups.contains(tag.group) ||
+            _isScopedClothingGroup(tag.group))));
 
     final added = <TagItem>[];
     void add(TagItem? tag) {
@@ -5894,6 +6726,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == '褲子') return '下身／褲子';
     if (group == '服裝') return '連身裙／整套服裝';
     if (group == '服裝顏色') return '連身裝顏色';
+    final scopedSlot = _scopedClothingSlot(group);
+    final scopedKind = _scopedClothingKind(group);
+    if (scopedSlot != null && scopedKind != null) {
+      return '${_clothingScopeLabel(scopedSlot)} ${_clothingScopedKindLabel(scopedKind)}';
+    }
     return group;
   }
 
@@ -5940,6 +6777,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _stepTagPicker(List<String> groups,
       {required String nextLabel, int? personIndex, bool showNext = true}) {
+    if (groups.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text(
+            '\u8ACB\u5148\u9078\u64C7\u4E00\u7A2E\u670D\u88DD\u985E\u578B'),
+      );
+    }
     final groupKey =
         personIndex == null ? null : '$personIndex:${groups.join('|')}';
     final storedGroup = personIndex == null
@@ -6119,6 +6963,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingDetailGroups(int personIndex) {
+    final bases =
+        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
+    return bases.expand(_clothingDetailGroupsForBase).toSet().toList();
+  }
+
+  List<String> _clothingWearGroups(int personIndex) {
+    final bases =
+        _selectedTagsForPerson(personIndex).where(_isClothingBaseTag).toList();
+    return bases.expand(_clothingWearGroupsForBase).toSet().toList();
+  }
+
+  // ignore: unused_element
+  List<String> _legacyClothingDetailGroups(int personIndex) {
     final selected = _selectedTagsForPerson(personIndex);
     bool has(String group) => selected.any((tag) => tag.group == group);
     final onePiece = selected.any((tag) => ['服裝', '服裝風格'].contains(tag.group));
@@ -6171,6 +7028,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
           final adaptiveDetails = _clothingDetailGroups(index);
+          final adaptiveWear = _clothingWearGroups(index);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
           if (!slot.detailed) {
@@ -6214,6 +7072,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const SizedBox(height: 6),
                   _stepTagPicker(styles,
                       nextLabel: '下一步', personIndex: index, showNext: false),
+                  if (adaptiveWear.isNotEmpty) ...[
+                    const Divider(height: 26),
+                    const Text(
+                      '\u7A7F\u812B\u72C0\u614B\uFF08\u4F9D\u670D\u88DD\u985E\u578B\uFF09',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    _stepTagPicker(adaptiveWear,
+                        nextLabel: '\u4E0B\u4E00\u6B65',
+                        personIndex: index,
+                        showNext: false),
+                  ],
                   const Divider(height: 26),
                   const Text('風格、顏色與服裝細節（可多選）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
