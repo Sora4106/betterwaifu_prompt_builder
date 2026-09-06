@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.22+24 - 2026-09-06
+
+- 自動偵測：feat: add prompt tag reverse import
+
+
 ## 1.1.21+23 - 2026-09-06
 
 - 自動偵測：feat: compose clothing color and detail tags
