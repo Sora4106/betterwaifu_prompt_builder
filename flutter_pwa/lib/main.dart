@@ -4464,7 +4464,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           } else {
                             _personActiveGroups[groupKey!] = group;
                           }
-                        })),
+                        }),
                   ),
                 ),
               );
