@@ -1,7 +1,8 @@
-const appVersion = '1.1.33';
-const appBuildNumber = 35;
-const appVersionLabel = '1.1.33+35';
+const appVersion = '1.1.34';
+const appBuildNumber = 36;
+const appVersionLabel = '1.1.34+36';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：Merge remote-tracking branch \'origin/main\''},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：Merge remote-tracking branch \'origin/main\''},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: organize eye colors and special eye tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add hierarchical color selectors'},
