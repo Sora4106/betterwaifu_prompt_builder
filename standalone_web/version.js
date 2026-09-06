@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.32",
-  "build": 34,
-  "label": "1.1.32+34",
+  "version": "1.1.33",
+  "build": 35,
+  "label": "1.1.33+35",
   "history": [
+    {
+      "version": "1.1.33",
+      "build": 35,
+      "label": "1.1.33+35",
+      "date": "2026-09-06",
+      "notes": "自動偵測：Merge remote-tracking branch 'origin/main'"
+    },
     {
       "version": "1.1.32",
       "build": 34,

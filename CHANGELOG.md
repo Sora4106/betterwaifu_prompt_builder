@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.33+35 - 2026-09-06
+
+- 自動偵測：Merge remote-tracking branch 'origin/main'
+
+
 ## 1.1.32+34 - 2026-09-06
 
 - 自動偵測：feat: organize eye colors and special eye tags
