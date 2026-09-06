@@ -334,6 +334,13 @@ List<TagItem> _seedTags() => [
       _tag('trait_blue_hair', '外觀特徵', '藍髮', 'blue hair', 1),
       _tag('trait_red_hair', '外觀特徵', '紅髮', 'red hair', 1),
       _tag('trait_pink_hair', '外觀特徵', '粉紅髮', 'pink hair', 1),
+      _tag('trait_purple_hair', '外觀特徵', '紫髮', 'purple hair', 1),
+      _tag('trait_white_hair', '外觀特徵', '白髮', 'white hair', 1),
+      _tag('trait_brown_hair', '外觀特徵', '棕髮', 'brown hair', 1),
+      _tag('trait_green_hair', '外觀特徵', '綠髮', 'green hair', 1),
+      _tag('trait_orange_hair', '外觀特徵', '橘髮', 'orange hair', 1),
+      _tag('trait_aqua_hair', '外觀特徵', '水藍髮', 'aqua hair', 1),
+      _tag('trait_yellow_hair', '外觀特徵', '黃髮', 'yellow hair', 1),
       _tag('trait_green_eyes', '外觀特徵', '綠眼睛', 'green eyes', 1),
       _tag('trait_blue_eyes', '外觀特徵', '藍眼睛', 'blue eyes', 1),
       _tag('trait_red_eyes', '外觀特徵', '紅眼睛', 'red eyes', 1),
@@ -717,6 +724,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hand_gesture'),
       _tag('pose_hands_together', '姿勢', '雙手合十', 'hands together', 4,
           conflictGroup: 'hand_gesture'),
+      _tag('pose_fist', '姿勢', '握拳手勢', 'fist', 4,
+          conflictGroup: 'hand_gesture'),
       _tag('pose_hands_behind_back', '姿勢', '雙手放在背後', 'hands behind back', 4,
           conflictGroup: 'hand_gesture'),
       _tag('pose_hand_on_head', '姿勢', '手放在頭上', 'hand on head', 4,
@@ -1021,6 +1030,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'trait_blue_hair',
       'trait_red_hair',
       'trait_pink_hair',
+      'trait_purple_hair',
+      'trait_white_hair',
+      'trait_brown_hair',
+      'trait_green_hair',
+      'trait_orange_hair',
+      'trait_aqua_hair',
+      'trait_yellow_hair',
     };
     if (!mergedHairIds.contains(tag.id)) return tag;
     return TagItem(
@@ -1056,8 +1072,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<String, TextEditingController> _personSearchControllers =
       <String, TextEditingController>{};
   final Map<int, GlobalKey> _stepKeys = <int, GlobalKey>{};
+  final GlobalKey _outputKey = GlobalKey(debugLabel: 'prompt-output');
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
+  final TextEditingController _reversePrompt = TextEditingController();
   final TextEditingController _negative = TextEditingController(
     text: _defaultNegativeText,
   );
@@ -1380,20 +1398,94 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
+  String? _hairColorWord(TagItem tag) {
+    final match = RegExp(
+      r'^(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold) hair$',
+      caseSensitive: false,
+    ).firstMatch(_cleanTag(tag.en));
+    return match?.group(1)?.toLowerCase();
+  }
+
+  bool _isHairStyleTag(TagItem tag) =>
+      tag.id.startsWith('hair_') ||
+      _traitOverrideGroups(tag.en).contains('hair_style');
+
+  String _hairColorChinese(TagItem tag) =>
+      tag.zh.replaceFirst(RegExp(r'髮$'), '');
+
+  List<_GeneratedOutputTag> _hairOutputTagsForPerson(int personIndex) {
+    final selected = _selectedTagsForPerson(personIndex);
+    final colors = selected.where((tag) => _hairColorWord(tag) != null).toList();
+    final lengths = selected
+        .where((tag) => _hairLengthTag(tag.en) != null)
+        .toList();
+    final styles = selected
+        .where((tag) => _isHairStyleTag(tag) && _hairLengthTag(tag.en) == null)
+        .toList();
+    if (colors.isEmpty || (lengths.isEmpty && styles.isEmpty)) {
+      return const <_GeneratedOutputTag>[];
+    }
+
+    final color = colors.first;
+    final length = lengths.isEmpty ? null : lengths.first;
+    final related = <TagItem>[color, ...lengths, ...styles];
+    final english = <String>[_hairColorWord(color)!];
+    final chinese = <String>[_hairColorChinese(color)];
+    if (length != null) {
+      final lengthEnglish = _hairLengthTag(length.en)!;
+      english.add(styles.isEmpty
+          ? lengthEnglish
+          : lengthEnglish.replaceFirst(RegExp(r' hair$'), ''));
+      chinese.add(styles.isEmpty
+          ? length.zh
+          : length.zh.replaceFirst(RegExp(r'髮$'), ''));
+    }
+    english.addAll(styles.map((tag) => tag.en));
+    chinese.addAll(styles.map((tag) => tag.zh));
+    return [
+      _GeneratedOutputTag(
+        zh: chinese.join(),
+        en: english.join(' '),
+        tagIds: related.map((tag) => tag.id).toList(),
+        personIndex: personIndex,
+      ),
+    ];
+  }
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
+    final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
-    final covered = clothing.expand((tag) => tag.tagIds).toSet();
-    final other = _selectedTagsForPerson(index)
-        .where(
-            (tag) => !_isClothingGroup(tag.group) && !covered.contains(tag.id))
+    final hair = _hairOutputTagsForPerson(index);
+    final covered = {
+      ...clothing.expand((tag) => tag.tagIds),
+      ...hair.expand((tag) => tag.tagIds),
+    };
+    final other = selected
+        .where((tag) =>
+            !_isClothingGroup(tag.group) && !covered.contains(tag.id))
         .map((tag) => _GeneratedOutputTag(
               zh: tag.zh,
               en: tag.en,
               tagId: tag.id,
               tagIds: [tag.id],
               personIndex: index,
-            ));
-    return [...clothing, ...other];
+            ))
+        .toList();
+    final beforeClothing = other
+        .where((tag) =>
+            _outputGroupOrder(selected
+                .firstWhere((item) => item.id == tag.tagId)
+                .group) <
+            20)
+        .toList();
+    final afterClothing = other
+        .where((tag) =>
+            _outputGroupOrder(selected
+                .firstWhere((item) => item.id == tag.tagId)
+                .group) >=
+            20)
+        .toList();
+    return [...beforeClothing, ...hair, ...clothing, ...afterClothing];
   }
 
   int get _personSelectedCount =>
@@ -1410,6 +1502,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _restore();
     _checkForVersionUpdate();
     _search.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {});
+      _scrollToStep(_stepIndex);
+    });
   }
 
   void _checkForVersionUpdate() {
@@ -1478,6 +1575,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void dispose() {
     _search.dispose();
     _extraPositive.dispose();
+    _reversePrompt.dispose();
     _negative.dispose();
     _preprompt.dispose();
     for (final controller in _personSearchControllers.values) {
@@ -1592,6 +1690,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _showAdult = data['showAdult'] == true;
       _groupPeoplePrompt = data['groupPeoplePrompt'] != false;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
+      _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -1600,6 +1699,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ).map((key, value) => MapEntry(key.toLowerCase(), '$value')));
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
       _peopleCount = _personSlots.length;
+      for (var index = 0; index < _personSlots.length; index++) {
+        _syncCharacterTraitsForSlot(index);
+      }
     } catch (_) {
       // A malformed local record should never stop the builder from opening.
     }
@@ -1630,6 +1732,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'showAdult': _showAdult,
         'groupPeoplePrompt': _groupPeoplePrompt,
         'extraPositive': _extraPositive.text,
+        'reversePrompt': _reversePrompt.text,
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
         'preprompt': _preprompt.text,
@@ -1688,15 +1791,106 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  String _englishTagKey(String value) => _cleanTag(value)
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+      .trim();
+
+  TagItem? _tagByEnglish(String english) {
+    final key = _englishTagKey(english);
+    for (final tag in _allTags) {
+      if (_englishTagKey(tag.en) == key) return tag;
+    }
+    return null;
+  }
+
+  TagItem _createCharacterTraitOption(CatalogTagData trait) {
+    final existing = _tagByEnglish(trait.en);
+    if (existing != null) return existing;
+    final id = 'character_trait_${_slug(trait.en)}';
+    for (final tag in _customTags) {
+      if (tag.id == id) return tag;
+    }
+    final option = TagItem(
+      id: id,
+      group: trait.group == '自訂特徵' ? '外觀特徵' : trait.group,
+      zh: trait.zh,
+      en: trait.en,
+      order: trait.order,
+      adult: trait.adult,
+      builtIn: false,
+      conflictGroup: trait.conflictGroup,
+    );
+    _customTags.add(option);
+    return option;
+  }
+
+  List<TagItem> _characterTraitOptions(CatalogTagData trait) {
+    final direct = _tagByEnglish(trait.en);
+    if (direct != null) return [direct];
+
+    final composite = RegExp(
+      r'^(very short|very long|long|medium|short)\s+([a-z-]+)\s+hair$',
+      caseSensitive: false,
+    ).firstMatch(_cleanTag(trait.en));
+    if (composite == null) return [_createCharacterTraitOption(trait)];
+
+    final length = '${composite.group(1)} hair';
+    final color = '${composite.group(2)} hair';
+    final lengthTag = _tagByEnglish(length);
+    final colorTag = _tagByEnglish(color);
+    return [
+      if (colorTag != null) colorTag,
+      if (lengthTag != null) lengthTag,
+      if (colorTag == null || lengthTag == null)
+        _createCharacterTraitOption(trait),
+    ];
+  }
+
+  bool _characterTraitUsesTag(CatalogTagData trait, String tagId) =>
+      _characterTraitOptions(trait).any((tag) => tag.id == tagId);
+
+  bool _isCurrentCharacterTrait(int index, TagItem tag) {
+    if (index < 0 || index >= _personSlots.length) return false;
+    final slot = _personSlots[index];
+    if (slot.mode != '動漫角色') return false;
+    final character = _characterForNew(slot);
+    return character?.traits.any((trait) => _characterTraitUsesTag(trait, tag.id)) ??
+        false;
+  }
+
+  void _removeCharacterTraitSelections(
+      int index, CatalogCharacter? character) {
+    if (character == null) return;
+    final ids = _personTagIds(index);
+    for (final trait in character.traits) {
+      ids.removeAll(_characterTraitOptions(trait).map((tag) => tag.id));
+    }
+  }
+
+  void _syncCharacterTraitsForSlot(int index) {
+    if (index < 0 || index >= _personSlots.length) return;
+    final slot = _personSlots[index];
+    if (!slot.detailed || slot.mode != '動漫角色') return;
+    final character = _characterForNew(slot);
+    if (character == null) return;
+    final ids = _personTagIds(index);
+    for (final trait in character.traits) {
+      if (_isRemovedCharacterTag(index, trait.en)) continue;
+      ids.addAll(_characterTraitOptions(trait).map((tag) => tag.id));
+    }
+  }
+
   Set<String> _traitOverrideGroups(String en) {
     final value = en.trim().toLowerCase();
     final groups = <String>{};
     if (RegExp(
-            r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow)\s+hair\b')
+            r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold)\s+hair\b')
         .hasMatch(value)) {
       groups.add('hair_color');
     }
-    if (RegExp(r'\b(very\s+short|very\s+long|long|medium|short)\s+hair\b')
+    if (RegExp(
+            r'\b(very\s+short|very\s+long|long|medium|short)\s+(?:[a-z-]+\s+)?hair\b')
         .hasMatch(value)) {
       groups.add('hair_length');
     }
@@ -1742,6 +1936,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return character.traits
         .where((trait) =>
             _traitOverrideGroups(trait.en).intersection(replaced).isEmpty &&
+            !_characterTraitOptions(trait).any(
+                (option) => _personTagIds(index).contains(option.id)) &&
             !_isRemovedCharacterTag(index, trait.en))
         .toList();
   }
@@ -1889,6 +2085,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .add(_cleanTag(outputTag.en).toLowerCase());
         }
       } else if (outputTag.personIndex != null && outputTag.tagIds.isNotEmpty) {
+        final character = _characterForNew(
+            _personSlots[outputTag.personIndex!]);
+        for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+          if (_characterTraitOptions(trait)
+              .any((option) => outputTag.tagIds.contains(option.id))) {
+            _removedCharacterTagSet(outputTag.personIndex!)
+                .add(_cleanTag(trait.en).toLowerCase());
+          }
+        }
         _personTagIds(outputTag.personIndex!).removeAll(outputTag.tagIds);
       } else if (outputTag.tagId != null) {
         if (outputTag.personIndex == null) {
@@ -2556,17 +2761,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (targetIds.contains(tag.id)) {
       setState(() {
         targetIds.remove(tag.id);
+        if (personIndex != null && _isCurrentCharacterTrait(personIndex, tag)) {
+          final character = _characterForNew(_personSlots[personIndex]);
+          for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+            if (_characterTraitUsesTag(trait, tag.id)) {
+              _removedCharacterTagSet(personIndex)
+                  .add(_cleanTag(trait.en).toLowerCase());
+              targetIds.removeAll(
+                  _characterTraitOptions(trait).map((option) => option.id));
+            }
+          }
+        }
         _persist();
       });
       return;
     }
-    if (personIndex != null &&
-        !(await _confirmCharacterOverride(tag, personIndex))) {
-      return;
+    var characterOverrideConfirmed = false;
+    if (personIndex != null) {
+      characterOverrideConfirmed =
+          await _confirmCharacterOverride(tag, personIndex);
+      if (!characterOverrideConfirmed) return;
     }
     final conflicts =
         currentTags.where((item) => _tagsConflict(item, tag)).toList();
-    if (conflicts.isNotEmpty) {
+    final onlyOriginalCharacterConflicts = personIndex != null &&
+        characterOverrideConfirmed &&
+        conflicts.isNotEmpty &&
+        conflicts.every((item) => _isCurrentCharacterTrait(personIndex, item));
+    if (conflicts.isNotEmpty && !onlyOriginalCharacterConflicts) {
       final replace = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
@@ -2590,6 +2812,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         targetIds.remove(conflict.id);
       }
       targetIds.add(tag.id);
+      if (personIndex != null) {
+        final character = _characterForNew(_personSlots[personIndex]);
+        for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+          if (_characterTraitUsesTag(trait, tag.id)) {
+            _removedCharacterTagSet(personIndex)
+                .remove(_cleanTag(trait.en).toLowerCase());
+          }
+        }
+      }
       _persist();
     });
   }
@@ -2601,7 +2832,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final character = _characterForNew(slot);
     final selectedGroups = _traitOverrideGroups(tag.en);
     if (character == null || selectedGroups.isEmpty) return true;
+    final originalTraitIds = character.traits
+        .expand(_characterTraitOptions)
+        .map((tag) => tag.id)
+        .toSet();
     if (_selectedTagsForPerson(personIndex).any((selected) =>
+        !originalTraitIds.contains(selected.id) &&
         _traitOverrideGroups(selected.en)
             .intersection(selectedGroups)
             .isNotEmpty)) {
@@ -2652,6 +2888,184 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .showSnackBar(SnackBar(content: Text('$label已複製')));
   }
 
+  TagItem? _tagByReverseLabel(String value) {
+    final englishKey = _englishTagKey(value);
+    final chineseKey = _cleanTag(value);
+    for (final tag in _allTags) {
+      if (englishKey.isNotEmpty && _englishTagKey(tag.en) == englishKey) {
+        return tag;
+      }
+      if (chineseKey.isNotEmpty && _cleanTag(tag.zh) == chineseKey) return tag;
+    }
+    return null;
+  }
+
+  List<TagItem> _reverseTagCandidates(String value) {
+    final exact = _tagByReverseLabel(value);
+    if (exact != null) return [exact];
+    final key = _englishTagKey(value);
+    if (key.isEmpty) return const <TagItem>[];
+
+    final hair = <TagItem>[];
+    final colorWord = key.split(' ').first;
+    final hairColor = _tagByEnglish('$colorWord hair');
+    if (hairColor != null) hair.add(hairColor);
+    final hairSuffixes = _allTags
+        .where((tag) =>
+            (tag.group == '髮型' || _hairLengthTag(tag.en) != null) &&
+            key.endsWith(_englishTagKey(tag.en)))
+        .toList()
+      ..sort((a, b) => _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
+    if (hairSuffixes.isNotEmpty && hair.isNotEmpty) {
+      hair.add(hairSuffixes.first);
+      return hair.toSet().toList();
+    }
+
+    final bases = _allTags
+        .where((tag) =>
+            _isClothingBaseGroup(tag.group) &&
+            key.endsWith(_englishTagKey(tag.en)))
+        .toList()
+      ..sort((a, b) => _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
+    if (bases.isEmpty) return const <TagItem>[];
+
+    final base = bases.first;
+    final result = <TagItem>[base];
+    final colorGroup = _clothingColorGroup(base.group);
+    if (colorGroup != null) {
+      for (final tag in _allTags.where((tag) => tag.group == colorGroup)) {
+        if (_clothingColorWord(tag) == colorWord) {
+          result.add(tag);
+          break;
+        }
+      }
+    }
+    final styleGroup = _clothingStyleGroup(base.group);
+    if (styleGroup != null) {
+      for (final tag in _allTags.where((tag) => tag.group == styleGroup)) {
+        final style = _clothingModifierEnglish(tag);
+        if (style.isNotEmpty && key.contains(_englishTagKey(style))) {
+          result.add(tag);
+          break;
+        }
+      }
+    }
+    for (final tag in _allTags.where(
+        (tag) => tag.group == '服裝細節' || tag.group == '服裝材質')) {
+      final modifier = _clothingModifierEnglish(tag);
+      if (modifier.isNotEmpty && key.contains(_englishTagKey(modifier))) {
+        result.add(tag);
+      }
+    }
+    return result.length == 1 ? const <TagItem>[] : result.toSet().toList();
+  }
+
+  String _reverseExtraKey(String value) {
+    final englishKey = _englishTagKey(value);
+    return englishKey.isEmpty ? _cleanTag(value).toLowerCase() : englishKey;
+  }
+
+  void _reversePromptTags() {
+    final normalized = _reversePrompt.text
+        .replaceAllMapped(
+            RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
+        .replaceAll(RegExp(r'[()\[\]{}]'), '');
+    final tokens = normalized
+        .split(RegExp(r'[,，、\n\r。；;.]+'))
+        .map(_cleanTag)
+        .where((token) => token.isNotEmpty)
+        .where((token) => !['break', 'and'].contains(token.toLowerCase()))
+        .toList();
+    if (tokens.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('請先貼上要反推的提示標籤。')));
+      return;
+    }
+
+    final recognized = <TagItem>[];
+    final unknown = <String>[];
+    int? importedPeopleCount;
+    String? importedGender;
+    for (final token in tokens) {
+      final peopleMatch = RegExp(
+        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
+        caseSensitive: false,
+      ).firstMatch(_englishTagKey(token));
+      if (peopleMatch != null) {
+        importedPeopleCount = (int.tryParse(peopleMatch.group(1)!) ?? 1)
+            .clamp(1, 10)
+            .toInt();
+        final kind = peopleMatch.group(2)!.toLowerCase();
+        importedGender = kind.startsWith('girl')
+            ? '女性'
+            : kind.startsWith('boy')
+                ? '男性'
+                : '其他/異種';
+        continue;
+      }
+      final tags = _reverseTagCandidates(token);
+      if (tags.isEmpty) {
+        unknown.add(token);
+      } else {
+        recognized.addAll(tags);
+      }
+    }
+
+    final globalGroups = {'場景', '畫面', '品質', '其他'};
+    setState(() {
+      if (importedPeopleCount != null) {
+        while (_personSlots.length < importedPeopleCount!) {
+          _personSlots.add(PersonSlot());
+        }
+        while (_personSlots.length > importedPeopleCount!) {
+          _personSlots.removeLast();
+        }
+        _personSelectedIds
+            .removeWhere((index, _) => index >= importedPeopleCount!);
+        _removedCharacterTags
+            .removeWhere((index, _) => index >= importedPeopleCount!);
+        _personTagQueries
+            .removeWhere((index, _) => index >= importedPeopleCount!);
+        _personActiveGroups.removeWhere((key, _) =>
+            int.tryParse(key.split(':').first) != null &&
+            int.parse(key.split(':').first) >= importedPeopleCount!);
+        _peopleCount = importedPeopleCount!;
+        _gender = importedGender ?? _gender;
+      }
+
+      for (final tag in recognized.toSet()) {
+        if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
+          continue;
+        }
+        final target = globalGroups.contains(tag.group)
+            ? _selectedIds
+            : _personTagIds(0);
+        final current = target == _selectedIds
+            ? _selectedTags
+            : _selectedTagsForPerson(0);
+        for (final conflict in current.where((item) => _tagsConflict(item, tag))) {
+          target.remove(conflict.id);
+        }
+        target.add(tag.id);
+      }
+
+      final existingExtra = _extraTags(_extraPositive.text);
+      final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
+      for (final token in unknown) {
+        if (existingKeys.add(_reverseExtraKey(token))) existingExtra.add(token);
+      }
+      _extraPositive.text = existingExtra.join(', ');
+      _persist();
+    });
+
+    final location = importedPeopleCount == null
+        ? ''
+        : '；人物數量已調整為 $_peopleCount 人，辨識到的人物標籤先放在人物 1';
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            '已勾選 ${recognized.length} 個標籤，${unknown.length} 個未收錄標籤已加入額外正向欄位$location')));
+  }
+
   Future<void> _clearAllTags() async {
     final clear = await showDialog<bool>(
       context: context,
@@ -2689,6 +3103,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _activeGroup = '全部';
       _search.clear();
       _extraPositive.clear();
+      _reversePrompt.clear();
       _negative.text = _defaultNegativeText;
       _preprompt.clear();
       _persist();
@@ -2798,6 +3213,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clipSkip = '${data['clipSkip'] ?? _clipSkip}';
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
+      _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -3261,6 +3677,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.mode = '動漫角色';
       slot.characterId = imported.first.id;
       slot.animeTag = imported.first.animeTag;
+      _removedCharacterTags.remove(slotIndex);
+      _syncCharacterTraitsForSlot(slotIndex);
       _recentCharacterIds
         ..remove(imported.first.id)
         ..insert(0, imported.first.id);
@@ -3387,6 +3805,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
       final slot = _personSlots[slotIndex];
+      _removeCharacterTraitSelections(
+          slotIndex, _characterForNew(slot));
       slot.animeTag = anime.animeTag;
       slot.animeQuery = '';
       slot.query = '';
@@ -3402,6 +3822,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
       final slot = _personSlots[slotIndex];
+      _removeCharacterTraitSelections(
+          slotIndex, _characterForNew(slot));
       slot.characterId = character.id;
       slot.mode = '動漫角色';
       slot.animeTag = character.animeTag;
@@ -3410,6 +3832,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _removedCharacterTags.remove(slotIndex);
       _clearPersonSearchController(slotIndex, 'anime');
       _clearPersonSearchController(slotIndex, 'character');
+      _syncCharacterTraitsForSlot(slotIndex);
       _recentCharacterIds.remove(character.id);
       _recentCharacterIds.insert(0, character.id);
       if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
@@ -3561,6 +3984,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               target.mode = '動漫角色';
               target.characterId = character.id;
               target.animeTag = character.animeTag;
+              _removedCharacterTags.remove(targetIndex);
+              _syncCharacterTraitsForSlot(targetIndex);
               target.animeQuery = '';
               target.query = '';
               _clearPersonSearchController(targetIndex, 'anime');
@@ -3898,6 +4323,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return group;
   }
 
+  double _wizardGroupChipWidth(String group, double availableWidth) {
+    final label = _wizardGroupLabel(group);
+    final idealWidth = 38 + label.runes.length * 17.0;
+    return idealWidth.clamp(76.0, availableWidth).toDouble();
+  }
+
   List<TagItem> _stepVisibleTags(List<String> groups,
       {String? queryText, String? activeGroup}) {
     final query = (queryText ?? _search.text).trim().toLowerCase();
@@ -3952,39 +4383,49 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   setState(() => _personTagQueries[personIndex] = value),
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: groups.map((group) {
-            return ChoiceChip(
-                label: Text(
-                  _wizardGroupLabel(group),
-                  softWrap: false,
-                  overflow: TextOverflow.visible,
-                  style: TextStyle(
-                    color: group == currentGroup
-                        ? _buttonSelectedText
-                        : Colors.white,
-                    fontWeight: FontWeight.w700,
+        LayoutBuilder(
+          builder: (context, constraints) => Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: groups.map((group) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                child: SizedBox(
+                  width: _wizardGroupChipWidth(group, constraints.maxWidth),
+                  child: ChoiceChip(
+                    label: Text(
+                      _wizardGroupLabel(group),
+                      softWrap: true,
+                      maxLines: 2,
+                      overflow: TextOverflow.clip,
+                      style: TextStyle(
+                        color: group == currentGroup
+                            ? _buttonSelectedText
+                            : Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    selected: group == currentGroup,
+                    backgroundColor: _buttonSurface,
+                    selectedColor: _buttonSelectedSurface,
+                    side: BorderSide(
+                      color: group == currentGroup
+                          ? const Color(0xfff0eaff)
+                          : _buttonBorder,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    onSelected: (_) => setState(() {
+                          if (personIndex == null) {
+                            _activeGroup = group;
+                          } else {
+                            _personActiveGroups[groupKey!] = group;
+                          }
+                        })),
                   ),
                 ),
-                selected: group == currentGroup,
-                backgroundColor: _buttonSurface,
-                selectedColor: _buttonSelectedSurface,
-                side: BorderSide(
-                  color: group == currentGroup
-                      ? const Color(0xfff0eaff)
-                      : _buttonBorder,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                onSelected: (_) => setState(() {
-                      if (personIndex == null) {
-                        _activeGroup = group;
-                      } else {
-                        _personActiveGroups[groupKey!] = group;
-                      }
-                    }));
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
         const SizedBox(height: 12),
         if (visible.isEmpty)
@@ -4205,8 +4646,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  void _scrollToOutput() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = _outputKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        alignment: 0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
   void _openStep(int index) {
-    setState(() => _stepIndex = index);
+    setState(() {
+      _stepIndex = index;
+      _persist();
+    });
     _scrollToStep(index);
   }
 
@@ -4361,8 +4819,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       const Spacer(),
                       Switch(
                           value: slot.detailed,
-                          onChanged: (value) => setState(() {
+                              onChanged: (value) => setState(() {
                                 slot.detailed = value;
+                                if (value) _syncCharacterTraitsForSlot(index);
                                 _persist();
                               })),
                       const Text('需要細節')
@@ -4560,6 +5019,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
               labelText: '額外正向標籤', hintText: '中文或英文，逗號/換行分隔')),
+      const SizedBox(height: 10),
+      TextField(
+          controller: _reversePrompt,
+          maxLines: 4,
+          decoration: const InputDecoration(
+              labelText: '標籤反推（貼上既有提示詞）',
+              hintText: '例如：1girl, pink hair, long hair, school uniform')),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: FilledButton.icon(
+          onPressed: _reversePromptTags,
+          icon: const Icon(Icons.auto_fix_high),
+          label: const Text('反推並勾選標籤'),
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+          '已收錄的英文或中文標籤會自動勾選；查不到的內容會追加到額外正向標籤。括號權重與英文句點會自動整理。',
+          style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant)),
       const SizedBox(height: 10),
       TextField(
           controller: _negative,
@@ -5312,6 +5793,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
               const SizedBox(height: 6),
               ConstrainedBox(
+                key: _outputKey,
                 constraints: const BoxConstraints(maxWidth: 1120),
                 child: _outputPanel(),
               ),
@@ -5329,7 +5811,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
           Positioned(
             left: 6,
-            top: 12,
+            top: 112,
+            child: SafeArea(
+              child: SizedBox(
+                width: 42,
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 3, vertical: 6),
+                    child: Column(
+                      children: [
+                        ...List.generate(7, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: IconButton.filled(
+                              constraints: const BoxConstraints.tightFor(
+                                  width: 32, height: 30),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              tooltip: '前往第 ${index + 1} 項',
+                              onPressed: () => _openStep(index),
+                              icon: Text('${index + 1}',
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800)),
+                            ),
+                          );
+                        }),
+                        const Divider(height: 8),
+                        IconButton.filled(
+                          constraints: const BoxConstraints.tightFor(
+                              width: 32, height: 30),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          tooltip: '前往中英文提示詞輸出',
+                          onPressed: _scrollToOutput,
+                          icon: const Icon(Icons.vertical_align_bottom,
+                              size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 6,
+            bottom: 12,
             child: SafeArea(
               child: SizedBox(
                 width: 42,
