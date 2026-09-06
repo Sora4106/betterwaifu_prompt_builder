@@ -649,6 +649,25 @@ List<TagItem> _clothingColorTags(
       .toList();
 }
 
+List<TagItem> _eyeColorTags() {
+  const legacyIds = <String, String>{
+    'green': 'trait_green_eyes',
+    'blue': 'trait_blue_eyes',
+    'red': 'trait_red_eyes',
+    'purple': 'trait_purple_eyes',
+  };
+  return _clothingColors
+      .map((color) => _tag(
+            legacyIds[color[0]] ?? 'eye_color_${color[0]}',
+            '眼睛',
+            '${color[1]}眼睛',
+            '${color[0]} eyes',
+            2,
+            conflictGroup: 'eye_color',
+          ))
+      .toList();
+}
+
 List<TagItem> _clothingColorShadeTags(
   String prefix,
   String group,
@@ -813,16 +832,66 @@ List<TagItem> _seedTags() => [
       _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
           conflictGroup: 'hair_color'),
       ..._hairColorShadeTags(),
-      // Eye colours stay in appearance, but are sorted to the bottom of the
-      // appearance picker so the ordinary appearance tags remain together.
-      _tag('trait_green_eyes', '外觀特徵', '綠眼睛', 'green eyes', 99,
-          conflictGroup: 'eye_color'),
-      _tag('trait_blue_eyes', '外觀特徵', '藍眼睛', 'blue eyes', 99,
-          conflictGroup: 'eye_color'),
-      _tag('trait_red_eyes', '外觀特徵', '紅眼睛', 'red eyes', 99,
-          conflictGroup: 'eye_color'),
-      _tag('trait_purple_eyes', '外觀特徵', '紫眼睛', 'purple eyes', 99,
-          conflictGroup: 'eye_color'),
+      ..._eyeColorTags(),
+      ..._clothingColorShadeTags(
+          'eye_shade_color', '眼睛', '眼睛', 'eyes', 'eye_color'),
+
+      // Eye shapes, pupils, effects, and recognizable special eyes.
+      _tag('eye_normal', '眼睛', '一般眼睛', 'normal eyes', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_big', '眼睛', '大眼睛', 'big eyes', 2, conflictGroup: 'eye_shape'),
+      _tag('eye_small', '眼睛', '小眼睛', 'small eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_round', '眼睛', '圓眼', 'round eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_almond', '眼睛', '杏仁眼', 'almond eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_narrow', '眼睛', '細長眼', 'narrow eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_upturned', '眼睛', '上挑眼', 'upturned eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_downturned', '眼睛', '下垂眼', 'downturned eyes', 2,
+          conflictGroup: 'eye_shape'),
+      _tag('eye_sanpaku', '眼睛', '三白眼', 'sanpaku', 2),
+      _tag('eye_heterochromia', '眼睛', '異色瞳', 'heterochromia', 2),
+      _tag('eye_slit_pupils', '眼睛', '裂瞳', 'slit pupils', 2),
+      _tag('eye_vertical_pupils', '眼睛', '垂直瞳孔', 'vertical pupils', 2),
+      _tag('eye_horizontal_pupils', '眼睛', '水平瞳孔', 'horizontal pupils', 2),
+      _tag('eye_round_pupils', '眼睛', '圓形瞳孔', 'round pupils', 2),
+      _tag('eye_no_pupils', '眼睛', '無瞳孔', 'no pupils', 2),
+      _tag('eye_ringed', '眼睛', '環狀眼睛', 'ringed eyes', 2),
+      _tag('eye_spiral', '眼睛', '螺旋眼睛', 'spiral eyes', 2),
+      _tag('eye_star_pupils', '眼睛', '星形瞳孔', 'star-shaped pupils', 2),
+      _tag('eye_cross_pupils', '眼睛', '十字瞳孔', 'cross-shaped pupils', 2),
+      _tag('eye_glowing', '眼睛', '發光眼睛', 'glowing eyes', 2),
+      _tag('eye_empty', '眼睛', '空洞眼神', 'empty eyes', 2),
+      _tag('eye_bright_pupils', '眼睛', '明亮瞳孔', 'bright pupils', 2),
+      _tag('eye_white_pupils', '眼睛', '白色瞳孔', 'white pupils', 2),
+      _tag('eye_colored_sclera', '眼睛', '有色眼白', 'colored sclera', 2),
+      _tag('eye_black_sclera', '眼睛', '黑色眼白', 'black sclera', 2),
+      _tag('eye_yellow_sclera', '眼睛', '黃色眼白', 'yellow sclera', 2),
+      _tag('eye_extra_pupils', '眼睛', '額外瞳孔', 'extra pupils', 2),
+      _tag('eye_multiple', '眼睛', '多重眼睛', 'multiple eyes', 2),
+      _tag('eye_sharingan', '眼睛', '寫輪眼', 'sharingan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_mangekyou_sharingan', '眼睛', '萬花筒寫輪眼', 'mangekyou sharingan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_eternal_mangekyou_sharingan', '眼睛', '永恆萬花筒寫輪眼',
+          'eternal mangekyou sharingan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_rinnegan', '眼睛', '輪迴眼', 'rinnegan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_rinnesharingan', '眼睛', '輪迴寫輪眼', 'rinnesharingan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_byakugan', '眼睛', '白眼', 'byakugan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_tenseigan', '眼睛', '轉生眼', 'tenseigan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_jougan', '眼睛', '淨眼', 'jougan', 2, conflictGroup: 'eye_type'),
+      _tag('eye_ketsuryugan', '眼睛', '血龍眼', 'ketsuryugan', 2,
+          conflictGroup: 'eye_type'),
+      _tag('eye_shinigami', '眼睛', '死神之眼', 'shinigami eyes', 2,
+          conflictGroup: 'eye_type'),
       _tag('trait_tall', '身體特徵', '高挑身材', 'tall', 1),
       _tag('trait_curvy', '身體特徵', '曲線身材', 'curvy', 1),
       _tag('trait_slim', '身體特徵', '纖細身材', 'slim', 1),
@@ -1159,8 +1228,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'expression_eyes'),
       _tag('expr_sparkling_eyes', '表情', '閃亮眼睛', 'sparkling eyes', 3,
           conflictGroup: 'expression_eyes'),
-      _tag('expr_heart_shaped_pupils', '表情', '愛心瞳孔', 'heart-shaped pupils', 3,
-          adult: true, conflictGroup: 'expression_eyes'),
+      _tag('expr_heart_shaped_pupils', '眼睛', '愛心瞳孔', 'heart-shaped pupils', 2),
       _tag('expr_nose_blush', '表情', '鼻頭泛紅', 'nose blush', 3,
           conflictGroup: 'expression_face_detail'),
       _tag('expr_sweatdrop', '表情', '汗滴', 'sweatdrop', 3,
@@ -1756,6 +1824,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     const order = <String, int>{
       '外觀特徵': 10,
       '身體特徵': 11,
+      '眼睛': 12,
       '臉部特徵': 12,
       '額外特徵': 13,
       '胸部': 14,
@@ -1862,6 +1931,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isClothingColorGroup(String group) =>
       const {
+        '眼睛',
         '髮色',
         '服裝顏色',
         '上衣顏色',
@@ -2063,11 +2133,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _isClothingColorGroup(group) ? group : null;
   }
 
+  bool _isColorPickerTag(TagItem tag) {
+    if (tag.group == '眼睛') return tag.conflictGroup == 'eye_color';
+    return _isClothingColorGroup(tag.group);
+  }
+
   String? _selectedColorFamily(String pickerGroup, Set<String> selectedIds) {
     final colorGroup = _colorPickerGroup(pickerGroup);
     if (colorGroup == null) return null;
     for (final tag in _allTags) {
-      if (!selectedIds.contains(tag.id) || tag.group != colorGroup) continue;
+      if (!selectedIds.contains(tag.id) ||
+          tag.group != colorGroup ||
+          !_isColorPickerTag(tag)) continue;
       final family = _colorFamilyForTag(tag);
       if (family != null) return family;
     }
@@ -2846,8 +2923,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (_clothingColorNames.contains(color)) return '髮色';
     }
     if (value.contains('hair')) return '髮型';
-    if (RegExp(r'\b(?:[a-z-]+\s+)?eyes?\b').hasMatch(value)) {
-      return '外觀特徵';
+    if (RegExp(r'\b(?:[a-z-]+\s+)?eyes?\b').hasMatch(value) ||
+        RegExp(r'\b(?:pupils?|sclera|sharingan|rinnegan|byakugan|tenseigan|jougan|ketsuryugan)\b')
+            .hasMatch(value)) {
+      return '眼睛';
     }
     if (['slim', 'tall', 'curvy', 'muscular', 'petite', 'mature female']
         .contains(value)) {
@@ -2933,6 +3012,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
+  void _resetCharacterFeatureSelections(
+      int index, CatalogCharacter? previousCharacter) {
+    if (index < 0 || index >= _personSlots.length) return;
+    _removeCharacterTraitSelections(index, previousCharacter);
+    final ids = _personTagIds(index);
+    final tagsById = <String, TagItem>{
+      for (final tag in _allTags) tag.id: tag,
+    };
+    ids.removeWhere((id) {
+      final tag = tagsById[id];
+      return tag != null && _traitOverrideGroups(tag.en).isNotEmpty;
+    });
+    _removedCharacterTags.remove(index);
+  }
+
   void _syncCharacterTraitsForSlot(int index) {
     if (index < 0 || index >= _personSlots.length) return;
     final slot = _personSlots[index];
@@ -2973,10 +3067,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .hasMatch(value)) {
       groups.add('hair_style');
     }
-    if (RegExp(
-            r'\b(green|blue|red|purple|yellow|aqua|brown|pink|orange)\s+eyes\b')
-        .hasMatch(value)) {
+    final eyeColorPattern = _clothingColorNames.map(RegExp.escape).join('|');
+    if (RegExp(r'\b(?:' + eyeColorPattern + r')\s+eyes?\b').hasMatch(value)) {
       groups.add('eye_color');
+    }
+    if (RegExp(
+            r'\b(?:normal|big|small|round|almond|narrow|upturned|downturned)\s+eyes?\b')
+        .hasMatch(value)) {
+      groups.add('eye_shape');
+    }
+    if (RegExp(
+            r'\b(?:sharingan|mangekyou sharingan|eternal mangekyou sharingan|rinnegan|rinnesharingan|byakugan|tenseigan|jougan|ketsuryugan|shinigami eyes)\b')
+        .hasMatch(value)) {
+      groups.add('eye_type');
     }
     if (['slim', 'tall', 'curvy', 'muscular', 'petite'].contains(value)) {
       groups.add('body_type');
@@ -3767,6 +3870,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (groupSet.contains('外觀特徵')) {
       addRandomFromGroup('外觀特徵', max: 3);
     }
+    if (groupSet.contains('眼睛')) {
+      addRandomFromGroup('眼睛', max: 2);
+    }
     if (groupSet.contains('身體特徵')) {
       addRandomFromGroup('身體特徵', max: 2);
     }
@@ -4409,7 +4515,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
       if (detectedCharacter != null) {
         final slot = _personSlots[0];
-        _removeCharacterTraitSelections(0, _characterForNew(slot));
+        _resetCharacterFeatureSelections(0, _characterForNew(slot));
         slot.detailed = true;
         slot.mode = '動漫角色';
         slot.characterId = detectedCharacter!.id;
@@ -5086,6 +5192,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (imported.isNotEmpty) {
       final slot = _personSlots[slotIndex];
+      _resetCharacterFeatureSelections(slotIndex, _characterForNew(slot));
       slot.mode = '動漫角色';
       slot.characterId = imported.first.id;
       slot.animeTag = imported.first.animeTag;
@@ -5217,7 +5324,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
       final slot = _personSlots[slotIndex];
-      _removeCharacterTraitSelections(slotIndex, _characterForNew(slot));
+      _resetCharacterFeatureSelections(slotIndex, _characterForNew(slot));
       slot.animeTag = anime.animeTag;
       slot.animeQuery = '';
       slot.query = '';
@@ -5233,7 +5340,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     setState(() {
       final slot = _personSlots[slotIndex];
-      _removeCharacterTraitSelections(slotIndex, _characterForNew(slot));
+      _resetCharacterFeatureSelections(slotIndex, _characterForNew(slot));
       slot.characterId = character.id;
       slot.mode = '動漫角色';
       slot.animeTag = character.animeTag;
@@ -5391,6 +5498,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               final targetIndex = slotIndex < 0 ? 0 : slotIndex;
               _customCharacters.add(character);
               final target = _personSlots[targetIndex];
+              _resetCharacterFeatureSelections(
+                  targetIndex, _characterForNew(target));
               target.mode = '動漫角色';
               target.characterId = character.id;
               target.animeTag = character.animeTag;
@@ -5466,6 +5575,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '自訂角色',
                     '自訂特徵',
                     '身體特徵',
+                    '眼睛',
                     '額外特徵',
                     '髮色',
                     '髮型',
@@ -5573,6 +5683,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '自訂角色',
                     '自訂特徵',
                     '身體特徵',
+                    '眼睛',
                     '額外特徵',
                     '髮色',
                     '髮型',
@@ -5633,9 +5744,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
       final colorGroup = _colorPickerGroup(effectiveGroup);
+      final isPickerColor =
+          tag.group != '眼睛' || tag.conflictGroup == 'eye_color';
       final colorMatch = group == '全部'
           ? !_isShadeColorTag(tag) || (query.isNotEmpty && queryMatch)
-          : colorGroup == null || !_isShadeColorTag(tag)
+          : colorGroup == null || !isPickerColor || !_isShadeColorTag(tag)
               ? true
               : selectedFamily == _colorFamilyForTag(tag) ||
                   (query.isNotEmpty && queryMatch);
@@ -5653,6 +5766,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     tags.sort((a, b) {
       int rank(TagItem tag) {
         if (activeGroup == '髮型' && tag.group == '髮色') return 1;
+        if (activeGroup == '眼睛') return _isColorPickerTag(tag) ? 0 : 1;
         if (activeGroup == '外觀特徵' && _isEyeColorTag(tag)) return 1;
         return 0;
       }
@@ -5674,7 +5788,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
-    if (_isClothingColorGroup(tag.group)) {
+    if (_isColorPickerTag(tag)) {
       return _colorTagChip(tag, personIndex: personIndex, selected: selected);
     }
     return ConstrainedBox(
@@ -5792,10 +5906,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
       final colorGroup = _colorPickerGroup(pickerGroup);
-      final colorMatch = colorGroup == null || !_isShadeColorTag(tag)
-          ? true
-          : selectedFamily == _colorFamilyForTag(tag) ||
-              (query.isNotEmpty && queryMatch);
+      final isPickerColor =
+          tag.group != '眼睛' || tag.conflictGroup == 'eye_color';
+      final colorMatch =
+          colorGroup == null || !isPickerColor || !_isShadeColorTag(tag)
+              ? true
+              : selectedFamily == _colorFamilyForTag(tag) ||
+                  (query.isNotEmpty && queryMatch);
       return inGroup && adultMatch && queryMatch && colorMatch;
     }).toList();
     return _sortPickerTags(tags, pickerGroup);
@@ -6591,6 +6708,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .where((tag) => [
                         '外觀特徵',
                         '身體特徵',
+                        '眼睛',
                         '額外特徵',
                         '額外特徵位置',
                         '額外特徵顏色',
@@ -6608,6 +6726,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker([
             '外觀特徵',
             '身體特徵',
+            '眼睛',
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
