@@ -1342,6 +1342,20 @@ const supplementalTags = <CatalogTagData>[
       order: 2,
       conflictGroup: 'bottom_color'),
   CatalogTagData(
+      id: 'bottom_color_silver',
+      group: '下身顏色',
+      zh: '銀色下身',
+      en: 'silver bottoms',
+      order: 2,
+      conflictGroup: 'bottom_color'),
+  CatalogTagData(
+      id: 'bottom_color_white_silver',
+      group: '下身顏色',
+      zh: '白銀雙色下身',
+      en: 'white and silver bottoms',
+      order: 2,
+      conflictGroup: 'bottom_color'),
+  CatalogTagData(
       id: 'clothing_lace', group: '服裝細節', zh: '蕾絲', en: 'lace trim', order: 2),
   CatalogTagData(
       id: 'clothing_frills', group: '服裝細節', zh: '荷葉邊', en: 'frills', order: 2),
@@ -1372,6 +1386,8 @@ const supplementalTags = <CatalogTagData>[
       id: 'clothing_satin', group: '服裝材質', zh: '緞面', en: 'satin', order: 2),
   CatalogTagData(
       id: 'clothing_silk', group: '服裝材質', zh: '絲綢', en: 'silk', order: 2),
+  CatalogTagData(
+      id: 'clothing_knit', group: '服裝材質', zh: '針織', en: 'knit', order: 2),
   CatalogTagData(
       id: 'clothing_latex',
       group: '服裝材質',
@@ -1417,6 +1433,13 @@ const supplementalTags = <CatalogTagData>[
       order: 2,
       adult: true),
   CatalogTagData(
+      id: 'clothing_holding_clothes',
+      group: '穿脫狀態',
+      zh: '手持衣物（成年角色）',
+      en: 'holding clothes',
+      order: 2,
+      adult: true),
+  CatalogTagData(
       id: 'clothing_dressing',
       group: '穿脫狀態',
       zh: '穿衣中',
@@ -1434,6 +1457,13 @@ const supplementalTags = <CatalogTagData>[
       group: '穿脫狀態',
       zh: '內褲褪下（成年角色）',
       en: 'panties down',
+      order: 2,
+      adult: true),
+  CatalogTagData(
+      id: 'clothing_skirt_around_one_leg',
+      group: '穿脫狀態',
+      zh: '裙子繞在單腿上（成年角色）',
+      en: 'skirt around one leg',
       order: 2,
       adult: true),
 
@@ -1654,6 +1684,12 @@ const catalogCharacters = <CatalogCharacter>[
           group: '角色標籤',
           zh: '粉紅色頭髮',
           en: 'pink hair',
+          order: 1),
+      CatalogTagData(
+          id: 'lala_long_hair',
+          group: '角色標籤',
+          zh: '長髮',
+          en: 'long hair',
           order: 1),
       CatalogTagData(
           id: 'lala_ahoge', group: '角色標籤', zh: '呆毛', en: 'ahoge', order: 1),

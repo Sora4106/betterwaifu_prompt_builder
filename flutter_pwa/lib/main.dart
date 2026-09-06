@@ -325,22 +325,37 @@ List<TagItem> _seedTags() => [
       _tag('role_tomboy', '角色類型', '假小子', 'tomboy', 0),
 
       // Appearance and body.
-      _tag('trait_long_hair', '外觀特徵', '長髮', 'long hair', 1),
-      _tag('trait_short_hair', '外觀特徵', '短髮', 'short hair', 1),
-      _tag('trait_hair_between_eyes', '外觀特徵', '瀏海遮眼', 'hair between eyes', 1),
-      _tag('trait_blonde_hair', '外觀特徵', '金髮', 'blonde hair', 1),
-      _tag('trait_black_hair', '外觀特徵', '黑髮', 'black hair', 1),
-      _tag('trait_silver_hair', '外觀特徵', '銀髮', 'silver hair', 1),
-      _tag('trait_blue_hair', '外觀特徵', '藍髮', 'blue hair', 1),
-      _tag('trait_red_hair', '外觀特徵', '紅髮', 'red hair', 1),
-      _tag('trait_pink_hair', '外觀特徵', '粉紅髮', 'pink hair', 1),
-      _tag('trait_purple_hair', '外觀特徵', '紫髮', 'purple hair', 1),
-      _tag('trait_white_hair', '外觀特徵', '白髮', 'white hair', 1),
-      _tag('trait_brown_hair', '外觀特徵', '棕髮', 'brown hair', 1),
-      _tag('trait_green_hair', '外觀特徵', '綠髮', 'green hair', 1),
-      _tag('trait_orange_hair', '外觀特徵', '橘髮', 'orange hair', 1),
-      _tag('trait_aqua_hair', '外觀特徵', '水藍髮', 'aqua hair', 1),
-      _tag('trait_yellow_hair', '外觀特徵', '黃髮', 'yellow hair', 1),
+      _tag('trait_long_hair', '髮型', '長髮', 'long hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('trait_short_hair', '髮型', '短髮', 'short hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('trait_hair_between_eyes', '髮型', '瀏海遮眼', 'hair between eyes', 1),
+      _tag('trait_blonde_hair', '髮色', '金髮', 'blonde hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_black_hair', '髮色', '黑髮', 'black hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_silver_hair', '髮色', '銀髮', 'silver hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_blue_hair', '髮色', '藍髮', 'blue hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_red_hair', '髮色', '紅髮', 'red hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_pink_hair', '髮色', '粉紅髮', 'pink hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_purple_hair', '髮色', '紫髮', 'purple hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_white_hair', '髮色', '白髮', 'white hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_brown_hair', '髮色', '棕髮', 'brown hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_green_hair', '髮色', '綠髮', 'green hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_orange_hair', '髮色', '橘髮', 'orange hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_aqua_hair', '髮色', '水藍髮', 'aqua hair', 1,
+          conflictGroup: 'hair_color'),
+      _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
+          conflictGroup: 'hair_color'),
       _tag('trait_green_eyes', '外觀特徵', '綠眼睛', 'green eyes', 1),
       _tag('trait_blue_eyes', '外觀特徵', '藍眼睛', 'blue eyes', 1),
       _tag('trait_red_eyes', '外觀特徵', '紅眼睛', 'red eyes', 1),
@@ -361,6 +376,8 @@ List<TagItem> _seedTags() => [
       _tag('hair_medium', '髮型', '中長髮', 'medium hair', 1,
           conflictGroup: 'hair_length'),
       _tag('hair_very_long', '髮型', '超長髮', 'very long hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_waist_length', '髮型', '及腰長髮', 'waist-length hair', 1,
           conflictGroup: 'hair_length'),
       _tag('hair_bob_cut', '髮型', '鮑伯頭', 'bob cut', 1,
           conflictGroup: 'hair_style'),
@@ -409,6 +426,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_style'),
 
       // Clothing, intentionally split into practical sub-groups.
+      _tag('clothing_top', '上衣', '上衣', 'top', 2),
       _tag('clothing_tshirt', '上衣', 'T恤', 't-shirt', 2),
       _tag('clothing_shirt', '上衣', '襯衫', 'shirt', 2),
       _tag('clothing_sweater', '上衣', '毛衣', 'sweater', 2),
@@ -416,6 +434,8 @@ List<TagItem> _seedTags() => [
       _tag('clothing_jacket', '上衣', '夾克', 'jacket', 2),
       _tag('clothing_crop_top', '上衣', '短版上衣', 'crop top', 2),
       _tag('clothing_off_shoulder', '上衣', '露肩上衣', 'off-shoulder shirt', 2),
+      _tag('clothing_one_shoulder', '上衣風格', '單肩上衣風格', 'one-shoulder top', 2,
+          conflictGroup: 'top_style'),
       _tag('clothing_blouse', '上衣', '女式襯衫', 'blouse', 2),
       _tag('clothing_jeans', '褲子', '牛仔褲', 'jeans', 2),
       _tag('clothing_shorts', '褲子', '短褲', 'shorts', 2),
@@ -424,19 +444,19 @@ List<TagItem> _seedTags() => [
       _tag('clothing_leggings', '褲子', '內搭褲', 'leggings', 2),
       _tag('clothing_skirt', '裙子', '裙子', 'skirt', 2),
       _tag('clothing_miniskirt', '裙子', '迷你裙', 'miniskirt', 2),
-      _tag('clothing_pleated_skirt', '裙子', '百褶裙', 'pleated skirt', 2),
+      _tag('clothing_pleated_skirt', '下身風格', '百褶裙風格', 'pleated skirt', 2),
       _tag('clothing_short_skirt', '裙子', '短裙', 'short skirt', 2),
       _tag('clothing_knee_length_skirt', '裙子', '及膝裙', 'knee-length skirt', 2),
       _tag('clothing_midi_skirt', '裙子', '中長裙', 'midi skirt', 2),
       _tag('clothing_maxi_skirt', '裙子', '超長裙', 'maxi skirt', 2),
-      _tag('clothing_pencil_skirt', '裙子', '鉛筆裙', 'pencil skirt', 2),
-      _tag('clothing_a_line_skirt', '裙子', 'A字裙', 'a-line skirt', 2),
-      _tag('clothing_circle_skirt', '裙子', '傘裙', 'circle skirt', 2),
-      _tag('clothing_tiered_skirt', '裙子', '蛋糕裙', 'tiered skirt', 2),
-      _tag('clothing_tutu_skirt', '裙子', '芭蕾舞裙', 'tutu skirt', 2),
-      _tag('clothing_wrap_skirt', '裙子', '裹身裙', 'wrap skirt', 2),
-      _tag('clothing_slit_skirt', '裙子', '開衩裙', 'slit skirt', 2),
-      _tag('clothing_denim_skirt', '裙子', '牛仔裙', 'denim skirt', 2),
+      _tag('clothing_pencil_skirt', '下身風格', '鉛筆裙風格', 'pencil skirt', 2),
+      _tag('clothing_a_line_skirt', '下身風格', 'A字裙風格', 'a-line skirt', 2),
+      _tag('clothing_circle_skirt', '下身風格', '傘裙風格', 'circle skirt', 2),
+      _tag('clothing_tiered_skirt', '下身風格', '蛋糕裙風格', 'tiered skirt', 2),
+      _tag('clothing_tutu_skirt', '下身風格', '芭蕾舞裙風格', 'tutu skirt', 2),
+      _tag('clothing_wrap_skirt', '下身風格', '裹身裙風格', 'wrap skirt', 2),
+      _tag('clothing_slit_skirt', '下身風格', '開衩裙風格', 'slit skirt', 2),
+      _tag('clothing_denim_skirt', '下身風格', '牛仔裙風格', 'denim skirt', 2),
       _tag('clothing_dress', '服裝', '洋裝', 'dress', 2),
       _tag('clothing_sundress', '服裝', '夏日洋裝', 'sundress', 2),
       _tag('clothing_school_uniform', '服裝', '校服', 'school uniform', 2),
@@ -461,6 +481,8 @@ List<TagItem> _seedTags() => [
       _tag('clothing_socks', '襪子', '短襪', 'socks', 2),
       _tag('clothing_kneehighs', '襪子', '膝上襪', 'kneehighs', 2),
       _tag('clothing_thighhighs', '襪子', '大腿襪', 'thighhighs', 2),
+      _tag('clothing_lace_stockings', '襪子', '蕾絲長襪', 'lace stockings', 2,
+          conflictGroup: 'legwear'),
       _tag('clothing_pantyhose', '襪子', '連褲襪', 'pantyhose', 2),
       _tag('clothing_fishnet', '襪子', '網襪', 'fishnet legwear', 2),
       _tag('clothing_sneakers', '鞋子', '運動鞋', 'sneakers', 2),
@@ -565,6 +587,9 @@ List<TagItem> _seedTags() => [
       ..._clothingColorTags(
           'panties_color', '內褲顏色', '內褲', 'panties', 'underwear_bottom_color',
           adult: true),
+      _tag('panties_color_pink_white', '內褲顏色', '粉白色內褲',
+          'pink and white panties', 2,
+          adult: true, conflictGroup: 'underwear_bottom_color'),
       ..._clothingColorTags(
           'socks_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
       ..._clothingColorTags(
@@ -698,6 +723,10 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'basic_pose'),
       _tag('pose_lying_floor', '姿勢', '躺在地上', 'lying on floor', 4,
           conflictGroup: 'basic_pose'),
+      _tag('pose_lying_table', '姿勢', '躺在桌上', 'lying on the table', 4,
+          conflictGroup: 'basic_pose'),
+      _tag('pose_lift_skirt', '姿勢', '掀起裙子', 'lift up the skirt', 4,
+          adult: true),
       _tag('pose_one_leg_up', '姿勢', '抬起單腳', 'one leg raised', 4,
           conflictGroup: 'leg_raise'),
       _tag('pose_left_leg_up', '姿勢', '抬起左腳', 'left leg raised', 4,
@@ -860,6 +889,7 @@ List<TagItem> _seedTags() => [
       _tag('body_huge_breasts', '胸部', '巨乳', 'huge breasts', 5, adult: true),
       _tag('body_breasts', '胸部', '胸部可見', 'breasts', 5, adult: true),
       _tag('body_cleavage', '胸部', '乳溝', 'cleavage', 5, adult: true),
+      _tag('body_underboob', '胸部', '下胸', 'underboob', 5, adult: true),
       _tag('body_nipples', '胸部', '乳頭可見', 'nipples', 5, adult: true),
       _tag('body_breast_press', '胸部', '胸部擠壓', 'breast press', 5, adult: true),
       _tag('nudity_nude', '裸露', '裸體', 'nude', 6, adult: true),
@@ -889,6 +919,8 @@ List<TagItem> _seedTags() => [
       // Sex acts and sexual positions. All are adult-only and off by the adult filter.
       _tag('act_sex', '性行為', '性行為（成年角色）', 'sex', 7, adult: true),
       _tag('act_vaginal', '性行為', '陰道性交（成年角色）', 'vaginal', 7, adult: true),
+      _tag('act_triple_vaginal', '性行為', '三人陰道性交（成年角色）',
+          'triple vaginal', 7, adult: true),
       _tag('act_anal', '性行為', '肛交（成年角色）', 'anal', 7, adult: true),
       _tag('act_oral', '性行為', '口交（成年角色）', 'oral', 7, adult: true),
       _tag('act_blowjob', '性行為', '口交行為（成年角色）', 'blowjob', 7, adult: true),
@@ -900,6 +932,8 @@ List<TagItem> _seedTags() => [
       _tag('act_french_kiss', '性行為', '法式接吻（成年角色）', 'french kiss', 7,
           adult: true),
       _tag('act_grinding', '性行為', '磨蹭（成年角色）', 'grinding', 7, adult: true),
+      _tag('act_table_humping', '性行為', '桌上磨蹭（成年角色）', 'table humping', 7,
+          adult: true),
       _tag('act_bondage', '性行為', '束縛（成年角色）', 'bondage', 7, adult: true),
       _tag('act_bdsm', '性行為', 'BDSM（成年角色）', 'bdsm', 7, adult: true),
       _tag('act_cum', '性行為', '體液（成年角色）', 'cum', 7, adult: true),
@@ -1024,19 +1058,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'trait_long_hair',
       'trait_short_hair',
       'trait_hair_between_eyes',
-      'trait_blonde_hair',
-      'trait_black_hair',
-      'trait_silver_hair',
-      'trait_blue_hair',
-      'trait_red_hair',
-      'trait_pink_hair',
-      'trait_purple_hair',
-      'trait_white_hair',
-      'trait_brown_hair',
-      'trait_green_hair',
-      'trait_orange_hair',
-      'trait_aqua_hair',
-      'trait_yellow_hair',
     };
     if (!mergedHairIds.contains(tag.id)) return tag;
     return TagItem(
@@ -1116,7 +1137,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '臉部特徵': 11,
       '胸部': 12,
       '裸露': 13,
-      '髮型': 14,
+      '髮色': 14,
+      '髮型': 15,
       '服裝': 20,
       '服裝風格': 21,
       '服裝顏色': 22,
@@ -1202,6 +1224,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }.contains(group);
 
   bool _isClothingColorGroup(String group) => const {
+        '髮色',
         '服裝顏色',
         '上衣顏色',
         '下身顏色',
@@ -1246,13 +1269,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
-  String? _clothingColorWord(TagItem tag) {
-    const colors = [
+  static const _clothingColorNames = [
       'multicolored',
       'black',
       'white',
       'red',
       'blue',
+      'aqua',
       'pink',
       'purple',
       'green',
@@ -1261,12 +1284,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'gray',
       'gold',
       'silver',
+      'orange',
     ];
+
+  List<String> _clothingColorWords(TagItem tag) {
     final value = tag.en.trim().toLowerCase();
-    for (final color in colors) {
-      if (value == color || value.startsWith('$color ')) return color;
-    }
+    return _clothingColorNames
+        .where((color) => RegExp(r'(^|\s)' + color + r'(?:\s|$)').hasMatch(value))
+        .toList();
+  }
+
+  String? _clothingColorWord(TagItem tag) {
+    final words = _clothingColorWords(tag);
+    if (words.isNotEmpty) return words.first;
+    final value = tag.en.trim().toLowerCase();
     return value.isEmpty ? null : value.split(' ').first;
+  }
+
+  String _clothingColorPrefix(TagItem tag) {
+    final words = _clothingColorWords(tag);
+    if (words.isNotEmpty) return words.join(' and ');
+    return _clothingColorWord(tag) ?? '';
   }
 
   String _clothingColorChinese(TagItem tag) {
@@ -1276,6 +1314,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'white': '白色',
       'red': '紅色',
       'blue': '藍色',
+      'aqua': '水藍色',
       'pink': '粉紅色',
       'purple': '紫色',
       'green': '綠色',
@@ -1284,8 +1323,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'gray': '灰色',
       'gold': '金色',
       'silver': '銀色',
+      'orange': '橘色',
     };
     return colors[_clothingColorWord(tag)] ?? tag.zh;
+  }
+
+  String _clothingColorChinesePrefix(TagItem tag) {
+    const colors = <String, String>{
+      'multicolored': '多彩',
+      'black': '黑色',
+      'white': '白色',
+      'red': '紅色',
+      'blue': '藍色',
+      'aqua': '水藍色',
+      'pink': '粉紅色',
+      'purple': '紫色',
+      'green': '綠色',
+      'yellow': '黃色',
+      'brown': '棕色',
+      'gray': '灰色',
+      'gold': '金色',
+      'silver': '銀色',
+      'orange': '橘色',
+    };
+    final words = _clothingColorWords(tag);
+    if (words.isEmpty) return tag.zh;
+    return words.map((word) => colors[word] ?? word).join('與');
   }
 
   String _clothingModifierEnglish(TagItem tag) {
@@ -1336,33 +1399,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (color != null) related.add(color);
 
       final styleGroup = _clothingStyleGroup(base.group);
-      final style = styleGroup == null
-          ? null
-          : selected.cast<TagItem?>().firstWhere(
-                (tag) => tag?.group == styleGroup,
-                orElse: () => null,
-              );
-      if (style != null) related.add(style);
+      final styles = styleGroup == null
+          ? const <TagItem>[]
+          : selected.where((tag) => tag.group == styleGroup).toList();
+      related.addAll(styles);
 
       final modifiers = selected
           .where((tag) => tag.group == '服裝細節' || tag.group == '服裝材質')
           .toList();
       related.addAll(modifiers);
-      final colorWord = color == null ? null : _clothingColorWord(color);
-      final styleEn = style == null ? null : _clothingModifierEnglish(style);
       final baseLower = base.en.toLowerCase();
-      final effectiveColor =
-          colorWord != null && !baseLower.startsWith('$colorWord ')
-              ? colorWord
-              : null;
+      final colorPrefix = color == null ? null : _clothingColorPrefix(color);
+      final effectiveColor = colorPrefix != null &&
+              colorPrefix.isNotEmpty &&
+              !baseLower.startsWith('$colorPrefix ')
+          ? colorPrefix
+          : null;
       final enModifiers = <String>[
-        if (styleEn != null) styleEn,
+        ...styles.map(_clothingModifierEnglish),
         ...modifiers.map(_clothingModifierEnglish),
       ].where((part) =>
           part.trim().isNotEmpty && !baseLower.contains(part.toLowerCase()));
-      final styleZh = style == null ? null : _clothingModifierChinese(style);
       final zhModifiers = <String>[
-        if (styleZh != null) styleZh,
+        ...styles.map(_clothingModifierChinese),
         ...modifiers.map(_clothingModifierChinese),
       ].where((part) => part.trim().isNotEmpty && !base.zh.contains(part));
       final enParts = <String>[
@@ -1372,7 +1431,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ];
       final zhParts = <String>[
         if (effectiveColor != null && color != null)
-          _clothingColorChinese(color),
+          _clothingColorChinesePrefix(color),
         ...zhModifiers,
         base.zh,
       ];
@@ -1384,6 +1443,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tagIds: ids,
         personIndex: personIndex,
       ));
+      // BetterWaifu prompts often reinforce a one-piece garment with the
+      // generic clothing colour tag as well as the composed noun.
+      if (base.group == '服裝' && color != null) {
+        result.add(_GeneratedOutputTag(
+          zh: color.zh,
+          en: color.en,
+          tagId: color.id,
+          tagIds: [color.id],
+          personIndex: personIndex,
+        ));
+      }
     }
 
     for (final tag in selected.where((tag) => !consumed.contains(tag.id))) {
@@ -1407,6 +1477,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isHairStyleTag(TagItem tag) =>
+      tag.group == '髮型' ||
       tag.id.startsWith('hair_') ||
       _traitOverrideGroups(tag.en).contains('hair_style');
 
@@ -1829,14 +1900,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final direct = _tagByEnglish(trait.en);
     if (direct != null) return [direct];
 
-    final composite = RegExp(
-      r'^(very short|very long|long|medium|short)\s+([a-z-]+)\s+hair$',
+    final value = _cleanTag(trait.en);
+    final lengthFirst = RegExp(
+      r'^(very short|very long|waist-length|long|medium|short)\s+([a-z-]+)\s+hair$',
       caseSensitive: false,
-    ).firstMatch(_cleanTag(trait.en));
-    if (composite == null) return [_createCharacterTraitOption(trait)];
+    ).firstMatch(value);
+    final colorFirst = RegExp(
+      r'^([a-z-]+)\s+(very short|very long|waist-length|long|medium|short)\s+hair$',
+      caseSensitive: false,
+    ).firstMatch(value);
+    if (lengthFirst == null && colorFirst == null) {
+      return [_createCharacterTraitOption(trait)];
+    }
 
-    final length = '${composite.group(1)} hair';
-    final color = '${composite.group(2)} hair';
+    final lengthWord = lengthFirst?.group(1) ?? colorFirst!.group(2)!;
+    final colorWord = lengthFirst?.group(2) ?? colorFirst!.group(1)!;
+    final length = '$lengthWord hair';
+    final color = '$colorWord hair';
     final lengthTag = _tagByEnglish(length);
     final colorTag = _tagByEnglish(color);
     return [
@@ -1886,12 +1966,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final groups = <String>{};
     if (RegExp(
             r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold)\s+hair\b')
-        .hasMatch(value)) {
+            .hasMatch(value) ||
+        RegExp(
+                r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold)\s+(?:very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
+            .hasMatch(value)) {
       groups.add('hair_color');
     }
     if (RegExp(
-            r'\b(very\s+short|very\s+long|long|medium|short)\s+(?:[a-z-]+\s+)?hair\b')
-        .hasMatch(value)) {
+            r'\b(very\s+short|very\s+long|waist-length|long|medium|short)\s+(?:[a-z-]+\s+)?hair\b')
+            .hasMatch(value) ||
+        RegExp(
+                r'\b(?:blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold)\s+(?:very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
+            .hasMatch(value)) {
       groups.add('hair_length');
     }
     if (RegExp(
@@ -2108,11 +2194,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _cleanTag(String value) => value
       .trim()
-      .replaceAll(RegExp(r'^[,，\s]+|[,，\s]+$'), '')
+      .replaceAll(RegExp(r'^[,，。.;\s]+|[,，。.;\s]+$'), '')
       .replaceAll(RegExp(r'\s+'), ' ');
 
   List<String> _extraTags(String value) => value
-      .split(RegExp(r'[,，、。\n]+'))
+      .split(RegExp(r'[,，、。.;\n\r]+'))
       .map(_cleanTag)
       .where((item) => item.isNotEmpty)
       .toList();
@@ -2241,7 +2327,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _hairLengthTag(String value) {
     final normalized = _cleanTag(value).toLowerCase();
-    final match = RegExp(r'^(very short|very long|long|medium|short) hair$')
+    final match = RegExp(
+            r'^(very short|very long|waist-length|long|medium|short) hair$')
         .firstMatch(normalized);
     return match?.group(0);
   }
@@ -2595,6 +2682,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
     if (firstGroup != null && firstGroup == secondGroup) {
+      if (firstGroup == 'top_style' || firstGroup == 'bottom_style') {
+        return false;
+      }
       return firstGroup != 'clothing_color';
     }
     if ((firstGroup == 'arm_pose' &&
@@ -3032,12 +3122,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final result = <TagItem>[base];
     final colorGroup = _clothingColorGroup(base.group);
     if (colorGroup != null) {
-      for (final tag in _allTags.where((tag) => tag.group == colorGroup)) {
-        if (_clothingColorWord(tag) == colorWord) {
-          result.add(tag);
-          break;
-        }
-      }
+      final colors = _allTags
+          .where((tag) => tag.group == colorGroup)
+          .where((tag) {
+            final words = _clothingColorWords(tag);
+            return words.isNotEmpty && words.every(key.contains);
+          })
+          .toList()
+        ..sort((a, b) {
+          final wordCount = _clothingColorWords(b).length.compareTo(
+              _clothingColorWords(a).length);
+          return wordCount == 0
+              ? _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length)
+              : wordCount;
+        });
+      if (colors.isNotEmpty) result.add(colors.first);
     }
     final styleGroup = _clothingStyleGroup(base.group);
     if (styleGroup != null) {
@@ -3045,7 +3144,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final style = _clothingModifierEnglish(tag);
         if (style.isNotEmpty && key.contains(_englishTagKey(style))) {
           result.add(tag);
-          break;
         }
       }
     }
@@ -3620,6 +3718,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.remoteAnimeEn = anime.title;
       slot.animeQuery = '';
       _clearPersonSearchController(slotIndex, 'anime');
+      // Keep remote results available from the normal anime/character
+      // selectors even after the lookup panel is closed.
+      for (final remote in characters) {
+        final discovered = _remoteCatalogCharacter(anime, remote);
+        final existingIndex =
+            _customCharacters.indexWhere((item) => item.id == discovered.id);
+        if (existingIndex < 0) {
+          _customCharacters.add(discovered);
+        }
+      }
       setState(() {
         _remoteCharacters[slotIndex] = characters;
         _remoteLookupLoading.remove(slotIndex);
@@ -3814,11 +3922,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       final character = _remoteCatalogCharacter(anime, remote);
-      if (!_customCharacters.any((item) => item.id == character.id)) {
-        imported.add(character);
+      final existingIndex =
+          _customCharacters.indexWhere((item) => item.id == character.id);
+      if (existingIndex < 0) {
+        _customCharacters.add(character);
+      } else {
+        // A previous lookup may have saved the name without the optional
+        // description traits. Replace it with the enriched version now.
+        _customCharacters[existingIndex] = character;
       }
+      imported.add(character);
     }
-    _customCharacters.addAll(imported);
     if (imported.isNotEmpty) {
       final slot = _personSlots[slotIndex];
       slot.mode = '動漫角色';
@@ -4202,6 +4316,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   items: const [
                     '自訂角色',
                     '自訂特徵',
+                    '髮色',
                     '髮型',
                     '上衣',
                     '褲子',
@@ -4296,6 +4411,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子顏色',
                     '自訂角色',
                     '自訂特徵',
+                    '髮色',
                     '髮型',
                     '上衣',
                     '褲子',
@@ -4407,6 +4523,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'white': Color(0xfff5f5f5),
       'red': Color(0xffe5484d),
       'blue': Color(0xff3b82f6),
+      'aqua': Color(0xff22d3ee),
       'pink': Color(0xffec4899),
       'purple': Color(0xff8b5cf6),
       'green': Color(0xff22c55e),
@@ -4415,6 +4532,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'gray': Color(0xff9ca3af),
       'gold': Color(0xffd4a72c),
       'silver': Color(0xffcbd5e1),
+      'orange': Color(0xfff97316),
     };
     final swatch = Container(
       width: 28,
@@ -5265,14 +5383,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
                   .where((tag) =>
-                      ['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'].contains(tag.group))
+                      ['外觀特徵', '髮色', '髮型', '臉部特徵', '胸部', '裸露']
+                          .contains(tag.group))
                   .map((tag) => tag.zh)
                   .join('、')
                   .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
-          _stepPersonTagPicker(['外觀特徵', '髮型', '臉部特徵', '胸部', '裸露'],
+          _stepPersonTagPicker(
+              ['外觀特徵', '髮色', '髮型', '臉部特徵', '胸部', '裸露'],
               nextLabel: '下一步：服裝',
-              instruction: '請在每位人物自己的區塊內設定外觀、髮型、臉部、胸部與裸露標籤。')),
+              instruction: '請在每位人物自己的區塊內設定外觀、髮色、髮型、臉部、胸部與裸露標籤。')),
       _stepCard(
           3,
           '服裝與穿脫狀態',
