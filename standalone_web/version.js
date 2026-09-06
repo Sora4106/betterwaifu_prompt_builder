@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.24",
-  "build": 26,
-  "label": "1.1.24+26",
+  "version": "1.1.25",
+  "build": 27,
+  "label": "1.1.25+27",
   "history": [
+    {
+      "version": "1.1.25",
+      "build": 27,
+      "label": "1.1.25+27",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: preserve characters during reverse prompt import"
+    },
     {
       "version": "1.1.24",
       "build": 26,

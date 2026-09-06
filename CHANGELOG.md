@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.25+27 - 2026-09-06
+
+- 自動偵測：feat: preserve characters during reverse prompt import
+
+
 ## 1.1.24+26 - 2026-09-06
 
 - 自動偵測：fix: repair category chip widget syntax
