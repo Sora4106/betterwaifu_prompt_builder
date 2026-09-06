@@ -1,7 +1,8 @@
-const appVersion = '1.1.34';
-const appBuildNumber = 36;
-const appVersionLabel = '1.1.34+36';
+const appVersion = '1.1.35';
+const appBuildNumber = 37;
+const appVersionLabel = '1.1.35+37';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: scope clothing styles and wear states'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：Merge remote-tracking branch \'origin/main\''},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：Merge remote-tracking branch \'origin/main\''},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: organize eye colors and special eye tags'},

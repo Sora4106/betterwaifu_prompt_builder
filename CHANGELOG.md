@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.35+37 - 2026-09-06
+
+- 自動偵測：feat: scope clothing styles and wear states
+
+
 ## 1.1.34+36 - 2026-09-06
 
 - 自動偵測：Merge remote-tracking branch 'origin/main'
