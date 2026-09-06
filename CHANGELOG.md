@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.32+34 - 2026-09-06
+
+- 自動偵測：feat: organize eye colors and special eye tags
+
+
 ## 1.1.31+33 - 2026-09-06
 
 - 自動偵測：feat: add hierarchical color selectors
