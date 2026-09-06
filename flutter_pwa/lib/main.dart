@@ -2753,6 +2753,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ? tag.id.substring('catalog_'.length)
           : tag.id);
 
+  bool _isOnePieceOutfitSetTag(TagItem tag) =>
+      tag.group == '服裝風格' && tag.conflictGroup == 'one_piece';
+
   String? _clothingScopeForBase(TagItem tag) {
     if (!_isClothingBaseTag(tag) && !_isLegacyClothingStyleTag(tag))
       return null;
@@ -2811,7 +2814,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (scope == 'pants' || scope == 'skirt') {
       groups.add('\u4E0B\u8EAB\u98A8\u683C');
     }
-    if (scope == 'onepiece') groups.add('\u670D\u88DD\u98A8\u683C');
     return groups;
   }
 
@@ -3150,6 +3152,61 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final consumed = <String>{};
     final result = <_GeneratedOutputTag>[];
 
+    // 舊版「服裝風格」資料本身就是完整的連身套裝組合，直接以完整名稱輸出，
+    // 避免再拆成「服裝 + 風格 + 顏色」多個中文項目。
+    for (final outfit in selected.where(_isOnePieceOutfitSetTag)) {
+      final related = <TagItem>[outfit];
+      final colorGroup = _clothingColorGroup(_clothingGroupOnePiece);
+      final color = colorGroup == null
+          ? null
+          : selected.cast<TagItem?>().firstWhere(
+                (tag) => tag?.group == colorGroup,
+                orElse: () => null,
+              );
+      if (color != null) related.add(color);
+
+      final trimColorGroup = _clothingTrimColorGroup(_clothingGroupOnePiece);
+      final trimColor = trimColorGroup == null
+          ? null
+          : selected.cast<TagItem?>().firstWhere(
+                (tag) => tag?.group == trimColorGroup,
+                orElse: () => null,
+              );
+      if (trimColor != null) related.add(trimColor);
+
+      final outfitLower = outfit.en.toLowerCase();
+      final colorPrefix = color == null ? null : _clothingColorPrefix(color);
+      final effectiveColor = colorPrefix != null &&
+              colorPrefix.isNotEmpty &&
+              !outfitLower.startsWith('$colorPrefix ')
+          ? colorPrefix
+          : null;
+      final chineseColor =
+          color == null ? null : _clothingColorChinesePrefix(color);
+      final zhParts = <String>[
+        if (chineseColor != null &&
+            chineseColor.isNotEmpty &&
+            !outfit.zh.startsWith(chineseColor))
+          chineseColor,
+        outfit.zh,
+        if (trimColor != null) trimColor.zh,
+      ];
+      final enParts = <String>[
+        if (effectiveColor != null) effectiveColor,
+        outfit.en,
+        if (trimColor != null && trimColor.en.trim().isNotEmpty)
+          'with ${trimColor.en.trim()}',
+      ];
+      consumed.addAll(related.map((tag) => tag.id));
+      result.add(_GeneratedOutputTag(
+        zh: zhParts.join(),
+        en: enParts.join(' '),
+        tagId: outfit.id,
+        tagIds: related.map((tag) => tag.id).toList(),
+        personIndex: personIndex,
+      ));
+    }
+
     for (final base in bases) {
       final scope = _clothingScopeForBase(base);
       if (scope == null) continue;
@@ -3186,6 +3243,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .where((tag) =>
               tag.id != base.id &&
               (styleGroups.contains(tag.group) ||
+                  (base.group == _clothingGroupOnePiece &&
+                      _isOnePieceOutfitSetTag(tag)) ||
                   (_isLegacyClothingStyleTag(tag) &&
                       _clothingScopeForTag(tag) == scope)))
           .toList();
@@ -7551,15 +7610,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           activeGroup == '表情' && tag.group == '臉部特徵';
+      final legacyOnePieceStyleInOnePieceGroup =
+          activeGroup == _scopedClothingGroup('onepiece', 'style') &&
+              _isOnePieceOutfitSetTag(tag);
       final inGroup = (groups.contains(tag.group) ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup) &&
+              faceExpressionInMergedGroup ||
+              legacyOnePieceStyleInOnePieceGroup) &&
           (activeGroup == null ||
               tag.group == activeGroup ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup);
+              faceExpressionInMergedGroup ||
+              legacyOnePieceStyleInOnePieceGroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
