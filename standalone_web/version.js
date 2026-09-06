@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.23",
-  "build": 25,
-  "label": "1.1.23+25",
+  "version": "1.1.24",
+  "build": 26,
+  "label": "1.1.24+26",
   "history": [
+    {
+      "version": "1.1.24",
+      "build": 26,
+      "label": "1.1.24+26",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: repair category chip widget syntax"
+    },
     {
       "version": "1.1.23",
       "build": 25,
