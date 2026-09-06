@@ -2,7 +2,7 @@
 
 ## 1.1.33+35 - 2026-09-06
 
-- fix: merge face and expression tags
+- 自動偵測：Merge remote-tracking branch 'origin/main'
 
 
 ## 1.1.32+34 - 2026-09-06
