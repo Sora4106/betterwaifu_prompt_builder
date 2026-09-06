@@ -1,7 +1,8 @@
-const appVersion = '1.1.41';
-const appBuildNumber = 43;
-const appVersionLabel = '1.1.41+43';
+const appVersion = '1.1.42';
+const appBuildNumber = 44;
+const appVersionLabel = '1.1.42+44';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: remove duplicate one-piece clothing color'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show clothing details per selected garment'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: save clothing designs as combinations'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: prioritize combination editor upper panel'},

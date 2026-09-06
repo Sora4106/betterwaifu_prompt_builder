@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.42+44 - 2026-09-06
+
+- 自動偵測：fix: remove duplicate one-piece clothing color
+
+
 ## 1.1.41+43 - 2026-09-06
 
 - 自動偵測：fix: show clothing details per selected garment

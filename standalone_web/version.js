@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.41",
-  "build": 43,
-  "label": "1.1.41+43",
+  "version": "1.1.42",
+  "build": 44,
+  "label": "1.1.42+44",
   "history": [
+    {
+      "version": "1.1.42",
+      "build": 44,
+      "label": "1.1.42+44",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: remove duplicate one-piece clothing color"
+    },
     {
       "version": "1.1.41",
       "build": 43,
