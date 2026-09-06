@@ -1,7 +1,8 @@
-const appVersion = '1.1.22';
-const appBuildNumber = 24;
-const appVersionLabel = '1.1.22+24';
+const appVersion = '1.1.23';
+const appBuildNumber = 25;
+const appVersionLabel = '1.1.23+25';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: reverse composed prompt tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add prompt tag reverse import'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: compose clothing color and detail tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: group multi-character prompt tags'},

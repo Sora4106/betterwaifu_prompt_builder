@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.22",
-  "build": 24,
-  "label": "1.1.22+24",
+  "version": "1.1.23",
+  "build": 25,
+  "label": "1.1.23+25",
   "history": [
+    {
+      "version": "1.1.23",
+      "build": 25,
+      "label": "1.1.23+25",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: reverse composed prompt tags"
+    },
     {
       "version": "1.1.22",
       "build": 24,

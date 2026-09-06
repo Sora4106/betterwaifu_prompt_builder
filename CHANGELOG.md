@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.23+25 - 2026-09-06
+
+- 自動偵測：feat: reverse composed prompt tags
+
+
 ## 1.1.22+24 - 2026-09-06
 
 - 自動偵測：feat: add prompt tag reverse import
