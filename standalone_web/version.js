@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.28",
-  "build": 30,
-  "label": "1.1.28+30",
+  "version": "1.1.29",
+  "build": 31,
+  "label": "1.1.29+31",
   "history": [
+    {
+      "version": "1.1.29",
+      "build": 31,
+      "label": "1.1.29+31",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add object-linked actions and remove avatar preview"
+    },
     {
       "version": "1.1.28",
       "build": 30,

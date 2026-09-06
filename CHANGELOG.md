@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.29+31 - 2026-09-06
+
+- 自動偵測：feat: add object-linked actions and remove avatar preview
+
+
 ## 1.1.28+30 - 2026-09-06
 
 - 自動偵測：feat: add trim colors accessory placement and masturbation tags
