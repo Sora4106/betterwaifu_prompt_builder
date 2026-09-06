@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.40",
-  "build": 42,
-  "label": "1.1.40+42",
+  "version": "1.1.41",
+  "build": 43,
+  "label": "1.1.41+43",
   "history": [
+    {
+      "version": "1.1.41",
+      "build": 43,
+      "label": "1.1.41+43",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: show clothing details per selected garment"
+    },
     {
       "version": "1.1.40",
       "build": 42,

@@ -1,7 +1,8 @@
-const appVersion = '1.1.40';
-const appBuildNumber = 42;
-const appVersionLabel = '1.1.40+42';
+const appVersion = '1.1.41';
+const appBuildNumber = 43;
+const appVersionLabel = '1.1.41+43';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show clothing details per selected garment'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: save clothing designs as combinations'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: prioritize combination editor upper panel'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: enlarge combination editor upper section'},
