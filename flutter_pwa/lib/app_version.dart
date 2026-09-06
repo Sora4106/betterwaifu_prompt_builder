@@ -1,7 +1,8 @@
-const appVersion = '1.1.36';
-const appBuildNumber = 38;
-const appVersionLabel = '1.1.36+38';
+const appVersion = '1.1.37';
+const appBuildNumber = 39;
+const appVersionLabel = '1.1.37+39';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: expand combination editor workspace'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add reusable prompt combinations'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: scope clothing styles and wear states'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：Merge remote-tracking branch \'origin/main\''},
