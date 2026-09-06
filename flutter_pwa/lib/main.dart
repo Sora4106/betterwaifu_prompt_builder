@@ -6667,94 +6667,117 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: name,
-                    autofocus: existing == null,
-                    decoration: const InputDecoration(
-                      labelText: '\u7D44\u5408\u4E2D\u6587\u540D\u7A31',
-                      hintText:
-                          '\u4F8B\u5982\u5750\u5728\u6905\u5B50\u4E0A\u63A1\u88D9',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: extra,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText:
-                          '\u984D\u5916\u6B63\u5411\u6A19\u7C64\uFF08\u4E2D\u6587\u6216\u82F1\u6587\uFF09',
-                      hintText:
-                          'custom prompt, \u6216\u7528\u9017\u865F\u5206\u9694',
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '\u5DF2\u9078\u6A19\u7C64\uFF1A${selectedTags.length} \u500B\uFF08\u76F8\u540C\u885D\u7A81\u985E\u5225\u6703\u5728\u5957\u7528\u6642\u63D0\u793A\u66FF\u63DB\uFF09',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  if (selectedTags.isNotEmpty)
-                    SizedBox(
-                      height: 72,
+                  Flexible(
+                    flex: 3,
+                    fit: FlexFit.loose,
+                    child: Scrollbar(
+                      thumbVisibility: true,
                       child: SingleChildScrollView(
-                        child: Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: selectedTags
-                              .map((tag) => InputChip(
-                                    label: Text(tag.en),
-                                    onDeleted: () => setDialogState(
-                                        () => selected.remove(tag.id)),
-                                  ))
-                              .toList(),
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: name,
+                              autofocus: existing == null,
+                              minLines: 2,
+                              maxLines: 3,
+                              decoration: const InputDecoration(
+                                labelText:
+                                    '\u7D44\u5408\u4E2D\u6587\u540D\u7A31',
+                                hintText:
+                                    '\u4F8B\u5982\u5750\u5728\u6905\u5B50\u4E0A\u63A1\u88D9',
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: extra,
+                              minLines: 3,
+                              maxLines: 5,
+                              decoration: const InputDecoration(
+                                labelText:
+                                    '\u984D\u5916\u6B63\u5411\u6A19\u7C64\uFF08\u4E2D\u6587\u6216\u82F1\u6587\uFF09',
+                                hintText:
+                                    'custom prompt, \u6216\u7528\u9017\u865F\u5206\u9694',
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '\u5DF2\u9078\u6A19\u7C64\uFF1A${selectedTags.length} \u500B\uFF08\u76F8\u540C\u885D\u7A81\u985E\u5225\u6703\u5728\u5957\u7528\u6642\u63D0\u793A\u66FF\u63DB\uFF09',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 6),
+                            if (selectedTags.isNotEmpty)
+                              SizedBox(
+                                height: 132,
+                                child: SingleChildScrollView(
+                                  child: Wrap(
+                                    spacing: 6,
+                                    runSpacing: 6,
+                                    children: selectedTags
+                                        .map((tag) => InputChip(
+                                              label: Text(tag.en),
+                                              onDeleted: () => setDialogState(
+                                                  () =>
+                                                      selected.remove(tag.id)),
+                                            ))
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 6),
+                            SizedBox(
+                              height: 122,
+                              child: SingleChildScrollView(
+                                child: Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: [
+                                    ChoiceChip(
+                                      label: const Text(
+                                          '\u5168\u90E8\u5206\u985E'),
+                                      selected: activeGroup.isEmpty,
+                                      onSelected: (_) => setDialogState(
+                                          () => activeGroup = ''),
+                                    ),
+                                    ...groups.map((group) => ChoiceChip(
+                                          label: Text(_wizardGroupLabel(group)),
+                                          selected: activeGroup == group,
+                                          onSelected: (_) => setDialogState(
+                                              () => activeGroup = group),
+                                        )),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: search,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.search),
+                                labelText:
+                                    '\u641C\u5C0B\u53EF\u52A0\u5165\u7684\u6A19\u7C64',
+                                suffixIcon: search.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        onPressed: () {
+                                          search.clear();
+                                          setDialogState(() {});
+                                        },
+                                        icon: const Icon(Icons.clear),
+                                      ),
+                              ),
+                              onChanged: (_) => setDialogState(() {}),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                         ),
                       ),
                     ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    height: 76,
-                    child: SingleChildScrollView(
-                      child: Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          ChoiceChip(
-                            label: const Text('\u5168\u90E8\u5206\u985E'),
-                            selected: activeGroup.isEmpty,
-                            onSelected: (_) =>
-                                setDialogState(() => activeGroup = ''),
-                          ),
-                          ...groups.map((group) => ChoiceChip(
-                                label: Text(_wizardGroupLabel(group)),
-                                selected: activeGroup == group,
-                                onSelected: (_) =>
-                                    setDialogState(() => activeGroup = group),
-                              )),
-                        ],
-                      ),
-                    ),
                   ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: search,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      labelText:
-                          '\u641C\u5C0B\u53EF\u52A0\u5165\u7684\u6A19\u7C64',
-                      suffixIcon: search.text.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                search.clear();
-                                setDialogState(() {});
-                              },
-                              icon: const Icon(Icons.clear),
-                            ),
-                    ),
-                    onChanged: (_) => setDialogState(() {}),
-                  ),
-                  const SizedBox(height: 8),
                   Expanded(
+                    flex: 2,
                     child: Scrollbar(
                       thumbVisibility: true,
                       child: SingleChildScrollView(
