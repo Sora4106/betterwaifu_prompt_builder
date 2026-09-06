@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.21+23 - 2026-09-06
+
+- 自動偵測：feat: compose clothing color and detail tags
+
+
 ## 1.1.20+22 - 2026-09-05
 
 - 自動偵測：feat: group multi-character prompt tags

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.20",
-  "build": 22,
-  "label": "1.1.20+22",
+  "version": "1.1.21",
+  "build": 23,
+  "label": "1.1.21+23",
   "history": [
+    {
+      "version": "1.1.21",
+      "build": 23,
+      "label": "1.1.21+23",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: compose clothing color and detail tags"
+    },
     {
       "version": "1.1.20",
       "build": 22,
