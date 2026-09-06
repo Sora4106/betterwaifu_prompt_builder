@@ -177,6 +177,18 @@ const supplementalTags = <CatalogTagData>[
   CatalogTagData(
       id: 'face_dizzy', group: '臉部特徵', zh: '暈眩眼', en: 'dizzy', order: 1),
   CatalogTagData(
+      id: 'face_furrowed_brow',
+      group: '臉部特徵',
+      zh: '皺眉',
+      en: 'furrowed brow',
+      order: 1),
+  CatalogTagData(
+      id: 'face_vacant_eyes',
+      group: '臉部特徵',
+      zh: '眼神渙散',
+      en: 'vacant eyes',
+      order: 1),
+  CatalogTagData(
       id: 'face_expressionless',
       group: '臉部特徵',
       zh: '面無表情',

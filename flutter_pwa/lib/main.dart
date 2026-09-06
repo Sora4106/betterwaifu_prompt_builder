@@ -9,6 +9,7 @@ import 'catalog_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
+const _stepLayoutVersion = 2;
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -96,6 +97,217 @@ class TagItem {
         builtIn: false,
         conflictGroup: json['conflictGroup'] as String?,
       );
+}
+
+class _PersonAvatarPreview extends StatelessWidget {
+  const _PersonAvatarPreview({required this.tags});
+
+  final List<TagItem> tags;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 82,
+        height: 104,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: const Color(0xff25253a),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _buttonBorder),
+        ),
+        child: CustomPaint(
+          painter: _PersonAvatarPainter(tags),
+        ),
+      );
+}
+
+class _PersonAvatarPainter extends CustomPainter {
+  _PersonAvatarPainter(this.tags);
+
+  final List<TagItem> tags;
+
+  Set<String> get _words => tags.map((tag) => tag.en.toLowerCase()).toSet();
+
+  Color _tagColor({required String suffix, required Color fallback}) {
+    const colors = <String, Color>{
+      'black': Color(0xff17171c),
+      'white': Color(0xfff5f5f5),
+      'red': Color(0xffe5484d),
+      'blue': Color(0xff3b82f6),
+      'aqua': Color(0xff22d3ee),
+      'pink': Color(0xffec4899),
+      'purple': Color(0xff8b5cf6),
+      'green': Color(0xff22c55e),
+      'yellow': Color(0xfffacc15),
+      'brown': Color(0xff925f38),
+      'gray': Color(0xff9ca3af),
+      'gold': Color(0xffd4a72c),
+      'silver': Color(0xffcbd5e1),
+      'orange': Color(0xfff97316),
+      'blonde': Color(0xffffd166),
+    };
+    for (final tag in tags) {
+      final value = tag.en.toLowerCase();
+      if (!value.contains(suffix)) continue;
+      for (final entry in colors.entries) {
+        if (value.contains(entry.key)) return entry.value;
+      }
+    }
+    return fallback;
+  }
+
+  bool _has(String value) => _words.any((word) => word.contains(value));
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final hairColor = _tagColor(
+        suffix: 'hair', fallback: const Color(0xff6f4e37));
+    final eyeColor = _tagColor(
+        suffix: 'eye', fallback: const Color(0xff4caf50));
+    final words = _words;
+    final longHair = _has('long hair') || _has('waist-length') || _has('very long');
+    final shortHair = _has('short hair') || _has('pixie');
+    final twinTails = _has('twintail') || _has('twin tails');
+    final ponytail = _has('ponytail');
+    final bun = _has('bun') || _has('odango');
+    final closedEyes = _has('closed eyes') || _has('sleepy eyes');
+    final vacantEyes = _has('vacant eyes') || _has('blank eyes') || _has('dull eyes');
+    final dizzyEyes = _has('dizzy');
+    final furrowed = _has('furrowed brow') || _has('angry') || _has('frown');
+    final smiling = _has('smile') || _has('grin') || _has('smirk');
+    final sad = _has('sad') || _has('crying') || _has('tears');
+    final openMouth = _has('open mouth') || _has('parted lips');
+    final blush = _has('blush') || _has('embarrassed');
+
+    final background = Paint()..color = const Color(0xff30304b);
+    canvas.drawCircle(Offset(size.width / 2, size.height * .46), size.width * .44,
+        background);
+
+    final skin = Paint()..color = const Color(0xffffd8c2);
+    final hair = Paint()..color = hairColor;
+    final dark = Paint()
+      ..color = const Color(0xff34303c)
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final head = Rect.fromCenter(
+      center: Offset(size.width / 2, size.height * .43),
+      width: size.width * .55,
+      height: size.height * .48,
+    );
+    final shoulders = Path()
+      ..moveTo(size.width * .16, size.height)
+      ..quadraticBezierTo(size.width * .18, size.height * .72,
+          size.width / 2, size.height * .7)
+      ..quadraticBezierTo(size.width * .82, size.height * .72,
+          size.width * .84, size.height)
+      ..close();
+    canvas.drawPath(shoulders, Paint()..color = const Color(0xff8b7cc8));
+
+    if (longHair) {
+      final longBack = RRect.fromRectAndRadius(
+        Rect.fromLTWH(head.left - 7, head.top + 16, head.width + 14,
+            size.height * .52),
+        const Radius.circular(24),
+      );
+      canvas.drawRRect(longBack, hair);
+    }
+    if (twinTails) {
+      canvas.drawOval(
+          Rect.fromLTWH(head.left - 13, head.top + 20, 17, 42), hair);
+      canvas.drawOval(
+          Rect.fromLTWH(head.right - 4, head.top + 20, 17, 42), hair);
+    } else if (ponytail) {
+      canvas.drawOval(
+          Rect.fromLTWH(head.right - 1, head.top + 8, 21, 47), hair);
+    }
+    if (bun) {
+      canvas.drawCircle(Offset(size.width / 2, head.top - 2), 12, hair);
+    }
+
+    canvas.drawOval(head, skin);
+    canvas.drawOval(
+        Rect.fromLTWH(head.left - 4, head.top - 5, head.width + 8, head.height *
+            (shortHair ? .45 : .54)),
+        hair);
+    final fringe = Path()
+      ..moveTo(head.left + 4, head.top + head.height * .2)
+      ..quadraticBezierTo(size.width / 2, head.top - 2,
+          head.right - 4, head.top + head.height * .2)
+      ..lineTo(head.right - 10, head.top + head.height * .29)
+      ..quadraticBezierTo(size.width / 2, head.top + head.height * .2,
+          head.left + 10, head.top + head.height * .29)
+      ..close();
+    canvas.drawPath(fringe, hair);
+
+    final eyePaint = Paint()..color = eyeColor;
+    final leftEye = Offset(size.width * .39, size.height * .46);
+    final rightEye = Offset(size.width * .61, size.height * .46);
+    if (dizzyEyes) {
+      for (final eye in [leftEye, rightEye]) {
+        canvas.drawLine(eye + const Offset(-4, -4), eye + const Offset(4, 4), dark);
+        canvas.drawLine(eye + const Offset(4, -4), eye + const Offset(-4, 4), dark);
+      }
+    } else if (closedEyes) {
+      canvas.drawArc(Rect.fromCenter(center: leftEye, width: 12, height: 8),
+          0, pi, false, dark);
+      canvas.drawArc(Rect.fromCenter(center: rightEye, width: 12, height: 8),
+          0, pi, false, dark);
+    } else {
+      for (final eye in [leftEye, rightEye]) {
+        canvas.drawOval(
+            Rect.fromCenter(center: eye, width: vacantEyes ? 11 : 9, height: 12),
+            Paint()..color = Colors.white);
+        canvas.drawCircle(eye, vacantEyes ? 4.2 : 3, eyePaint);
+        if (!vacantEyes) {
+          canvas.drawCircle(eye + const Offset(1, -1), 1, Paint()..color = Colors.white);
+        }
+      }
+    }
+
+    final browPaint = Paint()
+      ..color = const Color(0xff513a32)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    if (furrowed) {
+      canvas.drawLine(Offset(size.width * .32, size.height * .39),
+          Offset(size.width * .45, size.height * .41), browPaint);
+      canvas.drawLine(Offset(size.width * .55, size.height * .41),
+          Offset(size.width * .68, size.height * .39), browPaint);
+    } else {
+      canvas.drawLine(Offset(size.width * .33, size.height * .4),
+          Offset(size.width * .44, size.height * .39), browPaint);
+      canvas.drawLine(Offset(size.width * .56, size.height * .39),
+          Offset(size.width * .67, size.height * .4), browPaint);
+    }
+
+    if (blush) {
+      final blushPaint = Paint()..color = const Color(0xfff18b9b).withOpacity(.55);
+      canvas.drawOval(Rect.fromLTWH(head.left + 3, size.height * .55, 13, 5), blushPaint);
+      canvas.drawOval(Rect.fromLTWH(head.right - 16, size.height * .55, 13, 5), blushPaint);
+    }
+    final mouth = Paint()
+      ..color = const Color(0xff8b3f4b)
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    if (openMouth) {
+      canvas.drawOval(Rect.fromCenter(
+          center: Offset(size.width / 2, size.height * .61), width: 10, height: 8),
+          Paint()..color = const Color(0xff8b3f4b));
+    } else {
+      final mouthPath = Path()
+        ..moveTo(size.width * .44, size.height * .61)
+        ..quadraticBezierTo(size.width / 2,
+            size.height * (smiling ? .66 : sad ? .57 : .62),
+            size.width * .56, size.height * .61);
+      canvas.drawPath(mouthPath, mouth);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PersonAvatarPainter oldDelegate) =>
+      oldDelegate.tags != tags;
 }
 
 class _GeneratedOutputTag {
@@ -356,19 +568,25 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_color'),
       _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
           conflictGroup: 'hair_color'),
-      _tag('trait_green_eyes', '外觀特徵', '綠眼睛', 'green eyes', 1),
-      _tag('trait_blue_eyes', '外觀特徵', '藍眼睛', 'blue eyes', 1),
-      _tag('trait_red_eyes', '外觀特徵', '紅眼睛', 'red eyes', 1),
-      _tag('trait_purple_eyes', '外觀特徵', '紫眼睛', 'purple eyes', 1),
-      _tag('trait_tall', '外觀特徵', '高挑身材', 'tall', 1),
-      _tag('trait_curvy', '外觀特徵', '曲線身材', 'curvy', 1),
-      _tag('trait_slim', '外觀特徵', '纖細身材', 'slim', 1),
-      _tag('trait_mature', '外觀特徵', '成熟外貌（成年）', 'mature female', 1),
-      _tag('trait_makeup', '外觀特徵', '化妝', 'makeup', 1),
-      _tag('trait_earrings', '外觀特徵', '耳環', 'earrings', 1),
-      _tag('trait_necklace', '外觀特徵', '項鍊', 'necklace', 1),
-      _tag('trait_tattoo', '外觀特徵', '刺青', 'tattoo', 1),
-      _tag('trait_nail_polish', '外觀特徵', '指甲油', 'nail polish', 1),
+      // Eye colours stay in appearance, but are sorted to the bottom of the
+      // appearance picker so the ordinary appearance tags remain together.
+      _tag('trait_green_eyes', '外觀特徵', '綠眼睛', 'green eyes', 99,
+          conflictGroup: 'eye_color'),
+      _tag('trait_blue_eyes', '外觀特徵', '藍眼睛', 'blue eyes', 99,
+          conflictGroup: 'eye_color'),
+      _tag('trait_red_eyes', '外觀特徵', '紅眼睛', 'red eyes', 99,
+          conflictGroup: 'eye_color'),
+      _tag('trait_purple_eyes', '外觀特徵', '紫眼睛', 'purple eyes', 99,
+          conflictGroup: 'eye_color'),
+      _tag('trait_tall', '身體特徵', '高挑身材', 'tall', 1),
+      _tag('trait_curvy', '身體特徵', '曲線身材', 'curvy', 1),
+      _tag('trait_slim', '身體特徵', '纖細身材', 'slim', 1),
+      _tag('trait_mature', '身體特徵', '成熟外貌（成年）', 'mature female', 1),
+      _tag('trait_makeup', '額外特徵', '化妝', 'makeup', 1),
+      _tag('trait_earrings', '額外特徵', '耳環', 'earrings', 1),
+      _tag('trait_necklace', '額外特徵', '項鍊', 'necklace', 1),
+      _tag('trait_tattoo', '額外特徵', '刺青', 'tattoo', 1),
+      _tag('trait_nail_polish', '額外特徵', '指甲油', 'nail polish', 1),
 
       // Hairstyle types.
       _tag('hair_very_short', '髮型', '極短髮', 'very short hair', 1,
@@ -726,7 +944,7 @@ List<TagItem> _seedTags() => [
       _tag('pose_lying_table', '姿勢', '躺在桌上', 'lying on the table', 4,
           conflictGroup: 'basic_pose'),
       _tag('pose_lift_skirt', '姿勢', '掀起裙子', 'lift up the skirt', 4,
-          adult: true),
+          adult: true, conflictGroup: 'independent_pose_detail'),
       _tag('pose_one_leg_up', '姿勢', '抬起單腳', 'one leg raised', 4,
           conflictGroup: 'leg_raise'),
       _tag('pose_left_leg_up', '姿勢', '抬起左腳', 'left leg raised', 4,
@@ -1134,11 +1352,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _outputGroupOrder(String group) {
     const order = <String, int>{
       '外觀特徵': 10,
-      '臉部特徵': 11,
-      '胸部': 12,
-      '裸露': 13,
-      '髮色': 14,
-      '髮型': 15,
+      '身體特徵': 11,
+      '臉部特徵': 12,
+      '額外特徵': 13,
+      '胸部': 14,
+      '裸露': 15,
+      '髮色': 16,
+      '髮型': 17,
       '服裝': 20,
       '服裝風格': 21,
       '服裝顏色': 22,
@@ -1564,7 +1784,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _groups => [
         '全部',
-        ..._allTags.map((tag) => tag.group).toSet(),
+        ..._allTags
+            .map((tag) => tag.group)
+            .where((group) => group != '髮色')
+            .toSet(),
       ];
 
   @override
@@ -1750,8 +1973,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
-      _stepIndex =
-          ((data['stepIndex'] as num?)?.toInt() ?? 0).clamp(0, 6).toInt();
+      var savedStep = (data['stepIndex'] as num?)?.toInt() ?? 0;
+      if ((data['stepLayoutVersion'] as num?)?.toInt() != _stepLayoutVersion) {
+        // The old layout had a separate expression step at index 4. It now
+        // lives inside character features, so map saved progress safely.
+        if (savedStep == 4) {
+          savedStep = 2;
+        } else if (savedStep >= 5) {
+          savedStep -= 1;
+        }
+      }
+      _stepIndex = savedStep.clamp(0, 5).toInt();
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -1794,6 +2026,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'presets': _presets.map((preset) => preset.toJson()).toList(),
         'peopleCount': _peopleCount,
         'stepIndex': _stepIndex,
+        'stepLayoutVersion': _stepLayoutVersion,
         'gender': _gender,
         'model': _model,
         'sampler': _sampler,
@@ -1875,6 +2108,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  String _characterTraitGroup(CatalogTagData trait) {
+    if (trait.group != '自訂特徵') return trait.group;
+    final value = trait.en.toLowerCase();
+    if (RegExp(
+            r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold)\s+hair\b')
+        .hasMatch(value)) {
+      return '髮色';
+    }
+    if (value.contains('hair')) return '髮型';
+    if (RegExp(r'\b(?:[a-z-]+\s+)?eyes?\b').hasMatch(value)) {
+      return '外觀特徵';
+    }
+    if (['slim', 'tall', 'curvy', 'muscular', 'petite', 'mature female']
+        .contains(value)) {
+      return '身體特徵';
+    }
+    if (['makeup', 'earrings', 'necklace', 'tattoo', 'nail polish', 'glasses']
+        .contains(value)) {
+      return '額外特徵';
+    }
+    return '外觀特徵';
+  }
+
   TagItem _createCharacterTraitOption(CatalogTagData trait) {
     final existing = _tagByEnglish(trait.en);
     if (existing != null) return existing;
@@ -1884,7 +2140,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final option = TagItem(
       id: id,
-      group: trait.group == '自訂特徵' ? '外觀特徵' : trait.group,
+      group: _characterTraitGroup(trait),
       zh: trait.zh,
       en: trait.en,
       order: trait.order,
@@ -2726,6 +2982,106 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return false;
   }
 
+  bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
+    if (groups.contains(tag.group)) return true;
+    return groups.contains('髮型') && tag.group == '髮色';
+  }
+
+  void _randomizePersonGroups(int personIndex, List<String> groups) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final random = Random();
+    final target = _personTagIds(personIndex);
+    final groupSet = groups.toSet();
+    final current = _selectedTagsForPerson(personIndex);
+    final protectedTags = current
+        .where((tag) => !_tagBelongsToRandomGroups(tag, groupSet))
+        .toList();
+    target.removeWhere((id) => _allTags.any((tag) =>
+        tag.id == id && _tagBelongsToRandomGroups(tag, groupSet)));
+    final added = <TagItem>[];
+
+    bool add(TagItem? tag) {
+      if (tag == null ||
+          protectedTags.any((other) => _tagsConflict(other, tag)) ||
+          added.any((other) => _tagsConflict(other, tag))) {
+        return false;
+      }
+      target.add(tag.id);
+      added.add(tag);
+      return true;
+    }
+
+    List<TagItem> candidates(String group) => _allTags
+        .where((tag) =>
+            tag.group == group && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+
+    void addRandomFromGroup(String group, {int min = 0, int max = 1}) {
+      final pool = candidates(group);
+      if (pool.isEmpty) return;
+      final count = min + random.nextInt(max - min + 1);
+      if (count == 0) return;
+      var attempts = 0;
+      for (final tag in pool) {
+        if (attempts++ >= pool.length || added.length >= 12) break;
+        if (add(tag) && added.where((item) => item.group == group).length >= count) {
+          break;
+        }
+      }
+    }
+
+    if (groupSet.contains('外觀特徵')) {
+      addRandomFromGroup('外觀特徵', max: 3);
+    }
+    if (groupSet.contains('身體特徵')) {
+      addRandomFromGroup('身體特徵', max: 2);
+    }
+    if (groupSet.contains('額外特徵')) {
+      addRandomFromGroup('額外特徵', max: 2);
+    }
+    if (groupSet.contains('髮型')) {
+      addRandomFromGroup('髮色', min: 1);
+      addRandomFromGroup('髮型', min: 1, max: 2);
+    }
+    if (groupSet.contains('臉部特徵')) {
+      addRandomFromGroup('臉部特徵', max: 3);
+    }
+    if (groupSet.contains('表情')) {
+      addRandomFromGroup('表情', max: 4);
+    }
+    if (groupSet.contains('胸部')) {
+      addRandomFromGroup('胸部', min: 1);
+    }
+    if (groupSet.contains('裸露')) {
+      addRandomFromGroup('裸露', max: 1);
+    }
+    if (groupSet.contains('姿勢')) {
+      final basic = candidates('姿勢')
+          .where((tag) => _conflictGroup(tag) == 'basic_pose')
+          .toList();
+      if (basic.isNotEmpty) add(basic.first);
+      addRandomFromGroup('姿勢', max: 2);
+    }
+    if (groupSet.contains('動作')) {
+      addRandomFromGroup('動作', max: 2);
+    }
+    if (groupSet.contains('物件')) {
+      addRandomFromGroup('物件', max: 2);
+    }
+    if (groupSet.contains('成人道具')) {
+      addRandomFromGroup('成人道具', max: 1);
+    }
+    if (groupSet.contains('性行為')) {
+      addRandomFromGroup('性行為', max: 1);
+    }
+    if (groupSet.contains('性姿勢')) {
+      addRandomFromGroup('性姿勢', max: 1);
+    }
+
+    setState(_persist);
+  }
+
   TagItem? _randomClothingTag(List<String> groups, Random random) {
     final seen = <String>{};
     final candidates = _allTags
@@ -2769,11 +3125,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '穿脫狀態',
     };
     final target = _personTagIds(personIndex);
+    final protectedTags = _selectedTagsForPerson(personIndex)
+        .where((tag) => !clothingGroups.contains(tag.group))
+        .toList();
     target.removeWhere((id) => _allTags
         .any((tag) => tag.id == id && clothingGroups.contains(tag.group)));
 
+    final added = <TagItem>[];
     void add(TagItem? tag) {
-      if (tag != null) target.add(tag.id);
+      if (tag == null ||
+          protectedTags.any((other) => _tagsConflict(other, tag)) ||
+          added.any((other) => _tagsConflict(other, tag))) {
+        return;
+      }
+      target.add(tag.id);
+      added.add(tag);
     }
 
     if (random.nextBool()) {
@@ -2800,14 +3166,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList()
       ..shuffle(random);
     for (final tag in detailCandidates.take(1 + random.nextInt(3))) {
-      target.add(tag.id);
+      add(tag);
     }
     final accessoryCandidates = _allTags
         .where((tag) => tag.group == '配件' && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
     for (final tag in accessoryCandidates.take(random.nextInt(3))) {
-      target.add(tag.id);
+      add(tag);
     }
     if (accessoryCandidates.isNotEmpty && random.nextDouble() < 0.8) {
       add(_randomClothingTag(['配件顏色'], random));
@@ -4273,7 +4639,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
       return;
     }
-    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
+    final nextStep = _stepIndex < 5 ? _stepIndex + 1 : _stepIndex;
     setState(() {
       _stepIndex = nextStep;
       _activeGroup = '全部';
@@ -4316,6 +4682,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   items: const [
                     '自訂角色',
                     '自訂特徵',
+                    '身體特徵',
+                    '額外特徵',
                     '髮色',
                     '髮型',
                     '上衣',
@@ -4411,6 +4779,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '鞋子顏色',
                     '自訂角色',
                     '自訂特徵',
+                    '身體特徵',
+                    '額外特徵',
                     '髮色',
                     '髮型',
                     '上衣',
@@ -4458,14 +4828,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _visibleTags(String group) {
     final query = _search.text.trim().toLowerCase();
-    return _allTags.where((tag) {
-      final groupMatch = group == '全部' || tag.group == group;
+    final effectiveGroup = group == '髮色' ? '髮型' : group;
+    final tags = _allTags.where((tag) {
+      final hairColorInHairGroup =
+          effectiveGroup == '髮型' && tag.group == '髮色';
+      final groupMatch = group == '全部' ||
+          tag.group == effectiveGroup ||
+          hairColorInHairGroup;
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
       return groupMatch && adultMatch && queryMatch;
     }).toList();
+    return _sortPickerTags(tags, effectiveGroup);
+  }
+
+  bool _isEyeColorTag(TagItem tag) =>
+      RegExp(r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold|teal)\s+eyes?\b',
+              caseSensitive: false)
+          .hasMatch(tag.en);
+
+  List<TagItem> _sortPickerTags(List<TagItem> tags, String activeGroup) {
+    tags.sort((a, b) {
+      int rank(TagItem tag) {
+        if (activeGroup == '髮型' && tag.group == '髮色') return 1;
+        if (activeGroup == '外觀特徵' && _isEyeColorTag(tag)) return 1;
+        return 0;
+      }
+
+      final rankCompare = rank(a).compareTo(rank(b));
+      return rankCompare == 0
+          ? _compareOutputTags(a, b)
+          : rankCompare;
+    });
+    return tags;
   }
 
   double _adaptiveChipLabelWidth(BuildContext context) {
@@ -4597,15 +4994,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> _stepVisibleTags(List<String> groups,
       {String? queryText, String? activeGroup}) {
     final query = (queryText ?? _search.text).trim().toLowerCase();
-    return _allTags.where((tag) {
-      final inGroup = groups.contains(tag.group) &&
-          (activeGroup == null || tag.group == activeGroup);
+    final tags = _allTags.where((tag) {
+      final hairColorInHairGroup =
+          activeGroup == '髮型' && tag.group == '髮色';
+      final inGroup = (groups.contains(tag.group) || hairColorInHairGroup) &&
+          (activeGroup == null || tag.group == activeGroup || hairColorInHairGroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
       return inGroup && adultMatch && queryMatch;
     }).toList();
+    return _sortPickerTags(tags, activeGroup ?? groups.first);
   }
 
   Widget _stepTagPicker(List<String> groups,
@@ -4757,9 +5157,30 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 const TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        tooltip: '隨機服裝穿搭',
-                        onPressed: () => _randomizeClothing(index),
+                        tooltip: '隨機此大項（自動避開衝突）',
+                        onPressed: () =>
+                            _randomizePersonGroups(index, groups),
                         icon: const Icon(Icons.shuffle),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _PersonAvatarPreview(
+                          tags: _selectedTagsForPerson(index)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '即時人物預覽：會依髮色、髮型、眼睛顏色與表情顯示簡化頭像。這是提示詞輔助預覽，不是最終生成圖。',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -4861,6 +5282,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         child: Text('人物 ${index + 1} · $title',
                             style:
                                 const TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                      IconButton(
+                        tooltip: '隨機服裝穿搭（自動避開衝突）',
+                        onPressed: () => _randomizeClothing(index),
+                        icon: const Icon(Icons.shuffle),
                       ),
                     ],
                   ),
@@ -5383,16 +5809,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
                   .where((tag) =>
-                      ['外觀特徵', '髮色', '髮型', '臉部特徵', '胸部', '裸露']
+                      [
+                        '外觀特徵',
+                        '身體特徵',
+                        '額外特徵',
+                        '髮色',
+                        '髮型',
+                        '臉部特徵',
+                        '胸部',
+                        '裸露',
+                        '表情'
+                      ]
                           .contains(tag.group))
                   .map((tag) => tag.zh)
                   .join('、')
                   .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
           _stepPersonTagPicker(
-              ['外觀特徵', '髮色', '髮型', '臉部特徵', '胸部', '裸露'],
+              [
+                '外觀特徵',
+                '身體特徵',
+                '額外特徵',
+                '髮型',
+                '臉部特徵',
+                '表情',
+                '胸部',
+                '裸露'
+              ],
               nextLabel: '下一步：服裝',
-              instruction: '請在每位人物自己的區塊內設定外觀、髮色、髮型、臉部、胸部與裸露標籤。')),
+              instruction: '請在每位人物自己的區塊內設定外觀、身體、額外特徵、髮型、臉部與表情；髮色位於髮型分類最下方。')),
       _stepCard(
           3,
           '服裝與穿脫狀態',
@@ -5426,18 +5871,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepClothing()),
       _stepCard(
           4,
-          '表情',
-          _personSelectedIds.values
-              .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) => tag.group == '表情')
-              .map((tag) => tag.zh)
-              .join('、')
-              .ifEmpty('每位人物分別設定'),
-          Icons.mood_outlined,
-          _stepPersonTagPicker(['表情'],
-              nextLabel: '下一步：姿勢', instruction: '請分別設定每位人物的表情。')),
-      _stepCard(
-          5,
           '姿勢、動作、物件與成人道具',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -5450,7 +5883,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker(['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'],
               nextLabel: '下一步：品質與負面',
               instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件、成人道具與性姿勢；不同人物可以使用不同姿勢。')),
-      _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
+      _stepCard(5, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
   }
@@ -6089,7 +6522,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         horizontal: 3, vertical: 6),
                     child: Column(
                       children: [
-                        ...List.generate(7, (index) {
+                        ...List.generate(6, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 3),
                             child: IconButton.filled(
