@@ -2888,6 +2888,105 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .showSnackBar(SnackBar(content: Text('$label已複製')));
   }
 
+  String _compactReverseKey(String value) =>
+      _englishTagKey(value).replaceAll(' ', '');
+
+  int _reverseEditDistance(String left, String right) {
+    if (left == right) return 0;
+    if (left.isEmpty) return right.length;
+    if (right.isEmpty) return left.length;
+    var previous = List<int>.generate(right.length + 1, (index) => index);
+    for (var row = 1; row <= left.length; row++) {
+      final current = List<int>.filled(right.length + 1, 0);
+      current[0] = row;
+      for (var column = 1; column <= right.length; column++) {
+        final cost = left.codeUnitAt(row - 1) == right.codeUnitAt(column - 1)
+            ? 0
+            : 1;
+        current[column] = [
+          current[column - 1] + 1,
+          previous[column] + 1,
+          previous[column - 1] + cost,
+        ].reduce((a, b) => a < b ? a : b);
+      }
+      previous = current;
+    }
+    return previous[right.length];
+  }
+
+  double _reverseCharacterScore(String token, CatalogCharacter character) {
+    final tokenKey = _compactReverseKey(token);
+    if (tokenKey.length < 4) return 0;
+    final names = <String>[
+      character.characterTag,
+      character.characterEn,
+      '${character.characterTag}_${character.animeTag}',
+    ];
+    var best = 0.0;
+    for (final name in names) {
+      final nameKey = _compactReverseKey(name);
+      if (nameKey.isEmpty) continue;
+      if (nameKey == tokenKey) return 1.0;
+      if (nameKey.contains(tokenKey) || tokenKey.contains(nameKey)) {
+        final shorter = nameKey.length < tokenKey.length
+            ? nameKey.length
+            : tokenKey.length;
+        if (shorter >= 5) best = best < .82 ? .82 : best;
+      }
+      final distance = _reverseEditDistance(tokenKey, nameKey);
+      final similarity =
+          1 - distance / (tokenKey.length > nameKey.length ? tokenKey.length : nameKey.length);
+      if (similarity > best) best = similarity;
+    }
+    return best;
+  }
+
+  CatalogCharacter? _reverseCharacterMatch(String token) {
+    CatalogCharacter? bestCharacter;
+    var bestScore = 0.0;
+    for (final character in _allCharacters) {
+      final score = _reverseCharacterScore(token, character);
+      if (score > bestScore) {
+        bestScore = score;
+        bestCharacter = character;
+      }
+    }
+    return bestScore >= .72 ? bestCharacter : null;
+  }
+
+  String? _reverseAnimeMatch(String token) {
+    final tokenKey = _compactReverseKey(token);
+    if (tokenKey.length < 4) return null;
+    String? bestTag;
+    var bestScore = 0.0;
+    final seen = <String>{};
+    for (final character in _allCharacters) {
+      if (!seen.add(character.animeTag)) continue;
+      final nameKeys = [
+        _compactReverseKey(character.animeTag),
+        _compactReverseKey(character.animeEn),
+      ];
+      for (final nameKey in nameKeys) {
+        if (nameKey.isEmpty) continue;
+        final score = nameKey == tokenKey
+            ? 1.0
+            : tokenKey.length >= 6 &&
+                    (nameKey.contains(tokenKey) || tokenKey.contains(nameKey))
+                ? .82
+                : 1 -
+                    _reverseEditDistance(tokenKey, nameKey) /
+                        (tokenKey.length > nameKey.length
+                            ? tokenKey.length
+                            : nameKey.length);
+        if (score > bestScore) {
+          bestScore = score;
+          bestTag = character.animeTag;
+        }
+      }
+    }
+    return bestScore >= .78 ? bestTag : null;
+  }
+
   TagItem? _tagByReverseLabel(String value) {
     final englishKey = _englishTagKey(value);
     final chineseKey = _cleanTag(value);
@@ -3018,6 +3117,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           break;
         }
       }
+      tokenCharacter ??= _reverseCharacterMatch(token);
+      tokenAnimeTag ??= _reverseAnimeMatch(token);
       if (tokenCharacter != null) {
         detectedCharacter = tokenCharacter;
         continue;
@@ -3059,6 +3160,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (detectedCharacter != null) {
         final slot = _personSlots[0];
         _removeCharacterTraitSelections(0, _characterForNew(slot));
+        slot.detailed = true;
         slot.mode = '動漫角色';
         slot.characterId = detectedCharacter!.id;
         slot.animeTag = detectedCharacter!.animeTag;
@@ -3070,6 +3172,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
       } else if (detectedAnimeTag != null) {
         _personSlots[0]
+          ..detailed = true
           ..mode = '動漫角色'
           ..animeTag = detectedAnimeTag!;
       }
