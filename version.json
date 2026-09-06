@@ -1,8 +1,15 @@
 {
-  "version": "1.1.29",
-  "build": 31,
-  "label": "1.1.29+31",
+  "version": "1.1.30",
+  "build": 32,
+  "label": "1.1.30+32",
   "history": [
+    {
+      "version": "1.1.30",
+      "build": 32,
+      "label": "1.1.30+32",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: group person prompts and expand paizuri tags"
+    },
     {
       "version": "1.1.29",
       "build": 31,

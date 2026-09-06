@@ -1,7 +1,8 @@
-const appVersion = '1.1.29';
-const appBuildNumber = 31;
-const appVersionLabel = '1.1.29+31';
+const appVersion = '1.1.30';
+const appBuildNumber = 32;
+const appVersionLabel = '1.1.30+32';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: group person prompts and expand paizuri tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add object-linked actions and remove avatar preview'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add trim colors accessory placement and masturbation tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add scoped randomization and avatar preview'},

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.30+32 - 2026-09-06
+
+- 自動偵測：feat: group person prompts and expand paizuri tags
+
+
 ## 1.1.29+31 - 2026-09-06
 
 - 自動偵測：feat: add object-linked actions and remove avatar preview
