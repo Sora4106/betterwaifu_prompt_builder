@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.39",
-  "build": 41,
-  "label": "1.1.39+41",
+  "version": "1.1.40",
+  "build": 42,
+  "label": "1.1.40+42",
   "history": [
+    {
+      "version": "1.1.40",
+      "build": 42,
+      "label": "1.1.40+42",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: save clothing designs as combinations"
+    },
     {
       "version": "1.1.39",
       "build": 41,

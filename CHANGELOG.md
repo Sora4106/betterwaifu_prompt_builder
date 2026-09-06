@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.40+42 - 2026-09-06
+
+- 自動偵測：feat: save clothing designs as combinations
+
+
 ## 1.1.39+41 - 2026-09-06
 
 - 自動偵測：fix: prioritize combination editor upper panel
