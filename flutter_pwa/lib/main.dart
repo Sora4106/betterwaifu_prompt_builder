@@ -1379,7 +1379,36 @@ List<TagItem> _seedTags() => [
       _tag('act_scissoring', '性行為', '剪式摩擦（成年角色）', 'scissoring', 7, adult: true),
       _tag('act_breast_grinding', '性行為', '胸部磨蹭（成年角色）', 'breast grinding', 7,
           adult: true),
-      _tag('act_paizuri', '性行為', '乳交／胸部夾弄（成年角色）', 'paizuri', 7, adult: true),
+      _tag('act_paizuri', '性行為', '乳交／胸部夾弄（成年角色）', 'paizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_autopaizuri', '性行為', '自體乳交（成年角色）', 'autopaizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_cooperative_paizuri', '性行為', '協力乳交（成年角色）',
+          'cooperative paizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_handsfree_paizuri', '性行為', '無手乳交（成年角色）', 'handsfree paizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_paizuri_on_lap', '性行為', '膝上乳交（成年角色）', 'paizuri on lap', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_paizuri_over_clothes', '性行為', '隔衣乳交（成年角色）',
+          'paizuri over clothes', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_paizuri_under_clothes', '性行為', '衣物下乳交（成年角色）',
+          'paizuri under clothes', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_perpendicular_paizuri', '性行為', '垂直乳交（成年角色）',
+          'perpendicular paizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_reverse_paizuri', '性行為', '反向乳交（成年角色）', 'reverse paizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_straddling_paizuri', '性行為', '跨坐乳交（成年角色）', 'straddling paizuri',
+          7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_naizuri', '性行為', '無胸乳交（成年角色）', 'naizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
+      _tag('act_cooperative_naizuri', '性行為', '協力無胸乳交（成年角色）',
+          'cooperative naizuri', 7,
+          adult: true, conflictGroup: 'breast_sex_type'),
       _tag('act_breast_smother', '性行為', '胸部壓臉（成年角色）', 'breast smother', 7,
           adult: true),
       _tag('act_bondage', '性行為', '束縛（成年角色）', 'bondage', 7, adult: true),
@@ -2251,6 +2280,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...objectInteractions,
     ];
   }
+
+  bool _isFinalPersonOutputTag(int personIndex, _GeneratedOutputTag output) {
+    const finalGroups = {'性行為', '性姿勢'};
+    final selected = _selectedTagsForPerson(personIndex);
+    return output.tagIds.any((id) =>
+        selected.any((tag) => tag.id == id && finalGroups.contains(tag.group)));
+  }
+
+  List<_GeneratedOutputTag> _personScopedPromptTags(int personIndex) =>
+      _personPromptTags(personIndex)
+          .where((tag) => !_isFinalPersonOutputTag(personIndex, tag))
+          .toList();
+
+  List<_GeneratedOutputTag> _personFinalPromptTags(int personIndex) =>
+      _personPromptTags(personIndex)
+          .where((tag) => _isFinalPersonOutputTag(personIndex, tag))
+          .toList();
 
   int get _personSelectedCount =>
       _personSelectedIds.values.fold(0, (total, ids) => total + ids.length);
@@ -3133,11 +3179,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tokens.where((token) => seen.add(token.toLowerCase())).toList();
   }
 
-  List<String> _personPromptTokens(int index) => [
-        ..._characterTokensForSlot(_personSlots[index], index),
-        ..._personPromptTags(index).map((tag) => tag.en),
-      ];
-
   List<String> get _sharedPositiveTokens => [
         ..._selectedTags.map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
@@ -3155,12 +3196,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     addTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
-      final personal = _personPromptTokens(index)
+      final personal = [
+        ..._characterTokensForSlot(_personSlots[index], index),
+        ..._personScopedPromptTags(index).map((tag) => tag.en),
+      ]
           .where((value) => !used.contains(_cleanTag(value).toLowerCase()))
           .toList();
       if (personal.isEmpty) continue;
       personal.forEach((value) => used.add(_cleanTag(value).toLowerCase()));
       output.add('(${personal.join(', ')}:1.15).');
+    }
+    for (var index = 0; index < _personSlots.length; index++) {
+      addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
     }
     addTokens(_sharedPositiveTokens);
     return output.join(' ');
@@ -3393,7 +3440,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       };
       return framing.contains(tag.en) ? 'framing' : 'camera';
     }
-    if (tag.group == '穿脫狀態') return 'wear_state';
     if (tag.group == '胸部' &&
         [
           'flat chest',
@@ -6268,7 +6314,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           value: _groupPeoplePrompt,
           title: const Text('多人角色分組加強（括號權重）'),
           subtitle: const Text(
-              '兩人以上時，會將每位人物的角色、特徵、服裝、表情與動作分成獨立的 (…:1.15) 區塊；場景與共同標籤維持在區塊外。'),
+              '兩人以上時，會將每位人物的角色、特徵、服裝、表情與一般動作分成獨立的 (…:1.15) 區塊；性行為、性姿勢、場景、視角與共同標籤會統一放在最後。'),
           onChanged: (value) => setState(() {
                 _groupPeoplePrompt = value;
                 _persist();
