@@ -103,6 +103,7 @@ class _GeneratedOutputTag {
     required this.zh,
     required this.en,
     this.tagId,
+    this.tagIds = const <String>[],
     this.personIndex,
     this.characterTag = false,
   });
@@ -110,6 +111,7 @@ class _GeneratedOutputTag {
   final String zh;
   final String en;
   final String? tagId;
+  final List<String> tagIds;
   final int? personIndex;
   final bool characterTag;
 }
@@ -1153,6 +1155,247 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tags;
   }
 
+  bool _isClothingGroup(String group) => const {
+        '服裝',
+        '服裝風格',
+        '上衣',
+        '上衣風格',
+        '褲子',
+        '裙子',
+        '下身風格',
+        '內衣',
+        '胸罩',
+        '內褲',
+        '襪子',
+        '鞋子',
+        '配件',
+        '配件顏色',
+        '內衣顏色',
+        '胸罩顏色',
+        '內褲顏色',
+        '襪子顏色',
+        '鞋子顏色',
+        '服裝顏色',
+        '上衣顏色',
+        '下身顏色',
+        '服裝細節',
+        '服裝材質',
+        '穿脫狀態',
+      }.contains(group);
+
+  bool _isClothingColorGroup(String group) => const {
+        '服裝顏色',
+        '上衣顏色',
+        '下身顏色',
+        '內衣顏色',
+        '胸罩顏色',
+        '內褲顏色',
+        '襪子顏色',
+        '鞋子顏色',
+        '配件顏色',
+      }.contains(group);
+
+  bool _isClothingBaseGroup(String group) => const {
+        '服裝',
+        '服裝風格',
+        '上衣',
+        '褲子',
+        '裙子',
+        '內衣',
+        '胸罩',
+        '內褲',
+        '襪子',
+        '鞋子',
+        '配件',
+      }.contains(group);
+
+  String? _clothingColorGroup(String group) {
+    if (group == '服裝' || group == '服裝風格') return '服裝顏色';
+    if (group == '上衣') return '上衣顏色';
+    if (group == '褲子' || group == '裙子') return '下身顏色';
+    if (group == '內衣') return '內衣顏色';
+    if (group == '胸罩') return '胸罩顏色';
+    if (group == '內褲') return '內褲顏色';
+    if (group == '襪子') return '襪子顏色';
+    if (group == '鞋子') return '鞋子顏色';
+    if (group == '配件') return '配件顏色';
+    return null;
+  }
+
+  String? _clothingStyleGroup(String group) {
+    if (group == '上衣') return '上衣風格';
+    if (group == '褲子' || group == '裙子') return '下身風格';
+    return null;
+  }
+
+  String? _clothingColorWord(TagItem tag) {
+    const colors = [
+      'multicolored',
+      'black',
+      'white',
+      'red',
+      'blue',
+      'pink',
+      'purple',
+      'green',
+      'yellow',
+      'brown',
+      'gray',
+      'gold',
+      'silver',
+    ];
+    final value = tag.en.trim().toLowerCase();
+    for (final color in colors) {
+      if (value == color || value.startsWith('$color ')) return color;
+    }
+    return value.isEmpty ? null : value.split(' ').first;
+  }
+
+  String _clothingColorChinese(TagItem tag) {
+    const colors = <String, String>{
+      'multicolored': '多彩',
+      'black': '黑色',
+      'white': '白色',
+      'red': '紅色',
+      'blue': '藍色',
+      'pink': '粉紅色',
+      'purple': '紫色',
+      'green': '綠色',
+      'yellow': '黃色',
+      'brown': '棕色',
+      'gray': '灰色',
+      'gold': '金色',
+      'silver': '銀色',
+    };
+    return colors[_clothingColorWord(tag)] ?? tag.zh;
+  }
+
+  String _clothingModifierEnglish(TagItem tag) {
+    final value = tag.en.trim();
+    const simple = <String, String>{
+      'lace trim': 'lace',
+      'see-through clothing': 'see-through',
+      'sheer fabric': 'sheer',
+    };
+    final normalized = simple[value.toLowerCase()];
+    if (normalized != null) return normalized;
+    if (tag.group == '上衣風格' || tag.group == '下身風格') {
+      return value.replaceFirst(
+          RegExp(r'\s+(?:style\s+)?(?:top|shirt|blouse|skirt|pants)$',
+              caseSensitive: false),
+          '');
+    }
+    return value;
+  }
+
+  String _clothingModifierChinese(TagItem tag) {
+    if (tag.group == '上衣風格') {
+      return tag.zh.replaceFirst(RegExp(r'上衣風格$'), '');
+    }
+    if (tag.group == '下身風格') {
+      return tag.zh.replaceFirst(RegExp(r'(下身|裙子|褲子)風格$'), '');
+    }
+    return tag.zh;
+  }
+
+  List<_GeneratedOutputTag> _clothingOutputTagsForPerson(int personIndex) {
+    final selected = _selectedTagsForPerson(personIndex)
+        .where((tag) => _isClothingGroup(tag.group))
+        .toList();
+    final bases = selected.where((tag) => _isClothingBaseGroup(tag.group));
+    final consumed = <String>{};
+    final result = <_GeneratedOutputTag>[];
+
+    for (final base in bases) {
+      final related = <TagItem>[base];
+      final colorGroup = _clothingColorGroup(base.group);
+      final color = colorGroup == null
+          ? null
+          : selected.cast<TagItem?>().firstWhere(
+                (tag) => tag?.group == colorGroup,
+                orElse: () => null,
+              );
+      if (color != null) related.add(color);
+
+      final styleGroup = _clothingStyleGroup(base.group);
+      final style = styleGroup == null
+          ? null
+          : selected.cast<TagItem?>().firstWhere(
+                (tag) => tag?.group == styleGroup,
+                orElse: () => null,
+              );
+      if (style != null) related.add(style);
+
+      final modifiers = selected
+          .where((tag) => tag.group == '服裝細節' || tag.group == '服裝材質')
+          .toList();
+      related.addAll(modifiers);
+      final colorWord = color == null ? null : _clothingColorWord(color);
+      final styleEn = style == null ? null : _clothingModifierEnglish(style);
+      final baseLower = base.en.toLowerCase();
+      final effectiveColor =
+          colorWord != null && !baseLower.startsWith('$colorWord ')
+              ? colorWord
+              : null;
+      final enModifiers = <String>[
+        if (styleEn != null) styleEn,
+        ...modifiers.map(_clothingModifierEnglish),
+      ].where((part) =>
+          part.trim().isNotEmpty && !baseLower.contains(part.toLowerCase()));
+      final styleZh = style == null ? null : _clothingModifierChinese(style);
+      final zhModifiers = <String>[
+        if (styleZh != null) styleZh,
+        ...modifiers.map(_clothingModifierChinese),
+      ].where((part) => part.trim().isNotEmpty && !base.zh.contains(part));
+      final enParts = <String>[
+        if (effectiveColor != null) effectiveColor,
+        ...enModifiers,
+        base.en,
+      ];
+      final zhParts = <String>[
+        if (effectiveColor != null && color != null)
+          _clothingColorChinese(color),
+        ...zhModifiers,
+        base.zh,
+      ];
+      final ids = related.map((tag) => tag.id).toList();
+      consumed.addAll(ids);
+      result.add(_GeneratedOutputTag(
+        zh: zhParts.join(),
+        en: enParts.where((part) => part.trim().isNotEmpty).join(' '),
+        tagIds: ids,
+        personIndex: personIndex,
+      ));
+    }
+
+    for (final tag in selected.where((tag) => !consumed.contains(tag.id))) {
+      result.add(_GeneratedOutputTag(
+        zh: tag.zh,
+        en: tag.en,
+        tagId: tag.id,
+        tagIds: [tag.id],
+        personIndex: personIndex,
+      ));
+    }
+    return result;
+  }
+
+  List<_GeneratedOutputTag> _personPromptTags(int index) {
+    final clothing = _clothingOutputTagsForPerson(index);
+    final covered = clothing.expand((tag) => tag.tagIds).toSet();
+    final other = _selectedTagsForPerson(index)
+        .where(
+            (tag) => !_isClothingGroup(tag.group) && !covered.contains(tag.id))
+        .map((tag) => _GeneratedOutputTag(
+              zh: tag.zh,
+              en: tag.en,
+              tagId: tag.id,
+              tagIds: [tag.id],
+              personIndex: index,
+            ));
+    return [...clothing, ...other];
+  }
+
   int get _personSelectedCount =>
       _personSelectedIds.values.fold(0, (total, ids) => total + ids.length);
 
@@ -1631,9 +1874,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
       result.addAll(_characterOutputTagsForSlot(slot, index));
-      result.addAll(_selectedTagsForPerson(index).map((tag) =>
-          _GeneratedOutputTag(
-              zh: tag.zh, en: tag.en, tagId: tag.id, personIndex: index)));
+      result.addAll(_personPromptTags(index));
     }
     result.addAll(_selectedTags.map(
         (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
@@ -1647,6 +1888,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _removedCharacterTagSet(outputTag.personIndex!)
               .add(_cleanTag(outputTag.en).toLowerCase());
         }
+      } else if (outputTag.personIndex != null && outputTag.tagIds.isNotEmpty) {
+        _personTagIds(outputTag.personIndex!).removeAll(outputTag.tagIds);
       } else if (outputTag.tagId != null) {
         if (outputTag.personIndex == null) {
           _selectedIds.remove(outputTag.tagId);
@@ -1858,7 +2101,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tokens = <String>[..._peopleTokensNew()];
     for (var index = 0; index < _personSlots.length; index++) {
       tokens.addAll(_characterTokensForSlot(_personSlots[index], index));
-      tokens.addAll(_selectedTagsForPerson(index).map((tag) => tag.en));
+      tokens.addAll(_personPromptTags(index).map((tag) => tag.en));
     }
     tokens.addAll(_selectedTags.map((tag) => tag.en));
     tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
@@ -1869,7 +2112,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> _personPromptTokens(int index) => [
         ..._characterTokensForSlot(_personSlots[index], index),
-        ..._selectedTagsForPerson(index).map((tag) => tag.en),
+        ..._personPromptTags(index).map((tag) => tag.en),
       ];
 
   List<String> get _sharedPositiveTokens => [
@@ -1909,7 +2152,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (var index = 0; index < _personSlots.length; index++) {
       final personal = [
         ..._characterChineseForSlot(_personSlots[index], index),
-        ..._selectedTagsForPerson(index).map((tag) => tag.zh),
+        ..._personPromptTags(index).map((tag) => tag.zh),
       ];
       tokens.add('人物 ${index + 1}：${personal.join('、')}');
     }
@@ -3548,6 +3791,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
+    if (_isClothingColorGroup(tag.group)) {
+      return _colorTagChip(tag, personIndex: personIndex, selected: selected);
+    }
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
@@ -3577,6 +3823,70 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           color: selected ? const Color(0xfff0eaff) : _buttonBorder,
         ),
         onSelected: (_) => _toggle(tag, personIndex: personIndex),
+      ),
+    );
+  }
+
+  Widget _colorTagChip(TagItem tag,
+      {required int? personIndex, required bool selected}) {
+    final colorWord = _clothingColorWord(tag);
+    const colorValues = <String, Color>{
+      'black': Color(0xff17171c),
+      'white': Color(0xfff5f5f5),
+      'red': Color(0xffe5484d),
+      'blue': Color(0xff3b82f6),
+      'pink': Color(0xffec4899),
+      'purple': Color(0xff8b5cf6),
+      'green': Color(0xff22c55e),
+      'yellow': Color(0xfffacc15),
+      'brown': Color(0xff925f38),
+      'gray': Color(0xff9ca3af),
+      'gold': Color(0xffd4a72c),
+      'silver': Color(0xffcbd5e1),
+    };
+    final swatch = Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colorWord == 'multicolored' ? null : colorValues[colorWord],
+        gradient: colorWord == 'multicolored'
+            ? const LinearGradient(
+                colors: [
+                  Color(0xffef4444),
+                  Color(0xfffacc15),
+                  Color(0xff22c55e),
+                  Color(0xff3b82f6),
+                  Color(0xffa855f7),
+                ],
+              )
+            : null,
+        border: Border.all(
+          color: selected ? const Color(0xffffffff) : _buttonBorder,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: selected
+          ? const Icon(Icons.check, size: 17, color: Colors.white)
+          : null,
+    );
+    return Tooltip(
+      message: '${tag.zh} · ${tag.en}',
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 58, minHeight: 44),
+        child: FilterChip(
+          selected: selected,
+          label: swatch,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          labelPadding: EdgeInsets.zero,
+          backgroundColor: _buttonSurface,
+          selectedColor: _buttonSelectedSurface,
+          checkmarkColor: Colors.transparent,
+          side: BorderSide(
+            color: selected ? const Color(0xfff0eaff) : _buttonBorder,
+          ),
+          onSelected: (_) => _toggle(tag, personIndex: personIndex),
+        ),
       ),
     );
   }
@@ -3808,7 +4118,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('先選服裝大項目與樣式，再用服裝細節選擇顏色、花邊、蕾絲與材質。每位人物的服裝會分開保存。'),
+        const Text(
+            '先選服裝大項目與樣式，再用色塊與服裝細節組合完整名詞；例如黑色＋蕾絲＋大腿襪會輸出 black lace thighhighs。每位人物的服裝會分開保存。'),
         const SizedBox(height: 12),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;

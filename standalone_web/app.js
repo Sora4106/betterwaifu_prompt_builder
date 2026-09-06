@@ -883,6 +883,81 @@ if (dynamicPersonalGroupSubmit) dynamicPersonalGroupSubmit.addEventListener('sub
   const outputGroupOrder = { '外觀特徵': 10, '臉部特徵': 11, '胸部': 12, '裸露': 13, '髮型': 14, '服裝': 20, '服裝風格': 21, '服裝顏色': 22, '上衣': 23, '上衣風格': 24, '上衣顏色': 25, '褲子': 26, '裙子': 26, '下身風格': 27, '下身顏色': 28, '內衣': 30, '胸罩': 31, '內褲': 32, '襪子': 33, '鞋子': 34, '配件': 35, '配件顏色': 36, '服裝細節': 37, '服裝材質': 38, '穿脫狀態': 39, '表情': 40, '姿勢': 41, '性行為': 42, '性姿勢': 43, '動作': 44, '物件': 45, '成人道具': 46, '場景': 60, '畫面': 61 };
 Object.assign(outputGroupOrder, { '內衣顏色': 30, '胸罩顏色': 31, '內褲顏色': 32, '襪子顏色': 33, '鞋子顏色': 34 });
 function selectedTags(personIndex = null) { const ids = personIndex === null ? state.selected : personTagSet(personIndex); return allTags().filter(item => ids.has(item.id)).sort((a, b) => (outputGroupOrder[a.group] ?? 50) - (outputGroupOrder[b.group] ?? 50) || a.order - b.order || a.en.localeCompare(b.en)); }
+const composedClothingGroups = new Set(['服裝', '服裝風格', '上衣', '上衣風格', '褲子', '裙子', '下身風格', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件', '配件顏色', '內衣顏色', '胸罩顏色', '內褲顏色', '襪子顏色', '鞋子顏色', '服裝顏色', '上衣顏色', '下身顏色', '服裝細節', '服裝材質', '穿脫狀態']);
+const composedClothingBaseGroups = new Set(['服裝', '服裝風格', '上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '配件']);
+const colorGroups = new Set(['服裝顏色', '上衣顏色', '下身顏色', '內衣顏色', '胸罩顏色', '內褲顏色', '襪子顏色', '鞋子顏色', '配件顏色']);
+function isClothingColorGroup(group) { return colorGroups.has(group); }
+function clothingColorGroup(group) {
+  if (group === '服裝' || group === '服裝風格') return '服裝顏色';
+  if (group === '上衣') return '上衣顏色';
+  if (group === '褲子' || group === '裙子') return '下身顏色';
+  if (group === '內衣') return '內衣顏色';
+  if (group === '胸罩') return '胸罩顏色';
+  if (group === '內褲') return '內褲顏色';
+  if (group === '襪子') return '襪子顏色';
+  if (group === '鞋子') return '鞋子顏色';
+  if (group === '配件') return '配件顏色';
+  return '';
+}
+function clothingStyleGroup(group) {
+  if (group === '上衣') return '上衣風格';
+  if (group === '褲子' || group === '裙子') return '下身風格';
+  return '';
+}
+function clothingColorWord(item) {
+  const value = String(item?.en || '').toLowerCase();
+  return clothingColors.find(([key]) => value === key || value.startsWith(`${key} `))?.[0] || '';
+}
+function clothingColorChinese(item) {
+  const zh = { multicolored: '多彩', black: '黑色', white: '白色', red: '紅色', blue: '藍色', pink: '粉紅色', purple: '紫色', green: '綠色', yellow: '黃色', brown: '棕色', gray: '灰色', gold: '金色', silver: '銀色' };
+  return zh[clothingColorWord(item)] || item.zh;
+}
+function clothingModifierEnglish(item) {
+  const value = String(item.en || '').trim();
+  const simple = { 'lace trim': 'lace', 'see-through clothing': 'see-through', 'sheer fabric': 'sheer' };
+  if (simple[value.toLowerCase()]) return simple[value.toLowerCase()];
+  if (item.group === '上衣風格' || item.group === '下身風格') return value.replace(/\s+(?:style\s+)?(?:top|shirt|blouse|skirt|pants)$/i, '');
+  return value;
+}
+function clothingModifierChinese(item) {
+  if (item.group === '上衣風格') return item.zh.replace(/上衣風格$/, '');
+  if (item.group === '下身風格') return item.zh.replace(/(?:下身|裙子|褲子)風格$/, '');
+  return item.zh;
+}
+function composedClothingTags(personIndex) {
+  const selected = selectedTags(personIndex).filter(item => composedClothingGroups.has(item.group));
+  const bases = selected.filter(item => composedClothingBaseGroups.has(item.group));
+  const consumed = new Set();
+  const result = [];
+  bases.forEach(base => {
+    const related = [base];
+    const color = selected.find(item => item.group === clothingColorGroup(base.group));
+    if (color) related.push(color);
+    const style = selected.find(item => item.group === clothingStyleGroup(base.group));
+    if (style) related.push(style);
+    const modifiers = selected.filter(item => item.group === '服裝細節' || item.group === '服裝材質');
+    related.push(...modifiers);
+    related.forEach(item => consumed.add(item.id));
+    const colorWord = color ? clothingColorWord(color) || String(color.en || '').split(/\s+/)[0] : '';
+    const styleEn = style ? clothingModifierEnglish(style) : '';
+    const styleZh = style ? clothingModifierChinese(style) : '';
+    const baseLower = base.en.toLowerCase();
+    const effectiveColor = colorWord && !baseLower.startsWith(`${colorWord.toLowerCase()} `) ? colorWord : '';
+    const enModifiers = [styleEn, ...modifiers.map(clothingModifierEnglish)].filter(value => value && !baseLower.includes(value.toLowerCase()));
+    const zhModifiers = [styleZh, ...modifiers.map(clothingModifierChinese)].filter(value => value && !base.zh.includes(value));
+    const en = [effectiveColor, ...enModifiers, base.en].filter(Boolean).join(' ');
+    const zh = [color && effectiveColor ? clothingColorChinese(color) : '', ...zhModifiers, base.zh].filter(Boolean).join('');
+    result.push({ zh, en, kind: 'tag', tagIds: related.map(item => item.id), personIndex });
+  });
+  selected.filter(item => !consumed.has(item.id)).forEach(item => result.push({ zh: item.zh, en: item.en, kind: 'tag', id: item.id, tagIds: [item.id], personIndex }));
+  return result;
+}
+function personPromptTags(index) {
+  const clothing = composedClothingTags(index);
+  const covered = new Set(clothing.flatMap(item => item.tagIds || []));
+  const other = selectedTags(index).filter(item => !composedClothingGroups.has(item.group) && !covered.has(item.id)).map(item => ({ zh: item.zh, en: item.en, kind: 'tag', id: item.id, tagIds: [item.id], personIndex: index }));
+  return [...clothing, ...other];
+}
 function personSelectedCount() { return Object.values(state.personSelected).reduce((total, ids) => total + ids.length, 0); }
 function tokens() { const perPerson = []; state.peopleSlots.forEach((slot, index) => { perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)); }); return unique([...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en), ...splitTags(state.extra), ...splitTags(state.preprompt)]); }
 function positiveText() { return tokens().map(item => `${item}.`).join(' '); }
@@ -1081,7 +1156,18 @@ function characterOverrideMessage(item, personIndex) {
 }
 function toggleTag(id, personIndex = null) { const item = allTags().find(candidate => candidate.id === id); if (!item) return; const ids = personIndex === null ? state.selected : personTagSet(personIndex); if (ids.has(id)) { ids.delete(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); return; } const overrideMessage = characterOverrideMessage(item, personIndex); if (overrideMessage && !window.confirm(overrideMessage)) return; const conflicts = conflictingTags(item, personIndex); if (conflicts.length) { const names = conflicts.map(candidate => `${candidate.zh} (${candidate.en})`).join('、'); if (!window.confirm(`新增「${item.zh}」會與已選標籤衝突：${names}\n\n按「確定」移除原標籤並換成新標籤；按「取消」保留原選擇。`)) return; conflicts.forEach(candidate => ids.delete(candidate.id)); } ids.add(id); if (personIndex === null) state.selected = ids; else savePersonTagSet(personIndex, ids); render(); }
 
-function tagButton(item, personIndex = null) { const selected = personIndex === null ? state.selected.has(item.id) : personTagSet(personIndex).has(item.id); return `<button class="tag ${selected ? 'selected' : ''} ${item.adult ? 'adult' : ''}" data-tag="${esc(item.id)}" data-person-tag="${personIndex === null ? '' : personIndex}"><span>${item.adult ? '<i class="adult-dot">18+</i> ' : ''}${esc(item.zh)}</span><em>${esc(item.en)}</em></button>`; }
+function colorSwatchStyle(item) {
+  const key = clothingColorWord(item);
+  if (key === 'multicolored') return 'background:linear-gradient(135deg,#ef4444 0 20%,#facc15 20% 40%,#22c55e 40% 60%,#3b82f6 60% 80%,#a855f7 80%);';
+  const colors = { black: '#17171c', white: '#f5f5f5', red: '#e5484d', blue: '#3b82f6', pink: '#ec4899', purple: '#8b5cf6', green: '#22c55e', yellow: '#facc15', brown: '#925f38', gray: '#9ca3af', gold: '#d4a72c', silver: '#cbd5e1' };
+  return `background:${colors[key] || '#77779b'};`;
+}
+function tagButton(item, personIndex = null) {
+  const selected = personIndex === null ? state.selected.has(item.id) : personTagSet(personIndex).has(item.id);
+  const target = `data-tag="${esc(item.id)}" data-person-tag="${personIndex === null ? '' : personIndex}"`;
+  if (isClothingColorGroup(item.group)) return `<button type="button" class="tag color-tag ${selected ? 'selected' : ''} ${item.adult ? 'adult' : ''}" ${target} title="${esc(`${item.zh} · ${item.en}`)}" aria-label="${esc(`${item.zh} · ${item.en}`)}"><span class="color-swatch" style="${colorSwatchStyle(item)}">${selected ? '✓' : ''}</span><span class="sr-only">${esc(item.zh)} · ${esc(item.en)}</span></button>`;
+  return `<button type="button" class="tag ${selected ? 'selected' : ''} ${item.adult ? 'adult' : ''}" ${target}><span>${item.adult ? '<i class="adult-dot">18+</i> ' : ''}${esc(item.zh)}</span><em>${esc(item.en)}</em></button>`;
+}
 function renderTagPicker(groups, filterKey, personIndex = null) { const query = personIndex === null ? (state.wizardQuery || '') : (state.personQueries[personIndex] || ''); const filtered = allTags().filter(item => groups.includes(item.group) && (state.showAdult || !item.adult) && (!query || `${item.zh} ${item.en}`.toLowerCase().includes(query.toLowerCase()))); return `<div class="search-line"><span>⌕</span><input data-wizard-search="${filterKey}" data-person-search="${personIndex === null ? '' : personIndex}" value="${esc(query)}" placeholder="搜尋中文或英文標籤…"></div><div class="wizard-tags">${filtered.length ? filtered.map(item => tagButton(item, personIndex)).join('') : '<div class="empty">沒有符合的標籤，可使用新增自訂標籤。</div>'}</div>`; }
 function stepHeader(index, title, desc, icon) { const open = state.step === index; return `<button class="wizard-header" data-step="${index}"><span class="wizard-number">${index + 1}</span><span class="wizard-icon">${icon}</span><span class="wizard-title"><b>${title}</b><small>${desc}</small></span><span class="wizard-chevron">${open ? '⌃' : '⌄'}</span></button>`; }
 function stepCard(index, title, desc, icon, body) { return `<section class="wizard-step ${state.step === index ? 'open' : 'closed'}">${stepHeader(index, title, desc, icon)}${state.step === index ? `<div class="wizard-body"><div class="wizard-body-inner">${body}</div></div>` : ''}</section>`; }
@@ -1130,7 +1216,7 @@ function clothingDetailGroups(personIndex) {
 
 function clothingStep() {
   const styles = ['上衣', '褲子', '裙子', '內衣', '胸罩', '內褲', '襪子', '鞋子', '服裝', '配件'];
-  return `<p class="wizard-note">先選擇服裝類型，再顯示該類型的風格與專用顏色。內衣、胸罩、內褲、襪子、鞋子與配件可以和外衣共同存在；髮型、臉部特徵與表情則在各自的角色分類中設定。</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; const details = clothingDetailGroups(index); return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span>${slot.detailed ? `<button type="button" class="icon-button" data-random-clothing="${index}" title="隨機服裝穿搭">🎲 隨機穿搭</button>` : ''}</div>${slot.detailed ? `<b>服裝類型與樣式</b>${renderTagPicker(styles, `clothing-style-${index}`, index)}<hr><b>已選服裝的風格、顏色與細節</b>${renderTagPicker(details, `clothing-detail-${index}`, index)}` : '<p class="wizard-note">此人物設定為不需細節，不加入服裝標籤。</p>'}</article>`; }).join('')}${nextButton('下一步：表情')}`;
+  return `<p class="wizard-note">先選擇服裝類型，再用色塊與服裝細節組合完整名詞；例如黑色＋蕾絲＋大腿襪會輸出 black lace thighhighs。內衣、胸罩、內褲、襪子、鞋子與配件可以和外衣共同存在。</p>${state.peopleSlots.map((slot, index) => { const c = characterForSlot(slot); const title = c ? `${c.characterZh} · ${c.characterEn}` : `人物 ${index + 1}`; const details = clothingDetailGroups(index); return `<article class="character-card"><div class="character-card-head"><b>人物 ${index + 1} · ${esc(title)}</b><span class="model-pill">${slot.detailed ? '本人物專屬設定' : '不需細節'}</span>${slot.detailed ? `<button type="button" class="icon-button" data-random-clothing="${index}" title="隨機服裝穿搭">🎲 隨機穿搭</button>` : ''}</div>${slot.detailed ? `<b>服裝類型與樣式</b>${renderTagPicker(styles, `clothing-style-${index}`, index)}<hr><b>已選服裝的風格、顏色與細節</b>${renderTagPicker(details, `clothing-detail-${index}`, index)}` : '<p class="wizard-note">此人物設定為不需細節，不加入服裝標籤。</p>'}</article>`; }).join('')}${nextButton('下一步：表情')}`;
 }
 
 function conflictGroup(item) {
@@ -1337,14 +1423,14 @@ function generatedOutputTags() {
       const traits = traitsFromSlot(slot, index);
       traits.en.forEach((en, traitIndex) => result.push({ zh: traits.zh[traitIndex] || en, en, kind: 'character', personIndex: index }));
     }
-    selectedTags(index).forEach(item => result.push({ zh: item.zh, en: item.en, kind: 'tag', id: item.id, personIndex: index }));
+    personPromptTags(index).forEach(item => result.push(item));
   });
   selectedTags().forEach(item => result.push({ zh: item.zh, en: item.en, kind: 'tag', id: item.id, personIndex: -1 }));
   return result;
 }
 function chineseOutputMarkup() {
   const tags = generatedOutputTags();
-  const chips = tags.map(item => `<button type="button" class="output-tag" title="${esc(item.en)}" data-output-remove="${item.kind}" data-output-key="${esc(item.kind === 'tag' ? item.id : item.en)}" data-output-person="${item.personIndex}"><span>${esc(item.zh)}</span><b aria-hidden="true">×</b></button>`).join('');
+  const chips = tags.map(item => `<button type="button" class="output-tag" title="${esc(item.en)}" data-output-remove="${item.kind}" data-output-key="${esc(item.kind === 'tag' ? (item.tagIds || [item.id]).join('|') : item.en)}" data-output-person="${item.personIndex}"><span>${esc(item.zh)}</span><b aria-hidden="true">×</b></button>`).join('');
   return `<div class="output-person-count">人物數量：${esc(personSummary())}</div>${chips ? `<div class="output-tag-list">${chips}</div>` : '<div class="output-empty">尚未選擇可移除的資料庫標籤</div>'}${state.extra.trim() ? `<p class="output-description"><b>額外正向敘述：</b>${esc(splitTags(state.extra).map(autoTranslateTag).join('、'))}</p>` : ''}${state.preprompt.trim() ? `<p class="output-description"><b>Amanatsu 品質前綴：</b>${esc(state.preprompt.trim())}</p>` : ''}`;
 }
 function removeOutputTag(button) {
@@ -1352,7 +1438,7 @@ function removeOutputTag(button) {
   const personIndex = Number(button.dataset.outputPerson);
   if (kind === 'tag') {
     const ids = personIndex < 0 ? state.selected : personTagSet(personIndex);
-    ids.delete(button.dataset.outputKey);
+    (button.dataset.outputKey || '').split('|').filter(Boolean).forEach(id => ids.delete(id));
     if (personIndex >= 0) savePersonTagSet(personIndex, ids);
   } else if (kind === 'character' && personIndex >= 0) {
     removeCharacterTag(personIndex, button.dataset.outputKey);
@@ -1364,7 +1450,7 @@ function removeOutputTag(button) {
 function tokens() {
   const perPerson = [];
   state.peopleSlots.forEach((slot, index) => {
-    perPerson.push(...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en));
+    perPerson.push(...characterEnglishForSlot(slot, index), ...personPromptTags(index).map(item => item.en));
   });
   return unique([
     ...peopleTokens(), ...perPerson, ...selectedTags().map(item => item.en),
@@ -1373,7 +1459,7 @@ function tokens() {
 }
 function personPromptTokens(index) {
   const slot = state.peopleSlots[index];
-  return [...characterEnglishForSlot(slot, index), ...selectedTags(index).map(item => item.en)];
+  return [...characterEnglishForSlot(slot, index), ...personPromptTags(index).map(item => item.en)];
 }
 function sharedPositiveTokens() {
   return [
@@ -1410,7 +1496,7 @@ function chineseText() {
   const list = [personSummary()];
   state.peopleSlots.forEach((slot, index) => {
     if (!slot.detailed) return;
-    list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...selectedTags(index).map(item => item.zh)].join('、')}`);
+    list.push(`人物 ${index + 1}：${[...characterChineseForSlot(slot, index), ...personPromptTags(index).map(item => item.zh)].join('、')}`);
   });
   list.push(...selectedTags().map(item => item.zh));
   if (state.extra.trim()) list.push(`額外正向標籤（中文對照）：${splitTags(state.extra).map(autoTranslateTag).join('、')}`);
