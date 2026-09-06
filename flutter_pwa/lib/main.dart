@@ -2986,6 +2986,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final unknown = <String>[];
     int? importedPeopleCount;
     String? importedGender;
+    CatalogCharacter? detectedCharacter;
+    String? detectedAnimeTag;
     for (final token in tokens) {
       final peopleMatch = RegExp(
         r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
@@ -3001,6 +3003,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             : kind.startsWith('boy')
                 ? '男性'
                 : '其他/異種';
+        continue;
+      }
+      final tokenKey = _englishTagKey(token);
+      CatalogCharacter? tokenCharacter;
+      String? tokenAnimeTag;
+      for (final character in _allCharacters) {
+        if (_englishTagKey(character.characterTag) == tokenKey) {
+          tokenCharacter = character;
+          break;
+        }
+        if (_englishTagKey(character.animeTag) == tokenKey) {
+          tokenAnimeTag = character.animeTag;
+          break;
+        }
+      }
+      if (tokenCharacter != null) {
+        detectedCharacter = tokenCharacter;
+        continue;
+      }
+      if (tokenAnimeTag != null) {
+        detectedAnimeTag = tokenAnimeTag;
         continue;
       }
       final tags = _reverseTagCandidates(token);
@@ -3033,6 +3056,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _gender = importedGender ?? _gender;
       }
 
+      if (detectedCharacter != null) {
+        final slot = _personSlots[0];
+        _removeCharacterTraitSelections(0, _characterForNew(slot));
+        slot.mode = '動漫角色';
+        slot.characterId = detectedCharacter!.id;
+        slot.animeTag = detectedCharacter!.animeTag;
+        _removedCharacterTags.remove(0);
+        _syncCharacterTraitsForSlot(0);
+        _recentCharacterIds
+          ..remove(detectedCharacter!.id)
+          ..insert(0, detectedCharacter!.id);
+        if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
+      } else if (detectedAnimeTag != null) {
+        _personSlots[0]
+          ..mode = '動漫角色'
+          ..animeTag = detectedAnimeTag!;
+      }
+
       for (final tag in recognized.toSet()) {
         if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
           continue;
@@ -3061,9 +3102,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final location = importedPeopleCount == null
         ? ''
         : '；人物數量已調整為 $_peopleCount 人，辨識到的人物標籤先放在人物 1';
+    final characterNote = detectedCharacter == null
+        ? ''
+        : '；已帶入角色 ${detectedCharacter!.characterEn}';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(
-            '已勾選 ${recognized.length} 個標籤，${unknown.length} 個未收錄標籤已加入額外正向欄位$location')));
+            '已勾選 ${recognized.length} 個標籤，${unknown.length} 個未收錄標籤已加入額外正向欄位$location$characterNote')));
   }
 
   Future<void> _clearAllTags() async {
