@@ -287,12 +287,14 @@ const _clothingColors = <List<String>>[
   ['gray', '\u7070\u8272'],
   ['gold', '\u91D1\u8272'],
   ['silver', '\u9280\u8272'],
+  ['orange', '\u6A59\u8272'],
   ['multicolored', '\u591A\u5F69'],
 ];
 
 // Prompt colour words are more useful to the model than arbitrary HEX codes.
 // The shade names below are also used to compose a single clothing tag.
 const _clothingColorShades = <List<String>>[
+  ['aqua', '\u6C34\u85CD\u8272', 'aqua'],
   ['light_blue', '\u6DFA\u85CD\u8272', 'light blue'],
   ['dark_blue', '\u6DF1\u85CD\u8272', 'dark blue'],
   ['navy', '\u6D77\u8ECD\u85CD', 'navy'],
@@ -341,11 +343,117 @@ const _clothingColorShades = <List<String>>[
   ['rose', '\u73AB\u7470\u8272', 'rose'],
   ['light_gray', '\u6DFA\u7070\u8272', 'light gray'],
   ['dark_gray', '\u6DF1\u7070\u8272', 'dark gray'],
+  ['slate_gray', '\u77F3\u677F\u7070', 'slate gray'],
+  ['pewter', '\u932B\u7070\u8272', 'pewter'],
   ['charcoal', '\u70AD\u7070\u8272', 'charcoal'],
+  ['jet_black', '\u70CF\u9ED1\u8272', 'jet black'],
+  ['ebony', '\u70CF\u6728\u9ED1', 'ebony'],
+  ['off_black', '\u8FD1\u9ED1\u8272', 'off-black'],
   ['ivory', '\u8C61\u7259\u767D', 'ivory'],
   ['cream', '\u5976\u6CB9\u8272', 'cream'],
   ['beige', '\u7C73\u8272', 'beige'],
+  ['light_brown', '\u6DFA\u8910\u8272', 'light brown'],
+  ['dark_brown', '\u6DF1\u8910\u8272', 'dark brown'],
+  ['coffee', '\u5496\u5561\u8272', 'coffee'],
+  ['tan', '\u8910\u8272', 'tan'],
+  ['camel', '\u99DD\u8272', 'camel'],
+  ['chocolate', '\u5DE7\u514B\u529B\u8272', 'chocolate'],
+  ['chestnut', '\u6817\u68D5\u8272', 'chestnut'],
+  ['khaki', '\u5361\u5176\u8272', 'khaki'],
+  ['taupe', '\u7070\u8910\u8272', 'taupe'],
+  ['copper', '\u9285\u8272', 'copper'],
+  ['rose_gold', '\u73AB\u7470\u91D1', 'rose gold'],
 ];
+
+const _mainPromptColorWords = <String>{
+  'black',
+  'white',
+  'red',
+  'blue',
+  'pink',
+  'purple',
+  'green',
+  'yellow',
+  'brown',
+  'gray',
+  'gold',
+  'silver',
+  'orange',
+  'multicolored',
+  'blonde',
+};
+
+const _promptColorFamilies = <String, String>{
+  'aqua': 'blue',
+  'light blue': 'blue',
+  'dark blue': 'blue',
+  'navy': 'blue',
+  'sky blue': 'blue',
+  'baby blue': 'blue',
+  'royal blue': 'blue',
+  'azure': 'blue',
+  'cobalt blue': 'blue',
+  'sapphire blue': 'blue',
+  'steel blue': 'blue',
+  'midnight blue': 'blue',
+  'powder blue': 'blue',
+  'turquoise': 'blue',
+  'teal': 'blue',
+  'jet black': 'black',
+  'ebony': 'black',
+  'off-black': 'black',
+  'charcoal': 'black',
+  'light gray': 'gray',
+  'dark gray': 'gray',
+  'slate gray': 'gray',
+  'pewter': 'gray',
+  'ivory': 'white',
+  'cream': 'white',
+  'beige': 'white',
+  'light red': 'red',
+  'dark red': 'red',
+  'crimson': 'red',
+  'scarlet': 'red',
+  'maroon': 'red',
+  'burgundy': 'red',
+  'wine red': 'red',
+  'coral': 'red',
+  'light green': 'green',
+  'dark green': 'green',
+  'lime': 'green',
+  'mint green': 'green',
+  'emerald green': 'green',
+  'jade green': 'green',
+  'forest green': 'green',
+  'olive': 'green',
+  'sage green': 'green',
+  'light yellow': 'yellow',
+  'dark yellow': 'yellow',
+  'lemon yellow': 'yellow',
+  'mustard yellow': 'yellow',
+  'golden': 'gold',
+  'amber': 'gold',
+  'lavender': 'purple',
+  'lilac': 'purple',
+  'magenta': 'pink',
+  'hot pink': 'pink',
+  'light pink': 'pink',
+  'dark pink': 'pink',
+  'rose': 'pink',
+  'peach': 'pink',
+  'salmon': 'pink',
+  'light brown': 'brown',
+  'dark brown': 'brown',
+  'coffee': 'brown',
+  'tan': 'brown',
+  'camel': 'brown',
+  'chocolate': 'brown',
+  'chestnut': 'brown',
+  'khaki': 'brown',
+  'taupe': 'brown',
+  'copper': 'orange',
+  'rose gold': 'gold',
+};
 
 const _promptColorChinese = <String, String>{
   'multicolored': '\u591A\u5F69',
@@ -416,6 +524,22 @@ const _promptColorChinese = <String, String>{
   'ivory': '\u8C61\u7259\u767D',
   'cream': '\u5976\u6CB9\u8272',
   'beige': '\u7C73\u8272',
+  'slate gray': '\u77F3\u677F\u7070',
+  'pewter': '\u932B\u7070\u8272',
+  'jet black': '\u70CF\u9ED1\u8272',
+  'ebony': '\u70CF\u6728\u9ED1',
+  'off-black': '\u8FD1\u9ED1\u8272',
+  'light brown': '\u6DFA\u8910\u8272',
+  'dark brown': '\u6DF1\u8910\u8272',
+  'coffee': '\u5496\u5561\u8272',
+  'tan': '\u8910\u8272',
+  'camel': '\u99DD\u8272',
+  'chocolate': '\u5DE7\u514B\u529B\u8272',
+  'chestnut': '\u6817\u68D5\u8272',
+  'khaki': '\u5361\u5176\u8272',
+  'taupe': '\u7070\u8910\u8272',
+  'copper': '\u9285\u8272',
+  'rose gold': '\u73AB\u7470\u91D1',
 };
 
 const _promptColorValues = <String, Color>{
@@ -486,6 +610,22 @@ const _promptColorValues = <String, Color>{
   'ivory': Color(0xfffffff0),
   'cream': Color(0xfffffdd0),
   'beige': Color(0xfff5f5dc),
+  'slate gray': Color(0xff708090),
+  'pewter': Color(0xff899499),
+  'jet black': Color(0xff0a0a0a),
+  'ebony': Color(0xff282c35),
+  'off-black': Color(0xff202124),
+  'light brown': Color(0xffb5651d),
+  'dark brown': Color(0xff5c4033),
+  'coffee': Color(0xff6f4e37),
+  'tan': Color(0xffd2b48c),
+  'camel': Color(0xffc19a6b),
+  'chocolate': Color(0xff7b3f00),
+  'chestnut': Color(0xff954535),
+  'khaki': Color(0xffc3b091),
+  'taupe': Color(0xff483c32),
+  'copper': Color(0xffb87333),
+  'rose gold': Color(0xffb76e79),
 };
 
 List<TagItem> _clothingColorTags(
@@ -670,8 +810,6 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_color'),
       _tag('trait_orange_hair', '髮色', '橘髮', 'orange hair', 1,
           conflictGroup: 'hair_color'),
-      _tag('trait_aqua_hair', '髮色', '水藍髮', 'aqua hair', 1,
-          conflictGroup: 'hair_color'),
       _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
           conflictGroup: 'hair_color'),
       ..._hairColorShadeTags(),
@@ -841,6 +979,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'accessory_color'),
       _tag('accessory_color_silver', '配件顏色', '銀色配件', 'silver accessory', 2,
           conflictGroup: 'accessory_color'),
+      _tag('accessory_color_orange', '配件顏色', '橘色配件', 'orange accessory', 2,
+          conflictGroup: 'accessory_color'),
       _tag('accessory_color_multicolored', '配件顏色', '多彩配件',
           'multicolored accessory', 2,
           conflictGroup: 'accessory_color'),
@@ -919,6 +1059,8 @@ List<TagItem> _seedTags() => [
           'socks_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
       ..._clothingColorTags(
           'shoes_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+      ..._clothingColorTags('clothing_detail_color', '服裝細節顏色', '細節', 'detail',
+          'clothing_detail_color'),
 
       ..._clothingColorShadeTags(
           'clothing_shade_color', '服裝顏色', '服裝', 'clothing', 'clothing_color'),
@@ -939,6 +1081,8 @@ List<TagItem> _seedTags() => [
           'socks_shade_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
       ..._clothingColorShadeTags(
           'shoes_shade_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+      ..._clothingColorShadeTags('clothing_detail_shade_color', '服裝細節顏色', '細節',
+          'detail', 'clothing_detail_color'),
       ..._clothingColorShadeTags('accessory_shade_color', '配件顏色', '配件',
           'accessory', 'accessory_color'),
       ..._clothingTrimColorTags(
@@ -1641,6 +1785,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '配件': 35,
       '配件顏色': 36,
       '服裝細節': 37,
+      '服裝細節顏色': 38,
       '服裝材質': 38,
       '穿脫狀態': 39,
       '表情': 40,
@@ -1709,6 +1854,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '鞋子邊線色',
         '配件邊線色',
         '服裝細節',
+        '服裝細節顏色',
         '服裝材質',
         '穿脫狀態',
       }.contains(group) ||
@@ -1726,6 +1872,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '襪子顏色',
         '鞋子顏色',
         '配件顏色',
+        '服裝細節顏色',
       }.contains(group) ||
       group.endsWith('邊線色') ||
       group == '額外特徵顏色';
@@ -1808,6 +1955,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'dark red',
     'light gray',
     'dark gray',
+    'slate gray',
+    'pewter',
+    'jet black',
+    'off-black',
+    'light brown',
+    'dark brown',
+    'rose gold',
     'multicolored',
     'blonde',
     'black',
@@ -1841,6 +1995,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'brown',
     'gray',
     'charcoal',
+    'ebony',
+    'coffee',
+    'tan',
+    'camel',
+    'chocolate',
+    'chestnut',
+    'khaki',
+    'taupe',
+    'copper',
     'ivory',
     'cream',
     'beige',
@@ -1880,6 +2043,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (words.isNotEmpty) return words.first;
     final value = tag.en.trim().toLowerCase();
     return value.isEmpty ? null : value.split(' ').first;
+  }
+
+  String? _colorFamilyForTag(TagItem tag) {
+    final word = _clothingColorWord(tag);
+    if (word == null) return null;
+    return _promptColorFamilies[word] ??
+        (_mainPromptColorWords.contains(word) ? word : null);
+  }
+
+  bool _isShadeColorTag(TagItem tag) {
+    final word = _clothingColorWord(tag);
+    if (word == null || !_promptColorFamilies.containsKey(word)) return false;
+    return !_mainPromptColorWords.contains(word);
+  }
+
+  String? _colorPickerGroup(String group) {
+    if (group == '髮型') return '髮色';
+    return _isClothingColorGroup(group) ? group : null;
+  }
+
+  String? _selectedColorFamily(String pickerGroup, Set<String> selectedIds) {
+    final colorGroup = _colorPickerGroup(pickerGroup);
+    if (colorGroup == null) return null;
+    for (final tag in _allTags) {
+      if (!selectedIds.contains(tag.id) || tag.group != colorGroup) continue;
+      final family = _colorFamilyForTag(tag);
+      if (family != null) return family;
+    }
+    return null;
   }
 
   String _clothingColorPrefix(TagItem tag) {
@@ -2010,8 +2202,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .where((tag) => tag.group == '服裝細節' || tag.group == '服裝材質')
           .toList();
       related.addAll(modifiers);
+      final detailColor = selected.cast<TagItem?>().firstWhere(
+            (tag) => tag?.group == '服裝細節顏色',
+            orElse: () => null,
+          );
+      if (detailColor != null && modifiers.isNotEmpty) {
+        related.add(detailColor);
+      }
       final baseLower = base.en.toLowerCase();
       final colorPrefix = color == null ? null : _clothingColorPrefix(color);
+      final detailColorPrefix =
+          detailColor == null ? null : _clothingColorPrefix(detailColor);
       final trimEnglish = trimColor?.en.trim();
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
       final effectiveColor = colorPrefix != null &&
@@ -2021,12 +2222,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : null;
       final enModifiers = <String>[
         ...styles.map(_clothingModifierEnglish),
-        ...modifiers.map(_clothingModifierEnglish),
+        ...modifiers.map((tag) {
+          final modifier = _clothingModifierEnglish(tag);
+          if (detailColorPrefix == null || detailColorPrefix.isEmpty) {
+            return modifier;
+          }
+          return '$detailColorPrefix $modifier';
+        }),
       ].where((part) =>
           part.trim().isNotEmpty && !baseLower.contains(part.toLowerCase()));
       final zhModifiers = <String>[
         ...styles.map(_clothingModifierChinese),
-        ...modifiers.map(_clothingModifierChinese),
+        ...modifiers.map((tag) {
+          final modifier = _clothingModifierChinese(tag);
+          if (detailColor == null) return modifier;
+          return '${_clothingColorChinesePrefix(detailColor)}$modifier';
+        }),
       ].where((part) => part.trim().isNotEmpty && !base.zh.contains(part));
       final enParts = <String>[
         if (effectiveColor != null) effectiveColor,
@@ -3398,6 +3609,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.group == '胸罩顏色') return 'bra_color';
     if (tag.group == '襪子顏色') return 'legwear_color';
     if (tag.group == '鞋子顏色') return 'footwear_color';
+    if (tag.group == '服裝細節顏色') return 'clothing_detail_color';
     if (tag.conflictGroup != null) return tag.conflictGroup;
     final traitGroups = _traitOverrideGroups(tag.en);
     if (traitGroups.isNotEmpty) return traitGroups.first;
@@ -3654,6 +3866,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '下身顏色',
       '服裝顏色',
       '服裝細節',
+      '服裝細節顏色',
       '服裝材質',
       '穿脫狀態',
     };
@@ -3700,6 +3913,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..shuffle(random);
     for (final tag in detailCandidates.take(1 + random.nextInt(3))) {
       add(tag);
+    }
+    if (added.any((tag) => tag.group == '服裝細節' || tag.group == '服裝材質') &&
+        random.nextBool()) {
+      add(_randomClothingTag(['服裝細節顏色'], random));
     }
     final accessoryCandidates = _allTags
         .where((tag) => tag.group == '配件' && (_showAdult || !tag.adult))
@@ -5377,6 +5594,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '下身顏色',
                     '服裝顏色',
                     '服裝細節',
+                    '服裝細節顏色',
                     '服裝材質',
                     '穿脫狀態',
                     '表情',
@@ -5405,6 +5623,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> _visibleTags(String group) {
     final query = _search.text.trim().toLowerCase();
     final effectiveGroup = group == '髮色' ? '髮型' : group;
+    final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
       final groupMatch =
@@ -5413,7 +5632,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
-      return groupMatch && adultMatch && queryMatch;
+      final colorGroup = _colorPickerGroup(effectiveGroup);
+      final colorMatch = group == '全部'
+          ? !_isShadeColorTag(tag) || (query.isNotEmpty && queryMatch)
+          : colorGroup == null || !_isShadeColorTag(tag)
+              ? true
+              : selectedFamily == _colorFamilyForTag(tag) ||
+                  (query.isNotEmpty && queryMatch);
+      return groupMatch && adultMatch && queryMatch && colorMatch;
     }).toList();
     return _sortPickerTags(tags, effectiveGroup);
   }
@@ -5549,8 +5775,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<TagItem> _stepVisibleTags(List<String> groups,
-      {String? queryText, String? activeGroup}) {
+      {String? queryText, String? activeGroup, int? personIndex}) {
     final query = (queryText ?? _search.text).trim().toLowerCase();
+    final pickerGroup = activeGroup ?? groups.first;
+    final selectedIds =
+        personIndex == null ? _selectedIds : _personTagIds(personIndex);
+    final selectedFamily = _selectedColorFamily(pickerGroup, selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final inGroup = (groups.contains(tag.group) || hairColorInHairGroup) &&
@@ -5561,9 +5791,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
-      return inGroup && adultMatch && queryMatch;
+      final colorGroup = _colorPickerGroup(pickerGroup);
+      final colorMatch = colorGroup == null || !_isShadeColorTag(tag)
+          ? true
+          : selectedFamily == _colorFamilyForTag(tag) ||
+              (query.isNotEmpty && queryMatch);
+      return inGroup && adultMatch && queryMatch && colorMatch;
     }).toList();
-    return _sortPickerTags(tags, activeGroup ?? groups.first);
+    return _sortPickerTags(tags, pickerGroup);
   }
 
   Widget _stepTagPicker(List<String> groups,
@@ -5579,7 +5814,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ? _search.text
         : (_personTagQueries[personIndex] ?? '');
     final visible = _stepVisibleTags(groups,
-        queryText: tagQuery, activeGroup: currentGroup);
+        queryText: tagQuery,
+        activeGroup: currentGroup,
+        personIndex: personIndex);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -5749,6 +5986,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     bool has(String group) => selected.any((tag) => tag.group == group);
     final onePiece = selected.any((tag) => ['服裝', '服裝風格'].contains(tag.group));
     final groups = <String>['服裝細節', '服裝材質', '穿脫狀態'];
+    if (has('服裝細節') || has('服裝材質')) {
+      groups.insert(0, '服裝細節顏色');
+    }
     if (onePiece) {
       groups.insertAll(0, ['服裝風格', '服裝顏色', '服裝邊線色']);
     } else {
@@ -6402,6 +6642,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '下身顏色',
                     '服裝顏色',
                     '服裝細節',
+                    '服裝細節顏色',
                     '服裝材質',
                     '穿脫狀態'
                   ].contains(tag.group))
