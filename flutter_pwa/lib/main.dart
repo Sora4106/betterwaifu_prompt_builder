@@ -3266,17 +3266,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tagIds: ids,
         personIndex: personIndex,
       ));
-      // BetterWaifu prompts often reinforce a one-piece garment with the
-      // generic clothing colour tag as well as the composed noun.
-      if (base.group == '服裝' && color != null) {
-        result.add(_GeneratedOutputTag(
-          zh: color.zh,
-          en: color.en,
-          tagId: color.id,
-          tagIds: [color.id],
-          personIndex: personIndex,
-        ));
-      }
     }
 
     for (final tag in selected.where((tag) =>
