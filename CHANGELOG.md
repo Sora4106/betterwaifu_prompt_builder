@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.43+45 - 2026-09-06
+
+- 自動偵測：fix: compose one-piece outfit labels
+
+
 ## 1.1.42+44 - 2026-09-06
 
 - 自動偵測：fix: remove duplicate one-piece clothing color

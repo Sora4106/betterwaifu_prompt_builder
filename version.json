@@ -1,8 +1,15 @@
 {
-  "version": "1.1.42",
-  "build": 44,
-  "label": "1.1.42+44",
+  "version": "1.1.43",
+  "build": 45,
+  "label": "1.1.43+45",
   "history": [
+    {
+      "version": "1.1.43",
+      "build": 45,
+      "label": "1.1.43+45",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: compose one-piece outfit labels"
+    },
     {
       "version": "1.1.42",
       "build": 44,
