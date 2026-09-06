@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.30",
-  "build": 32,
-  "label": "1.1.30+32",
+  "version": "1.1.31",
+  "build": 33,
+  "label": "1.1.31+33",
   "history": [
+    {
+      "version": "1.1.31",
+      "build": 33,
+      "label": "1.1.31+33",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add hierarchical color selectors"
+    },
     {
       "version": "1.1.30",
       "build": 32,
