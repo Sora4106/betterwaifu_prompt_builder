@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'app_version.dart';
 import 'catalog_data.dart';
+import 'expanded_tag_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
@@ -2230,10 +2231,8 @@ List<TagItem> _seedTags() => [
       _tag('body_nipples', '胸部', '乳頭可見', 'nipples', 5, adult: true),
       _tag('body_breast_press', '胸部', '胸部擠壓', 'breast press', 5, adult: true),
       _tag('nudity_nude', '裸露', '裸體', 'nude', 6, adult: true),
-      _tag('nudity_nude_female', '裸露', '裸體女性', 'nude female', 6,
-          adult: true),
-      _tag('nudity_vagina', '裸露', '陰部（成年角色）', 'vagina', 6,
-          adult: true),
+      _tag('nudity_nude_female', '裸露', '裸體女性', 'nude female', 6, adult: true),
+      _tag('nudity_vagina', '裸露', '陰部（成年角色）', 'vagina', 6, adult: true),
       _tag('nudity_topless', '裸露', '上空', 'topless', 6, adult: true),
       _tag('nudity_bottomless', '裸露', '下空', 'bottomless', 6, adult: true),
       _tag('nudity_bare_shoulders', '裸露', '裸肩', 'bare shoulders', 6),
@@ -2345,8 +2344,7 @@ List<TagItem> _seedTags() => [
       _tag('act_bondage', '性行為', '束縛（成年角色）', 'bondage', 7, adult: true),
       _tag('act_bdsm', '性行為', 'BDSM（成年角色）', 'bdsm', 7, adult: true),
       _tag('act_cum', '性行為', '體液（成年角色）', 'cum', 7, adult: true),
-      _tag('act_semen_flowing_out', '性行為', '精液流出（成年角色）',
-          'semen flowing out', 7,
+      _tag('act_semen_flowing_out', '性行為', '精液流出（成年角色）', 'semen flowing out', 7,
           adult: true),
       _tag('act_cumshot', '性行為', '射精畫面（成年角色）', 'cumshot', 7, adult: true),
       _tag('act_sweat', '性行為', '汗水', 'sweat', 7),
@@ -2393,8 +2391,7 @@ List<TagItem> _seedTags() => [
       // Scene, camera and model-friendly quality terms.
       _tag('scene_bedroom', '場景', '臥室', 'bedroom', 9),
       _tag('scene_in_a_room', '場景', '在房間內', 'in a room', 9),
-      _tag('scene_wet_bed', '場景', '濕床（成年角色）', 'wet bed', 9,
-          adult: true),
+      _tag('scene_wet_bed', '場景', '濕床（成年角色）', 'wet bed', 9, adult: true),
       _tag('scene_bathroom', '場景', '浴室', 'bathroom', 9),
       _tag('scene_classroom', '場景', '教室', 'classroom', 9),
       _tag('scene_beach', '場景', '海灘', 'beach', 9),
@@ -2487,8 +2484,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       conflictGroup: tag.conflictGroup,
     );
   }).toList();
-  final List<TagItem> _supplemental =
-      supplementalTags.map(_catalogTag).toList();
+  final List<TagItem> _supplemental = [
+    ...supplementalTags,
+    ...expandedPromptTags,
+  ].map(_catalogTag).toList();
   final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
@@ -2614,6 +2613,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '場景': 60,
       '畫面': 61,
     };
+    if (expandedAdultClothingGroups.contains(group)) return 36;
+    if (expandedSexualActGroups.contains(group)) return 42;
+    if (expandedSexualPoseGroups.contains(group)) return 43;
+    if (expandedGeneralPoseGroups.contains(group)) {
+      return const {'身體動作', '多人互動', '角色姿勢'}.contains(group) ? 44 : 41;
+    }
+    if (expandedAdultToolGroups.contains(group)) return 46;
     return order[group] ?? 50;
   }
 
@@ -3660,8 +3666,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isFinalPersonOutputTag(int personIndex, _GeneratedOutputTag output) {
     const finalGroups = {'性行為', '性姿勢'};
     final selected = _selectedTagsForPerson(personIndex);
-    return output.tagIds.any((id) =>
-        selected.any((tag) => tag.id == id && finalGroups.contains(tag.group)));
+    return output.tagIds.any((id) => selected.any((tag) =>
+        tag.id == id &&
+        (finalGroups.contains(tag.group) ||
+            expandedSharedFinalGroups.contains(tag.group))));
   }
 
   List<_GeneratedOutputTag> _personScopedPromptTags(int personIndex) =>
@@ -5072,6 +5080,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (groupSet.contains('性姿勢')) {
       addRandomFromGroup('性姿勢', max: 1);
+    }
+
+    const directlyHandledGroups = <String>{
+      '外觀特徵',
+      '眼睛',
+      '身體特徵',
+      '額外特徵',
+      '髮型',
+      '表情',
+      '胸部',
+      '裸露',
+      '姿勢',
+      '動作',
+      '物件',
+      '成人道具',
+      '性行為',
+      '性姿勢',
+    };
+    final expandedGroups = groupSet.difference(directlyHandledGroups);
+    if (expandedGroups.isNotEmpty) {
+      final pool = _allTags
+          .where((tag) =>
+              expandedGroups.contains(tag.group) && (_showAdult || !tag.adult))
+          .toList()
+        ..shuffle(random);
+      final maxCount = expandedGroups.any(expandedSexualPoseGroups.contains)
+          ? 1
+          : min(2, pool.length);
+      for (final tag in pool) {
+        if (added.where((item) => expandedGroups.contains(item.group)).length >=
+            maxCount) {
+          break;
+        }
+        add(tag);
+      }
     }
 
     setState(_persist);
@@ -7947,6 +7990,151 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _stepCategorizedPersonTagPicker(
+    Map<String, List<String>> sections, {
+    required String nextLabel,
+    required String instruction,
+  }) {
+    final sectionNames = sections.keys.toList();
+    if (sectionNames.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(instruction),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: _showAdult,
+          title: const Text('顯示 18+ 分類'),
+          subtitle: const Text('成人姿勢、情趣服飾與成人道具預設隱藏。'),
+          onChanged: (value) => setState(() {
+            _showAdult = value;
+            _persist();
+          }),
+        ),
+        const SizedBox(height: 8),
+        ..._personSlots.asMap().entries.map((entry) {
+          final index = entry.key;
+          final slot = entry.value;
+          final characterNames = _characterChineseForSlot(slot, index);
+          final title =
+              characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
+          if (!slot.detailed) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(child: Text('${index + 1}')),
+                title: Text('人物 ${index + 1}'),
+                subtitle: const Text('此人物設定為不需細節，不加入此類標籤。'),
+              ),
+            );
+          }
+
+          final sectionKey = 'expanded-section:$index';
+          final storedSection = _personActiveGroups[sectionKey];
+          final currentSection =
+              storedSection != null && sections.containsKey(storedSection)
+                  ? storedSection
+                  : sectionNames.first;
+          final currentGroups = sections[currentSection]!;
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            color:
+                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(child: Text('${index + 1}')),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '人物 ${index + 1} · $title',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: '隨機目前分類（自動避開衝突）',
+                        onPressed: () =>
+                            _randomizePersonGroups(index, currentGroups),
+                        icon: const Icon(Icons.shuffle),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  LayoutBuilder(
+                    builder: (context, constraints) => Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: sectionNames.map((section) {
+                        final selected = section == currentSection;
+                        return ConstrainedBox(
+                          constraints:
+                              BoxConstraints(maxWidth: constraints.maxWidth),
+                          child: SizedBox(
+                            width: _wizardGroupChipWidth(
+                              section,
+                              constraints.maxWidth,
+                            ),
+                            child: ChoiceChip(
+                              label: Text(
+                                section,
+                                softWrap: true,
+                                maxLines: 2,
+                                overflow: TextOverflow.clip,
+                                style: TextStyle(
+                                  color: selected
+                                      ? _buttonSelectedText
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              selected: selected,
+                              backgroundColor: _buttonSurface,
+                              selectedColor: _buttonSelectedSurface,
+                              side: BorderSide(
+                                color: selected
+                                    ? const Color(0xfff0eaff)
+                                    : _buttonBorder,
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              onSelected: (_) => setState(
+                                () => _personActiveGroups[sectionKey] = section,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _stepTagPicker(
+                    currentGroups,
+                    nextLabel: nextLabel,
+                    personIndex: index,
+                    showNext: false,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: _advanceStep,
+            icon: const Icon(Icons.arrow_forward),
+            label: Text(nextLabel),
+          ),
+        ),
+      ],
+    );
+  }
+
   String _activePersonPickerGroup(int personIndex, List<String> groups) {
     if (groups.isEmpty) return '';
     final key = '$personIndex:${groups.join('|')}';
@@ -7975,8 +8163,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> _legacyClothingDetailGroups(int personIndex) {
     final selected = _selectedTagsForPerson(personIndex);
     bool has(String group) => selected.any((tag) => tag.group == group);
-    final onePiece = selected.any(
-        (tag) => ['服裝', '服裝風格', _cosplayGroup].contains(tag.group));
+    final onePiece = selected
+        .any((tag) => ['服裝', '服裝風格', _cosplayGroup].contains(tag.group));
     final groups = <String>['服裝細節', '服裝材質', '穿脫狀態'];
     if (has('服裝細節') || has('服裝材質')) {
       groups.insert(0, '服裝細節顏色');
@@ -8685,18 +8873,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepClothing()),
       _stepCard(
           5,
-          '姿勢、動作、物件與成人道具',
+          '姿勢、互動與成人分類',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
               .where((tag) =>
-                  ['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'].contains(tag.group))
+                  ['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢']
+                      .contains(tag.group) ||
+                  expandedPickerTagGroups.contains(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
-          _stepPersonTagPicker(['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'],
+          _stepCategorizedPersonTagPicker(expandedTagPickerSections,
               nextLabel: '下一步：品質與負面',
-              instruction: '請分別設定每位人物的基本姿勢、運動動作、常見物件、成人道具與性姿勢；不同人物可以使用不同姿勢。')),
+              instruction: '先選上層分類，再選細分類與標籤；每位人物會保留自己的姿勢、互動、服飾與成人內容。')),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal()),
     ]);
