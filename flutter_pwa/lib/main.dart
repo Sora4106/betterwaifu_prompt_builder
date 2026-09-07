@@ -2799,6 +2799,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _clothingScopeForBase(TagItem tag) {
     if (_isCosplayTag(tag)) return 'onepiece';
+    final scopedKind = _scopedClothingKind(tag.group);
+    if (scopedKind == 'style') return _scopedClothingSlot(tag.group);
     if (!_isClothingBaseTag(tag) && !_isLegacyClothingStyleTag(tag))
       return null;
     if (tag.group == _clothingGroupTop) return 'top';
@@ -2819,6 +2821,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final bases = selected.where(_isClothingBaseTag).toList();
     if (bases.isEmpty) {
       bases.addAll(selected.where(_isCosplayTag));
+    }
+    if (bases.isEmpty) {
+      // A scoped style can stand on its own (for example, selecting only
+      // "high heel shoes" plus a shoe color). Treat it as the garment noun
+      // so the color is composed into the same output tag.
+      bases.addAll(selected.where((tag) =>
+          _scopedClothingKind(tag.group) == 'style'));
     }
     final fallbackStyles =
         selected.where(_isLegacyClothingStyleTag).where((tag) {
@@ -2891,6 +2900,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingColorGroup(String group) {
+    final scopedSlot = _scopedClothingSlot(group);
+    if (scopedSlot != null) {
+      return switch (scopedSlot) {
+        'onepiece' => '服裝顏色',
+        'top' => '上衣顏色',
+        'pants' || 'skirt' => '下身顏色',
+        'underwear' => '內衣顏色',
+        'bra' => '胸罩顏色',
+        'panties' => '內褲顏色',
+        'socks' => '襪子顏色',
+        'shoes' => '鞋子顏色',
+        'accessory' => '配件顏色',
+        _ => null,
+      };
+    }
     if (group == '服裝' || group == '服裝風格' || group == _cosplayGroup) {
       return '服裝顏色';
     }
@@ -2906,6 +2930,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingTrimColorGroup(String group) {
+    final scopedSlot = _scopedClothingSlot(group);
+    if (scopedSlot != null) {
+      return switch (scopedSlot) {
+        'onepiece' => '服裝邊線色',
+        'top' => '上衣邊線色',
+        'pants' || 'skirt' => '下身邊線色',
+        'underwear' => '內衣邊線色',
+        'bra' => '胸罩邊線色',
+        'panties' => '內褲邊線色',
+        'socks' => '襪子邊線色',
+        'shoes' => '鞋子邊線色',
+        'accessory' => '配件邊線色',
+        _ => null,
+      };
+    }
     if (group == '服裝' || group == _cosplayGroup) return '服裝邊線色';
     if (group == '上衣') return '上衣邊線色';
     if (group == '褲子' || group == '裙子') return '下身邊線色';
@@ -3366,6 +3405,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final chineseBaseCoveredByStyle = base.zh.isNotEmpty &&
           zhStyleModifiers.any((part) => part.contains(base.zh));
       final cosplayCoversOnePiece = styles.any(_isCosplayTag);
+      final baseChinese = _scopedClothingKind(base.group) == 'style'
+          ? _clothingModifierChinese(base)
+          : base.zh;
       final enParts = <String>[
         if (effectiveColor != null) effectiveColor,
         ...enStyleModifiers,
@@ -3380,7 +3422,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (effectiveColor != null && color != null)
           _clothingColorChinesePrefix(color),
         ...zhStyleModifiers,
-        if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) base.zh,
+        if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
         ...zhDetailModifiers,
         if (trimColor != null) trimColor.zh,
         if (accessoryPosition != null) accessoryPosition.zh,
