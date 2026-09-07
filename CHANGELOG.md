@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.44+46 - 2026-09-07
+
+- 自動偵測：feat: add cosplay and scene prompt tags
+
+
 ## 1.1.43+45 - 2026-09-06
 
 - 自動偵測：fix: compose one-piece outfit labels

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.43",
-  "build": 45,
-  "label": "1.1.43+45",
+  "version": "1.1.44",
+  "build": 46,
+  "label": "1.1.44+46",
   "history": [
+    {
+      "version": "1.1.44",
+      "build": 46,
+      "label": "1.1.44+46",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add cosplay and scene prompt tags"
+    },
     {
       "version": "1.1.43",
       "build": 45,
