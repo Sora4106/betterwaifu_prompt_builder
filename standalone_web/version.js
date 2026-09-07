@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.45",
-  "build": 47,
-  "label": "1.1.45+47",
+  "version": "1.1.46",
+  "build": 48,
+  "label": "1.1.46+48",
   "history": [
+    {
+      "version": "1.1.46",
+      "build": 48,
+      "label": "1.1.46+48",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: compose shoe styles and clarify demon tail"
+    },
     {
       "version": "1.1.45",
       "build": 47,

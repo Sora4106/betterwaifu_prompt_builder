@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.46+48 - 2026-09-07
+
+- 自動偵測：fix: compose shoe styles and clarify demon tail
+
+
 ## 1.1.45+47 - 2026-09-07
 
 - 自動偵測：feat: add official categorized prompt tags
