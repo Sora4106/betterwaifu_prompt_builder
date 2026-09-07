@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.45+47 - 2026-09-07
+
+- 自動偵測：feat: add official categorized prompt tags
+
+
 ## 1.1.44+46 - 2026-09-07
 
 - 自動偵測：feat: add cosplay and scene prompt tags

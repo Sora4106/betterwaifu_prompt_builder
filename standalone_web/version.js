@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.44",
-  "build": 46,
-  "label": "1.1.44+46",
+  "version": "1.1.45",
+  "build": 47,
+  "label": "1.1.45+47",
   "history": [
+    {
+      "version": "1.1.45",
+      "build": 47,
+      "label": "1.1.45+47",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add official categorized prompt tags"
+    },
     {
       "version": "1.1.44",
       "build": 46,

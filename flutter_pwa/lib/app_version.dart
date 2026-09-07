@@ -1,7 +1,8 @@
-const appVersion = '1.1.44';
-const appBuildNumber = 46;
-const appVersionLabel = '1.1.44+46';
+const appVersion = '1.1.45';
+const appBuildNumber = 47;
+const appVersionLabel = '1.1.45+47';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add official categorized prompt tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add cosplay and scene prompt tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: compose one-piece outfit labels'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: remove duplicate one-piece clothing color'},
