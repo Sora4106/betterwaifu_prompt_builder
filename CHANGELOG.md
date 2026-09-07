@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.51+53 - 2026-09-07
+
+- 自動偵測：fix: restore independent section randomization
+
+
 ## 1.1.50+52 - 2026-09-07
 
 - 自動偵測：feat: sync scene clothing and pose randomization

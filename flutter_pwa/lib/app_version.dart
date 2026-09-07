@@ -1,7 +1,8 @@
-const appVersion = '1.1.50';
-const appBuildNumber = 52;
-const appVersionLabel = '1.1.50+52';
+const appVersion = '1.1.51';
+const appBuildNumber = 53;
+const appVersionLabel = '1.1.51+53';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: restore independent section randomization'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: sync scene clothing and pose randomization'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show secondary colors for all shoe and panties styles'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: merge one-piece clothing styles into base garments'},
