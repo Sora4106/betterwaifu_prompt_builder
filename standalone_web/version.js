@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.47",
-  "build": 49,
-  "label": "1.1.47+49",
+  "version": "1.1.48",
+  "build": 50,
+  "label": "1.1.48+50",
   "history": [
+    {
+      "version": "1.1.48",
+      "build": 50,
+      "label": "1.1.48+50",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: merge one-piece clothing styles into base garments"
+    },
     {
       "version": "1.1.47",
       "build": 49,

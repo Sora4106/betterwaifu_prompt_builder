@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.48+50 - 2026-09-07
+
+- 自動偵測：fix: merge one-piece clothing styles into base garments
+
+
 ## 1.1.47+49 - 2026-09-07
 
 - 自動偵測：fix: avoid coral animal moderation false positive

@@ -1,7 +1,8 @@
-const appVersion = '1.1.47';
-const appBuildNumber = 49;
-const appVersionLabel = '1.1.47+49';
+const appVersion = '1.1.48';
+const appBuildNumber = 50;
+const appVersionLabel = '1.1.48+50';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: merge one-piece clothing styles into base garments'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: avoid coral animal moderation false positive'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: compose shoe styles and clarify demon tail'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add official categorized prompt tags'},
