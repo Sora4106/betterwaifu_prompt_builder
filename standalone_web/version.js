@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.51",
-  "build": 53,
-  "label": "1.1.51+53",
+  "version": "1.1.52",
+  "build": 54,
+  "label": "1.1.52+54",
   "history": [
+    {
+      "version": "1.1.52",
+      "build": 54,
+      "label": "1.1.52+54",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add per-section tag clearing"
+    },
     {
       "version": "1.1.51",
       "build": 53,
