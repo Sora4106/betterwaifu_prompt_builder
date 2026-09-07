@@ -4476,6 +4476,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
+  /// Removes repeated English labels while preserving the first label's
+  /// Chinese/English pairing and output order.
+  ///
+  /// This is intentionally separate from [_deduplicateGeneratedOutputTags].
+  /// The latter keeps person/character/combination ownership so deleting a
+  /// chip can still update the correct source. Prompt rendering, however,
+  /// must not print the same English label twice inside one person group.
+  List<_GeneratedOutputTag> _deduplicatePromptOutputTags(
+      Iterable<_GeneratedOutputTag> tags,
+      {Set<String>? used}) {
+    final seen = used ?? <String>{};
+    final result = <_GeneratedOutputTag>[];
+    for (final tag in tags) {
+      final key = _cleanTag(tag.en).toLowerCase();
+      if (key.isEmpty || !seen.add(key)) continue;
+      result.add(tag);
+    }
+    return result;
+  }
+
   void _removeGeneratedOutputTag(_GeneratedOutputTag outputTag) {
     setState(() {
       if (outputTag.combinationId != null && outputTag.personIndex != null) {
@@ -4735,15 +4755,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     addTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
-      final personal = [
-        ..._characterTokensForSlot(_personSlots[index], index),
-        ..._personScopedPromptTags(index).map((tag) => tag.en),
-      ]
-          .where((value) => !used.contains(_cleanTag(value).toLowerCase()))
-          .toList();
+      final personal = _deduplicatePromptOutputTags([
+        ..._characterOutputTagsForSlot(_personSlots[index], index),
+        ..._personScopedPromptTags(index),
+      ], used: used);
       if (personal.isEmpty) continue;
-      personal.forEach((value) => used.add(_cleanTag(value).toLowerCase()));
-      output.add('(${personal.join(', ')}:1.15).');
+      output.add('(${personal.map((tag) => tag.en).join(', ')}:1.15).');
     }
     for (var index = 0; index < _personSlots.length; index++) {
       addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
@@ -4758,20 +4775,52 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String get _positiveZh {
     final tokens = <String>[_peopleZhNew()];
-    for (var index = 0; index < _personSlots.length; index++) {
-      final personalTags =
-          _deduplicateGeneratedOutputTags(_personPromptTags(index));
-      final personal = [
-        ..._characterChineseForSlot(_personSlots[index], index),
-        ...personalTags.map((tag) => tag.zh),
-      ];
-      tokens.add('人物 ${index + 1}：${personal.join('、')}');
+    final used = <String>{};
+
+    if (_groupPeoplePrompt && _personSlots.length > 1) {
+      for (var index = 0; index < _personSlots.length; index++) {
+        final personal = _deduplicatePromptOutputTags([
+          ..._characterOutputTagsForSlot(_personSlots[index], index),
+          ..._personScopedPromptTags(index),
+        ], used: used);
+        if (personal.isEmpty) continue;
+        tokens.add(
+            '人物 ${index + 1}：${personal.map((tag) => tag.zh).join('、')}');
+      }
+      for (var index = 0; index < _personSlots.length; index++) {
+        tokens.addAll(_deduplicatePromptOutputTags(
+                _personFinalPromptTags(index),
+                used: used)
+            .map((tag) => tag.zh));
+      }
+    } else {
+      for (var index = 0; index < _personSlots.length; index++) {
+        tokens.addAll(_deduplicatePromptOutputTags([
+          ..._characterOutputTagsForSlot(_personSlots[index], index),
+          ..._personPromptTags(index),
+        ], used: used).map((tag) => tag.zh));
+      }
     }
-    tokens.addAll(_selectedTags.map((tag) => tag.zh));
+
+    tokens.addAll(_deduplicatePromptOutputTags(
+      _selectedTags.map((tag) => _GeneratedOutputTag(
+            zh: tag.zh,
+            en: tag.en,
+            tagId: tag.id,
+          )),
+      used: used,
+    ).map((tag) => tag.zh));
     if (_extraPositive.text.trim().isNotEmpty) {
-      tokens.add(
-        '額外正向標籤（中文對照）：${_extraTags(_extraPositive.text).map(_positiveChineseTag).join('、')}',
+      final extra = _deduplicatePromptOutputTags(
+        _extraTags(_extraPositive.text).map((value) => _GeneratedOutputTag(
+              zh: _positiveChineseTag(value),
+              en: _positiveEnglishTag(value),
+            )),
+        used: used,
       );
+      if (extra.isNotEmpty) {
+        tokens.add('額外正向標籤（中文對照）：${extra.map((tag) => tag.zh).join('、')}');
+      }
     }
     if (_preprompt.text.trim().isNotEmpty)
       tokens.add('Amanatsu 品質前綴：${_preprompt.text.trim()}');
@@ -5949,6 +5998,153 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('目前組合已清除')));
     _scrollToStep(0);
+  }
+
+  Future<void> _clearStepTags(int index) async {
+    const titles = <int, String>{
+      0: '場景與畫面',
+      1: '角色資料',
+      2: '組合標籤',
+      3: '角色特徵',
+      4: '服裝與穿脫狀態',
+      5: '姿勢、互動與成人分類',
+      6: '品質、額外與負面',
+    };
+    final title = titles[index] ?? '本大項';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('清除「$title」？'),
+        content: Text('只會移除「$title」中的目前標籤與輸入內容，不會影響其他大項目。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('確定清除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    const characterGroups = <String>{
+      '外觀特徵',
+      '身體特徵',
+      '眼睛',
+      '臉部特徵',
+      '表情',
+      '額外特徵',
+      '額外特徵位置',
+      '額外特徵顏色',
+      '髮型',
+      '髮色',
+      '胸部',
+      '裸露',
+    };
+    const poseGroups = <String>{
+      '姿勢',
+      '動作',
+      '物件',
+      '成人道具',
+      '性行為',
+      '性姿勢',
+    };
+    final removableByGroup = (Set<String> groups) => _allTags
+        .where((tag) => groups.contains(tag.group))
+        .map((tag) => tag.id)
+        .toSet();
+    void removePersonTags(bool Function(String group) matches) {
+      final removable = _allTags
+          .where((tag) => matches(tag.group))
+          .map((tag) => tag.id)
+          .toSet();
+      for (final ids in _personSelectedIds.values) {
+        ids.removeWhere(removable.contains);
+      }
+      _personSelectedIds.removeWhere((_, ids) => ids.isEmpty);
+    }
+
+    setState(() {
+      switch (index) {
+        case 0:
+          final removable = removableByGroup({'場景', '畫面'});
+          _selectedIds.removeWhere(removable.contains);
+          _search.clear();
+          _activeGroup = '全部';
+          break;
+        case 1:
+          for (final slot in _personSlots) {
+            slot
+              ..detailed = false
+              ..mode = '原創'
+              ..characterId = ''
+              ..animeQuery = ''
+              ..animeTag = ''
+              ..remoteAnimeZh = ''
+              ..remoteAnimeEn = ''
+              ..query = ''
+              ..originalAnimeZh = ''
+              ..originalAnimeEn = ''
+              ..originalAnimeTag = ''
+              ..originalCharacterZh = ''
+              ..originalCharacterEn = ''
+              ..originalCharacterTag = ''
+              ..originalTraits = '';
+          }
+          _removedCharacterTags.clear();
+          _personTagQueries.clear();
+          _personActiveGroups.clear();
+          break;
+        case 2:
+          for (final entry in _personCombinationIds.entries) {
+            final appliedTagIds = _combinations
+                .where((combination) => entry.value.contains(combination.id))
+                .expand((combination) => combination.tagIds)
+                .toSet();
+            _personTagIds(entry.key).removeWhere(appliedTagIds.contains);
+          }
+          _personCombinationIds.clear();
+          break;
+        case 3:
+          removePersonTags(characterGroups.contains);
+          for (var personIndex = 0;
+              personIndex < _personSlots.length;
+              personIndex++) {
+            final slot = _personSlots[personIndex];
+            final character = _characterForNew(slot);
+            for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+              _removedCharacterTagSet(personIndex)
+                  .add(_cleanTag(trait.en).toLowerCase());
+            }
+            if (slot.mode == '原創') {
+              for (final trait in _extraTags(slot.originalTraits)) {
+                _removedCharacterTagSet(personIndex)
+                    .add(_cleanTag(trait).toLowerCase());
+              }
+            }
+          }
+          break;
+        case 4:
+          removePersonTags(_isClothingGroup);
+          break;
+        case 5:
+          removePersonTags((group) =>
+              poseGroups.contains(group) || expandedPickerTagGroups.contains(group));
+          break;
+        case 6:
+          _extraPositive.clear();
+          _reversePrompt.clear();
+          _negative.text = _defaultNegativeText;
+          _preprompt.clear();
+          break;
+      }
+      _persist();
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('已清除「$title」')));
   }
 
   void _downloadBackup() {
@@ -8454,7 +8650,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _scrollToStep(index);
   }
 
-  Widget _stepHeader(int index, String title, String summary, IconData icon) {
+  Widget _stepHeader(int index, String title, String summary, IconData icon,
+      {VoidCallback? onClear}) {
     final expanded = _stepIndex == index;
     return InkWell(
       onTap: () => _openStep(index),
@@ -8482,20 +8679,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onSurfaceVariant))
               ])),
-          Icon(expanded ? Icons.expand_less : Icons.expand_more),
+           Icon(expanded ? Icons.expand_less : Icons.expand_more),
+           if (onClear != null)
+             IconButton(
+               tooltip: '清除本大項標籤',
+               onPressed: onClear,
+               icon: const Icon(Icons.delete_outline),
+             ),
         ]),
       ),
     );
   }
 
   Widget _stepCard(
-      int index, String title, String summary, IconData icon, Widget child) {
+      int index, String title, String summary, IconData icon, Widget child,
+      {VoidCallback? onClear}) {
     return Card(
       key: _stepKey(index),
       margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
       child: Column(children: [
-        _stepHeader(index, title, summary, icon),
+        _stepHeader(index, title, summary, icon, onClear: onClear),
         if (_stepIndex == index) const Divider(height: 1),
         if (_stepIndex == index)
           Padding(
@@ -8900,13 +9104,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
               _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料'),
             ],
-          )),
+          ),
+          onClear: () => _clearStepTags(0)),
       _stepCard(
           1,
           '角色資料',
           _characterChineseNew().join('、').ifEmpty('每個人物都要設定或選擇不需細節'),
           Icons.badge_outlined,
-          _stepCharacters()),
+          _stepCharacters(),
+          onClear: () => _clearStepTags(1)),
       _stepCard(
           2,
           '\u7D44\u5408\u6A19\u7C64',
@@ -8914,7 +9120,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ? '\u5EFA\u7ACB\u53EF\u91CD\u8907\u5957\u7528\u7684\u670D\u88DD\u6216\u59FF\u52E2\u7D44\u5408'
               : '${_combinations.length} \u500B\u7D44\u5408\u53EF\u5957\u7528',
           Icons.auto_awesome_motion_outlined,
-          _stepCombinations()),
+          _stepCombinations(),
+          onClear: () => _clearStepTags(2)),
       _stepCard(
           3,
           '角色特徵',
@@ -8954,7 +9161,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '裸露',
           ],
               nextLabel: '下一步：服裝',
-              instruction: '請在每位人物自己的區塊內設定外觀、身體、眼睛、額外特徵、髮型與表情；髮色位於髮型分類最下方。')),
+               instruction: '請在每位人物自己的區塊內設定外觀、身體、眼睛、額外特徵、髮型與表情；髮色位於髮型分類最下方。'),
+          onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
           '服裝與穿脫狀態',
@@ -8986,7 +9194,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.checkroom_outlined,
-          _stepClothing()),
+          _stepClothing(),
+          onClear: () => _clearStepTags(4)),
       _stepCard(
           5,
           '姿勢、互動與成人分類',
@@ -9002,9 +9211,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.accessibility_new,
           _stepCategorizedPersonTagPicker(expandedTagPickerSections,
               nextLabel: '下一步：品質與負面',
-              instruction: '先選上層分類，再選細分類與標籤；每位人物會保留自己的姿勢、互動、服飾與成人內容。')),
+               instruction: '先選上層分類，再選細分類與標籤；每位人物會保留自己的姿勢、互動、服飾與成人內容。'),
+          onClear: () => _clearStepTags(5)),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
-          _stepFinal()),
+          _stepFinal(),
+          onClear: () => _clearStepTags(6)),
     ]);
   }
 
@@ -9264,7 +9475,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '人物數量：${_peopleZh()}',
+                    '人物數量：${_peopleZhNew()}',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -9420,7 +9631,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '輸出順序：${_peopleTag()} → 角色/特徵 → 服裝 → 表情 → 姿勢 → 場景/畫面 → 品質前綴。',
+                      '輸出順序：${_peopleTagNew()} → 角色/特徵 → 服裝 → 表情 → 姿勢 → 場景/畫面 → 品質前綴。',
                     ),
                   ),
                 ],
