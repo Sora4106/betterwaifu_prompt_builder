@@ -2826,8 +2826,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // A scoped style can stand on its own (for example, selecting only
       // "high heel shoes" plus a shoe color). Treat it as the garment noun
       // so the color is composed into the same output tag.
-      bases.addAll(selected.where((tag) =>
-          _scopedClothingKind(tag.group) == 'style'));
+      bases.addAll(
+          selected.where((tag) => _scopedClothingKind(tag.group) == 'style'));
     }
     final fallbackStyles =
         selected.where(_isLegacyClothingStyleTag).where((tag) {
@@ -2955,6 +2955,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == '鞋子') return '鞋子邊線色';
     if (group == '配件') return '配件邊線色';
     return null;
+  }
+
+  String _betterWaifuTrimEnglish(TagItem tag) {
+    // BetterWaifu's animal-content check can interpret the color word
+    // "coral" as the marine animal. Keep the Chinese meaning, but use a
+    // color-only English phrase for the generated prompt.
+    if (tag.en.trim().toLowerCase() == 'coral trim') {
+      return 'pink-orange trim';
+    }
+    return tag.en.trim();
   }
 
   String? _accessoryPositionGroup(String group) =>
@@ -3361,7 +3371,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final detailColorPrefix = effectiveDetailColor == null
           ? null
           : _clothingColorPrefix(effectiveDetailColor);
-      final trimEnglish = trimColor?.en.trim();
+      final trimEnglish =
+          trimColor == null ? null : _betterWaifuTrimEnglish(trimColor);
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
       final stripEmbeddedStyleColor = color != null;
       final effectiveColor = colorPrefix != null &&

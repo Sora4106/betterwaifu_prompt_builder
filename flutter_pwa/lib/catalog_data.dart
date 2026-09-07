@@ -1712,16 +1712,10 @@ const catalogCharacters = <CatalogCharacter>[
           en: 'green eyes',
           order: 1),
       CatalogTagData(
-          id: 'lala_demon_girl',
-          group: '角色標籤',
-          zh: '惡魔女孩（非獸人）',
-          en: 'demon girl',
-          order: 1),
-      CatalogTagData(
           id: 'lala_heart_tail',
           group: '角色標籤',
-          zh: '黑色心型惡魔尾巴',
-          en: 'demon tail',
+          zh: '黑色心型尾巴',
+          en: 'black heart-shaped tail',
           order: 1),
       CatalogTagData(
           id: 'lala_slim', group: '角色標籤', zh: '纖細身材', en: 'slim', order: 1),
