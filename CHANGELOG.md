@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.53+55 - 2026-09-07
+
+- 自動偵測：fix: move selfie into camera tags
+
+
 ## 1.1.52+54 - 2026-09-07
 
 - 自動偵測：feat: add per-section tag clearing

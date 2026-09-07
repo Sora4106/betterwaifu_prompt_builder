@@ -1,7 +1,8 @@
-const appVersion = '1.1.52';
-const appBuildNumber = 54;
-const appVersionLabel = '1.1.52+54';
+const appVersion = '1.1.53';
+const appBuildNumber = 55;
+const appVersionLabel = '1.1.53+55';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: move selfie into camera tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add per-section tag clearing'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: restore independent section randomization'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: sync scene clothing and pose randomization'},
