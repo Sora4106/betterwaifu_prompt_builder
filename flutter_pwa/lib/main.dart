@@ -521,6 +521,21 @@ List<TagItem> _createScopedClothingTags() {
       '\u5973\u50D5\u9023\u8EAB\u88DD\u98A8\u683C',
       'maid style one-piece'
     ],
+    [
+      'formal',
+      '\u6B63\u5F0F\u9023\u8EAB\u88DD\u98A8\u683C',
+      'formal style one-piece'
+    ],
+    [
+      'dark_academia',
+      '\u6697\u9ED1\u5B78\u9662\u9023\u8EAB\u88DD\u98A8\u683C',
+      'dark academia style one-piece'
+    ],
+    [
+      'steampunk',
+      '\u84B8\u6C23\u9F90\u514B\u9023\u8EAB\u88DD\u98A8\u683C',
+      'steampunk style one-piece'
+    ],
   ]);
   addMany('underwear', 'style', [
     ['lace', '\u856D\u7D72\u5167\u8863\u98A8\u683C', 'lace style underwear'],
@@ -1690,6 +1705,8 @@ List<TagItem> _seedTags() => [
       _tag('clothing_denim_skirt', '下身風格', '牛仔裙風格', 'denim skirt', 2),
       _tag('clothing_dress', '服裝', '洋裝', 'dress', 2),
       _tag('clothing_sundress', '服裝', '夏日洋裝', 'sundress', 2),
+      _tag('clothing_evening_gown', '服裝', '晚禮服', 'evening gown', 2),
+      _tag('clothing_outfit', '服裝', '套裝', 'outfit', 2),
       _tag('clothing_school_uniform', '服裝', '校服', 'school uniform', 2),
       _tag('clothing_business_suit', '服裝', '商務套裝', 'business suit', 2),
       _tag('clothing_kimono', '服裝', '和服', 'kimono', 2),
@@ -2577,7 +2594,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '髮色': 16,
       '髮型': 17,
       '服裝': 20,
-      '服裝風格': 21,
       '角色扮演': 21,
       '服裝顏色': 22,
       '上衣': 23,
@@ -2645,7 +2661,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _isScopedClothingGroup(group) ||
       const {
         '服裝',
-        '服裝風格',
         _cosplayGroup,
         '上衣',
         '上衣風格',
@@ -2795,7 +2810,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isCosplayTag(TagItem tag) => tag.group == _cosplayGroup;
 
   bool _isOnePieceStyleTag(TagItem tag) =>
-      tag.group == '服裝風格' || _isCosplayTag(tag);
+      (_scopedClothingKind(tag.group) == 'style' &&
+          _scopedClothingSlot(tag.group) == 'onepiece') ||
+      _isCosplayTag(tag);
 
   String? _clothingScopeForBase(TagItem tag) {
     if (_isCosplayTag(tag)) return 'onepiece';
@@ -2870,7 +2887,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       groups.add('\u4E0B\u8EAB\u98A8\u683C');
     }
     if (scope == 'onepiece') {
-      groups.add('服裝風格');
       groups.add(_cosplayGroup);
     }
     return groups;
@@ -2915,7 +2931,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _ => null,
       };
     }
-    if (group == '服裝' || group == '服裝風格' || group == _cosplayGroup) {
+    if (group == '服裝' || group == _cosplayGroup) {
       return '服裝顏色';
     }
     if (group == '上衣') return '上衣顏色';
@@ -3244,6 +3260,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final scopedKind = _scopedClothingKind(tag.group);
     if (scopedKind == 'style') {
+      if (_scopedClothingSlot(tag.group) == 'onepiece') {
+        return tag.zh.replaceFirst(RegExp(r'連身裝風格$'), '');
+      }
       return tag.zh.replaceFirst(RegExp(r'風格$'), '');
     }
     if (scopedKind == 'detail') {
@@ -4939,7 +4958,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (['褲子', '裙子'].contains(tag.group)) return 'bottom';
     if (tag.group == '胸罩') return 'bra';
     if (['內衣', '內褲'].contains(tag.group)) return 'underwear';
-    if (tag.group == '服裝風格' || tag.group == _cosplayGroup) {
+    if (tag.group == _cosplayGroup) {
       return 'onepiece_style';
     }
     if (tag.group == '服裝') return 'one_piece';
@@ -5251,7 +5270,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '內褲顏色',
       '襪子顏色',
       '鞋子顏色',
-      '服裝風格',
       '上衣風格',
       '下身風格',
       '上衣顏色',
@@ -5287,7 +5305,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (random.nextBool()) {
       add(_randomClothingTag(['服裝'], random));
       if (random.nextBool()) {
-        add(_randomClothingTag(['服裝風格', _cosplayGroup], random));
+        add(_randomClothingTag(
+            [_scopedClothingGroup('onepiece', 'style'), _cosplayGroup],
+            random));
       }
       add(_randomClothingTag(['服裝顏色'], random));
     } else {
@@ -7464,7 +7484,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '內褲顏色',
                     '襪子顏色',
                     '鞋子顏色',
-                    '服裝風格',
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
@@ -7568,7 +7587,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _cosplayGroup,
                     '配件',
                     '配件顏色',
-                    '服裝風格',
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
@@ -7825,20 +7843,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           activeGroup == '表情' && tag.group == '臉部特徵';
-      final legacyOnePieceStyleInOnePieceGroup =
-          activeGroup == _scopedClothingGroup('onepiece', 'style') &&
-              tag.group == '服裝風格';
       final inGroup = (groups.contains(tag.group) ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup ||
-              legacyOnePieceStyleInOnePieceGroup) &&
+              faceExpressionInMergedGroup) &&
           (activeGroup == null ||
               tag.group == activeGroup ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup ||
-              legacyOnePieceStyleInOnePieceGroup);
+              faceExpressionInMergedGroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -8217,14 +8230,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(personIndex);
     bool has(String group) => selected.any((tag) => tag.group == group);
     final onePiece = selected
-        .any((tag) => ['服裝', '服裝風格', _cosplayGroup].contains(tag.group));
+        .any((tag) => ['服裝', _cosplayGroup].contains(tag.group));
     final groups = <String>['服裝細節', '服裝材質', '穿脫狀態'];
     if (has('服裝細節') || has('服裝材質')) {
       groups.insert(0, '服裝細節顏色');
     }
     if (onePiece) {
       groups.insertAll(0, [
-        '服裝風格',
         _cosplayGroup,
         '服裝顏色',
         '服裝邊線色',
@@ -8908,7 +8920,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     _cosplayGroup,
                     '配件',
-                    '服裝風格',
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
@@ -8918,7 +8929,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝細節顏色',
                     '服裝材質',
                     '穿脫狀態'
-                  ].contains(tag.group))
+                  ].contains(tag.group) || _isScopedClothingGroup(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('每位人物分別設定'),
