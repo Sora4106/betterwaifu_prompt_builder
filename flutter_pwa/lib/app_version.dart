@@ -1,7 +1,8 @@
-const appVersion = '1.1.48';
-const appBuildNumber = 50;
-const appVersionLabel = '1.1.48+50';
+const appVersion = '1.1.49';
+const appBuildNumber = 51;
+const appVersionLabel = '1.1.49+51';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: show secondary colors for all shoe and panties styles'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: merge one-piece clothing styles into base garments'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: avoid coral animal moderation false positive'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: compose shoe styles and clarify demon tail'},
