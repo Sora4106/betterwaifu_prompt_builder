@@ -5192,6 +5192,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(_persist);
   }
 
+  void _randomizeSceneClothingAndPose() {
+    final random = Random();
+    final sceneCandidates = _allTags
+        .where((tag) => tag.group == '場景' && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+    final framingCandidates = _allTags
+        .where((tag) => tag.group == '畫面' && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+
+    setState(() {
+      _selectedIds.removeWhere((id) => _allTags.any((tag) =>
+          tag.id == id && (tag.group == '場景' || tag.group == '畫面')));
+      if (sceneCandidates.isNotEmpty) _selectedIds.add(sceneCandidates.first.id);
+      if (framingCandidates.isNotEmpty) {
+        _selectedIds.add(framingCandidates.first.id);
+      }
+      _persist();
+    });
+
+    const poseGroups = [
+      '姿勢',
+      '動作',
+      '物件',
+      '成人道具',
+      '性行為',
+      '性姿勢',
+    ];
+    for (var index = 0; index < _personSlots.length; index++) {
+      _randomizeClothing(index);
+      _randomizePersonGroups(index, poseGroups);
+    }
+  }
+
   TagItem? _randomClothingTag(List<String> groups, Random random) {
     final seen = <String>{};
     final candidates = _allTags
@@ -8122,9 +8157,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ),
                       ),
                       IconButton(
-                        tooltip: '隨機目前分類（自動避開衝突）',
-                        onPressed: () =>
-                            _randomizePersonGroups(index, currentGroups),
+                        tooltip: '隨機場景、服裝與姿勢',
+                        onPressed: _randomizeSceneClothingAndPose,
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
@@ -8336,8 +8370,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 const TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        tooltip: '隨機服裝穿搭（自動避開衝突）',
-                        onPressed: () => _randomizeClothing(index),
+                        tooltip: '隨機場景、服裝與姿勢',
+                        onPressed: _randomizeSceneClothingAndPose,
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
@@ -8865,7 +8899,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .join('、')
               .ifEmpty('尚未選擇'),
           Icons.landscape_outlined,
-          _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料')),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: '隨機場景、服裝與姿勢',
+                  onPressed: _randomizeSceneClothingAndPose,
+                  icon: const Icon(Icons.shuffle),
+                ),
+              ),
+              _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料'),
+            ],
+          )),
       _stepCard(
           1,
           '角色資料',
