@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.49",
-  "build": 51,
-  "label": "1.1.49+51",
+  "version": "1.1.50",
+  "build": 52,
+  "label": "1.1.50+52",
   "history": [
+    {
+      "version": "1.1.50",
+      "build": 52,
+      "label": "1.1.50+52",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: sync scene clothing and pose randomization"
+    },
     {
       "version": "1.1.49",
       "build": 51,

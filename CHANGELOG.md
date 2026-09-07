@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.50+52 - 2026-09-07
+
+- 自動偵測：feat: sync scene clothing and pose randomization
+
+
 ## 1.1.49+51 - 2026-09-07
 
 - 自動偵測：fix: show secondary colors for all shoe and panties styles
