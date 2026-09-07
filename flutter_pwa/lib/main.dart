@@ -8212,7 +8212,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       int personIndex, String? activeGroup) {
     final bases = _clothingDesignBases(_selectedTagsForPerson(personIndex));
     if (activeGroup == null || activeGroup.isEmpty) return bases;
-    return bases.where((base) => base.group == activeGroup).toList();
+    final activeScope = switch (activeGroup) {
+      '服裝' => 'onepiece',
+      '上衣' => 'top',
+      '褲子' => 'pants',
+      '裙子' => 'skirt',
+      '內衣' => 'underwear',
+      '胸罩' => 'bra',
+      '內褲' => 'panties',
+      '襪子' => 'socks',
+      '鞋子' => 'shoes',
+      '配件' => 'accessory',
+      _ => null,
+    };
+    return bases
+        .where((base) =>
+            base.group == activeGroup ||
+            (activeScope != null && _clothingScopeForBase(base) == activeScope))
+        .toList();
   }
 
   List<String> _clothingDetailGroups(int personIndex, {String? activeGroup}) {
