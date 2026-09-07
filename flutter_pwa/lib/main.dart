@@ -5192,7 +5192,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(_persist);
   }
 
-  void _randomizeSceneClothingAndPose() {
+  void _randomizeSceneAndFrame() {
     final random = Random();
     final sceneCandidates = _allTags
         .where((tag) => tag.group == '場景' && (_showAdult || !tag.adult))
@@ -5212,19 +5212,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _persist();
     });
-
-    const poseGroups = [
-      '姿勢',
-      '動作',
-      '物件',
-      '成人道具',
-      '性行為',
-      '性姿勢',
-    ];
-    for (var index = 0; index < _personSlots.length; index++) {
-      _randomizeClothing(index);
-      _randomizePersonGroups(index, poseGroups);
-    }
   }
 
   TagItem? _randomClothingTag(List<String> groups, Random random) {
@@ -8157,8 +8144,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ),
                       ),
                       IconButton(
-                        tooltip: '隨機場景、服裝與姿勢',
-                        onPressed: _randomizeSceneClothingAndPose,
+                        tooltip: '隨機目前分類（自動避開衝突）',
+                        onPressed: () =>
+                            _randomizePersonGroups(index, currentGroups),
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
@@ -8370,8 +8358,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 const TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        tooltip: '隨機場景、服裝與姿勢',
-                        onPressed: _randomizeSceneClothingAndPose,
+                        tooltip: '隨機服裝穿搭（自動避開衝突）',
+                        onPressed: () => _randomizeClothing(index),
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
@@ -8905,8 +8893,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               Align(
                 alignment: Alignment.centerRight,
                 child: IconButton(
-                  tooltip: '隨機場景、服裝與姿勢',
-                  onPressed: _randomizeSceneClothingAndPose,
+                  tooltip: '隨機場景與畫面',
+                  onPressed: _randomizeSceneAndFrame,
                   icon: const Icon(Icons.shuffle),
                 ),
               ),
