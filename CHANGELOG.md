@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.47+49 - 2026-09-07
+
+- 自動偵測：fix: avoid coral animal moderation false positive
+
+
 ## 1.1.46+48 - 2026-09-07
 
 - 自動偵測：fix: compose shoe styles and clarify demon tail
