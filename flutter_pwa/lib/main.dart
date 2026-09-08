@@ -1079,6 +1079,20 @@ const _clothingColorShades = <List<String>>[
   ['rose_gold', '\u73AB\u7470\u91D1', 'rose gold'],
 ];
 
+List<List<String>> _allClothingColorOptions() {
+  final options = <List<String>>[];
+  final seen = <String>{};
+  for (final color in _clothingColors) {
+    if (seen.add(color[0])) {
+      options.add([color[0], color[1], color[0]]);
+    }
+  }
+  for (final color in _clothingColorShades) {
+    if (seen.add(color[0])) options.add(color);
+  }
+  return options;
+}
+
 const _mainPromptColorWords = <String>{
   'black',
   'white',
@@ -1409,15 +1423,15 @@ List<TagItem> _clothingTrimColorTags(
   String zhSuffix,
   String conflictGroup,
 ) {
-  final options = <List<String>>[
-    ..._clothingColors.map((color) => [color[0], color[1], color[0]]),
-    ..._clothingColorShades,
-  ];
+  final options = _allClothingColorOptions();
+  final secondarySuffix = zhSuffix == '\u908A\u7DDA'
+      ? '\u6B21\u8272'
+      : zhSuffix;
   return options
       .map((color) => _tag(
             '${prefix}_${color[0]}',
             group,
-            '${color[1]}$zhSuffix',
+            '${color[1]}$secondarySuffix',
             '${color[2]} trim',
             2,
             conflictGroup: conflictGroup,
@@ -3198,6 +3212,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .join('與');
   }
 
+  String _clothingCombinedChineseColorPrefix(Iterable<TagItem> colors) {
+    final values = colors
+        .map(_clothingColorChinesePrefix)
+        .where((value) => value.trim().isNotEmpty)
+        .toList();
+    if (values.isEmpty) return '';
+    if (values.length == 1) return values.first;
+    final leading = values
+        .take(values.length - 1)
+        .map((value) => value.replaceFirst(RegExp(r'色$'), ''))
+        .join();
+    return '$leading${values.last}';
+  }
+
   String _clothingModifierEnglish(TagItem tag) {
     final value = tag.en.trim();
     final scopedKind = _scopedClothingKind(tag.group);
@@ -3408,9 +3436,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .map((tag) {
             final modifier = _clothingModifierEnglish(tag);
             final prefixes = <String>[];
-            if (trimColorPrefix != null && trimColorPrefix.isNotEmpty) {
-              prefixes.add(trimColorPrefix);
-            }
             if (detailColorPrefix != null &&
                 detailColorPrefix.isNotEmpty &&
                 !prefixes.contains(detailColorPrefix)) {
@@ -3431,9 +3456,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .map((tag) {
             final modifier = _clothingModifierChinese(tag);
             final prefixes = <String>[];
-            if (trimColor != null) {
-              prefixes.add(_clothingColorChinesePrefix(trimColor));
-            }
             if (effectiveDetailColor != null) {
               final detailPrefix =
                   _clothingColorChinesePrefix(effectiveDetailColor);
@@ -3456,24 +3478,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : base.zh;
       final enParts = <String>[
         if (effectiveColor != null) effectiveColor,
+        if (trimColorPrefix != null && trimColorPrefix.isNotEmpty)
+          trimColorPrefix,
         ...enStyleModifiers,
-        if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) base.en,
         ...enDetailModifiers,
-        if (enDetailModifiers.isEmpty &&
-            trimEnglish != null &&
-            trimEnglish.isNotEmpty)
-          'with $trimEnglish',
+        if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) base.en,
         if (accessoryPositionEnglish != null &&
             accessoryPositionEnglish.isNotEmpty)
           accessoryPositionEnglish,
       ];
       final zhParts = <String>[
-        if (effectiveColor != null && color != null)
-          _clothingColorChinesePrefix(color),
+        if ((effectiveColor != null && color != null) || trimColor != null)
+          _clothingCombinedChineseColorPrefix([
+            if (effectiveColor != null && color != null) color,
+            if (trimColor != null) trimColor,
+          ]),
         ...zhStyleModifiers,
-        if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
         ...zhDetailModifiers,
-        if (zhDetailModifiers.isEmpty && trimColor != null) trimColor.zh,
+        if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
         if (accessoryPosition != null) accessoryPosition.zh,
       ];
       final ids = related.map((tag) => tag.id).toList();
@@ -5801,13 +5823,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             });
       if (colors.isNotEmpty) result.add(colors.first);
     }
-    final styleGroup = _clothingStyleGroup(base.group);
-    if (styleGroup != null) {
-      for (final tag in _allTags.where((tag) => tag.group == styleGroup)) {
-        final style = _clothingModifierEnglish(tag);
-        if (style.isNotEmpty && key.contains(_englishTagKey(style))) {
-          result.add(tag);
-        }
+    final trimColorGroup = _clothingTrimColorGroup(base.group);
+    final trimColors = trimColorGroup == null
+        ? const <TagItem>[]
+        : _allTags.where((tag) => tag.group == trimColorGroup).where((tag) {
+            final words = _clothingColorWords(tag);
+            return words.isNotEmpty && words.every(key.contains);
+          }).toList()
+          ..sort((a, b) => _clothingColorWords(b)
+              .length
+              .compareTo(_clothingColorWords(a).length));
+    if (trimColors.isNotEmpty) result.add(trimColors.first);
+
+    final detailGroups = <String>{
+      _legacyClothingDetailGroup,
+      _legacyClothingMaterialGroup,
+      ..._clothingDetailGroupsForBase(base).where((group) {
+        final kind = _scopedClothingKind(group);
+        return kind == 'detail' || kind == 'material';
+      }),
+    };
+    for (final tag in _allTags.where((tag) => detailGroups.contains(tag.group))) {
+      final modifier = _clothingModifierEnglish(tag);
+      if (modifier.isNotEmpty && key.contains(_englishTagKey(modifier))) {
+        result.add(tag);
+      }
+    }
+
+    final styleGroups = <String>{
+      ..._clothingStyleGroupsForBase(base),
+      if (_clothingStyleGroup(base.group) != null)
+        _clothingStyleGroup(base.group)!,
+    };
+    for (final tag in _allTags.where((tag) => styleGroups.contains(tag.group))) {
+      final style = _clothingModifierEnglish(tag);
+      if (style.isNotEmpty && key.contains(_englishTagKey(style))) {
+        result.add(tag);
       }
     }
     for (final tag in _allTags
@@ -8040,6 +8091,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String _wizardGroupLabel(String group) {
+    const clothingColorLabels = <String, String>{
+      '服裝顏色': '連身裝主色',
+      '上衣顏色': '上衣主色',
+      '下身顏色': '下身主色',
+      '內衣顏色': '內衣主色',
+      '胸罩顏色': '胸罩主色',
+      '內褲顏色': '內褲主色',
+      '襪子顏色': '襪子主色',
+      '鞋子顏色': '鞋子主色',
+      '配件顏色': '配件主色',
+      '服裝邊線色': '連身裝次色',
+      '上衣邊線色': '上衣次色',
+      '下身邊線色': '下身次色',
+      '內衣邊線色': '內衣次色',
+      '胸罩邊線色': '胸罩次色',
+      '內褲邊線色': '內褲次色',
+      '襪子邊線色': '襪子次色',
+      '鞋子邊線色': '鞋子次色',
+      '配件邊線色': '配件次色',
+    };
+    final clothingColorLabel = clothingColorLabels[group];
+    if (clothingColorLabel != null) return clothingColorLabel;
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
     if (group == '褲子') return '下身／褲子';
