@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.57+59 - 2026-09-08
+
+- 自動偵測：fix: describe secondary garment colors as trim
+
+
 ## 1.1.56+58 - 2026-09-08
 
 - 自動偵測：fix: preserve clothing secondary color groups

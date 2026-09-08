@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.56",
-  "build": 58,
-  "label": "1.1.56+58",
+  "version": "1.1.57",
+  "build": 59,
+  "label": "1.1.57+59",
   "history": [
+    {
+      "version": "1.1.57",
+      "build": 59,
+      "label": "1.1.57+59",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: describe secondary garment colors as trim"
+    },
     {
       "version": "1.1.56",
       "build": 58,
