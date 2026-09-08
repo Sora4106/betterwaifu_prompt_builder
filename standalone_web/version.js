@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.55",
-  "build": 57,
-  "label": "1.1.55+57",
+  "version": "1.1.56",
+  "build": 58,
+  "label": "1.1.56+58",
   "history": [
+    {
+      "version": "1.1.56",
+      "build": 58,
+      "label": "1.1.56+58",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: preserve clothing secondary color groups"
+    },
     {
       "version": "1.1.55",
       "build": 57,

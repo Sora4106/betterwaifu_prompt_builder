@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.56+58 - 2026-09-08
+
+- 自動偵測：fix: preserve clothing secondary color groups
+
+
 ## 1.1.55+57 - 2026-09-08
 
 - 自動偵測：feat: rename clothing trim colors to secondary colors

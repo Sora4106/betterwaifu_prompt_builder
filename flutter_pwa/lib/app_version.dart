@@ -1,7 +1,8 @@
-const appVersion = '1.1.55';
-const appBuildNumber = 57;
-const appVersionLabel = '1.1.55+57';
+const appVersion = '1.1.56';
+const appBuildNumber = 58;
+const appVersionLabel = '1.1.56+58';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: preserve clothing secondary color groups'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: rename clothing trim colors to secondary colors'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: compose garment trim colors before details'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: move selfie into camera tags'},
