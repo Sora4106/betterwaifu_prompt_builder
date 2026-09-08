@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.54+56 - 2026-09-08
+
+- 自動偵測：fix: compose garment trim colors before details
+
+
 ## 1.1.53+55 - 2026-09-07
 
 - 自動偵測：fix: move selfie into camera tags

@@ -1,8 +1,15 @@
 {
-  "version": "1.1.53",
-  "build": 55,
-  "label": "1.1.53+55",
+  "version": "1.1.54",
+  "build": 56,
+  "label": "1.1.54+56",
   "history": [
+    {
+      "version": "1.1.54",
+      "build": 56,
+      "label": "1.1.54+56",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: compose garment trim colors before details"
+    },
     {
       "version": "1.1.53",
       "build": 55,
