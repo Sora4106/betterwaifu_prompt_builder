@@ -1,8 +1,15 @@
 {
-  "version": "1.1.54",
-  "build": 56,
-  "label": "1.1.54+56",
+  "version": "1.1.55",
+  "build": 57,
+  "label": "1.1.55+57",
   "history": [
+    {
+      "version": "1.1.55",
+      "build": 57,
+      "label": "1.1.55+57",
+      "date": "2026-09-08",
+      "notes": "自動偵測：feat: rename clothing trim colors to secondary colors"
+    },
     {
       "version": "1.1.54",
       "build": 56,

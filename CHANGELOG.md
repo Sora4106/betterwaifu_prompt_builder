@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.55+57 - 2026-09-08
+
+- 自動偵測：feat: rename clothing trim colors to secondary colors
+
+
 ## 1.1.54+56 - 2026-09-08
 
 - 自動偵測：fix: compose garment trim colors before details
