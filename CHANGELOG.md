@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.59+61 - 2026-09-08
+
+- 自動偵測：feat: add knees bent pose tag
+
+
 ## 1.1.58+60 - 2026-09-08
 
 - 自動偵測：feat: add stackable ninja props

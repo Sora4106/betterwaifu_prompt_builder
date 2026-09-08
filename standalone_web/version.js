@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.58",
-  "build": 60,
-  "label": "1.1.58+60",
+  "version": "1.1.59",
+  "build": 61,
+  "label": "1.1.59+61",
   "history": [
+    {
+      "version": "1.1.59",
+      "build": 61,
+      "label": "1.1.59+61",
+      "date": "2026-09-08",
+      "notes": "自動偵測：feat: add knees bent pose tag"
+    },
     {
       "version": "1.1.58",
       "build": 60,
