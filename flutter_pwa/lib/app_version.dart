@@ -1,7 +1,8 @@
-const appVersion = '1.1.57';
-const appBuildNumber = 59;
-const appVersionLabel = '1.1.57+59';
+const appVersion = '1.1.58';
+const appBuildNumber = 60;
+const appVersionLabel = '1.1.58+60';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add stackable ninja props'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: describe secondary garment colors as trim'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: preserve clothing secondary color groups'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: rename clothing trim colors to secondary colors'},

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.58+60 - 2026-09-08
+
+- 自動偵測：feat: add stackable ninja props
+
+
 ## 1.1.57+59 - 2026-09-08
 
 - 自動偵測：fix: describe secondary garment colors as trim
