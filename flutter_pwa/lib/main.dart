@@ -3390,6 +3390,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : _clothingColorPrefix(effectiveDetailColor);
       final trimEnglish =
           trimColor == null ? null : _betterWaifuTrimEnglish(trimColor);
+      final trimColorPrefix = trimEnglish?.replaceFirst(
+          RegExp(r'\s+trim$', caseSensitive: false), '');
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
       final stripEmbeddedStyleColor = color != null;
       final effectiveColor = colorPrefix != null &&
@@ -3405,10 +3407,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final enDetailModifiers = modifiers
           .map((tag) {
             final modifier = _clothingModifierEnglish(tag);
-            if (detailColorPrefix == null || detailColorPrefix.isEmpty) {
-              return modifier;
+            final prefixes = <String>[];
+            if (trimColorPrefix != null && trimColorPrefix.isNotEmpty) {
+              prefixes.add(trimColorPrefix);
             }
-            return '$detailColorPrefix $modifier';
+            if (detailColorPrefix != null &&
+                detailColorPrefix.isNotEmpty &&
+                !prefixes.contains(detailColorPrefix)) {
+              prefixes.add(detailColorPrefix);
+            }
+            return [...prefixes, modifier]
+                .where((part) => part.trim().isNotEmpty)
+                .join(' ');
           })
           .where((part) => part.trim().isNotEmpty)
           .toList();
@@ -3420,8 +3430,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final zhDetailModifiers = modifiers
           .map((tag) {
             final modifier = _clothingModifierChinese(tag);
-            if (effectiveDetailColor == null) return modifier;
-            return '${_clothingColorChinesePrefix(effectiveDetailColor)}$modifier';
+            final prefixes = <String>[];
+            if (trimColor != null) {
+              prefixes.add(_clothingColorChinesePrefix(trimColor));
+            }
+            if (effectiveDetailColor != null) {
+              final detailPrefix =
+                  _clothingColorChinesePrefix(effectiveDetailColor);
+              if (!prefixes.contains(detailPrefix)) prefixes.add(detailPrefix);
+            }
+            return '${prefixes.join()}$modifier';
           })
           .where((part) => part.trim().isNotEmpty)
           .toList();
@@ -3441,7 +3459,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ...enStyleModifiers,
         if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) base.en,
         ...enDetailModifiers,
-        if (trimEnglish != null && trimEnglish.isNotEmpty) 'with $trimEnglish',
+        if (enDetailModifiers.isEmpty &&
+            trimEnglish != null &&
+            trimEnglish.isNotEmpty)
+          'with $trimEnglish',
         if (accessoryPositionEnglish != null &&
             accessoryPositionEnglish.isNotEmpty)
           accessoryPositionEnglish,
@@ -3452,7 +3473,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ...zhStyleModifiers,
         if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
         ...zhDetailModifiers,
-        if (trimColor != null) trimColor.zh,
+        if (zhDetailModifiers.isEmpty && trimColor != null) trimColor.zh,
         if (accessoryPosition != null) accessoryPosition.zh,
       ];
       final ids = related.map((tag) => tag.id).toList();
