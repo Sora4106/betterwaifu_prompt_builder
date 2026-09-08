@@ -2574,9 +2574,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._customTags,
     ]) {
       final englishKey = _englishTagKey(tag.en);
+      // The same prompt word (for example "black trim") is valid for every
+      // clothing slot, so color groups must not be deduplicated together.
+      final preserveClothingColorGroup = _isClothingColorGroup(tag.group);
       final key = englishKey.isEmpty
           ? 'id:${tag.id}'
-          : _isScopedClothingGroup(tag.group)
+          : (_isScopedClothingGroup(tag.group) || preserveClothingColorGroup)
               ? 'en:$englishKey:${tag.group}'
               : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
@@ -2596,7 +2599,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   int _outputGroupOrder(String group) {
     const order = <String, int>{
-      '外觀特徵': 10,
       '身體特徵': 11,
       '眼睛': 12,
       '臉部特徵': 12,
@@ -4172,7 +4174,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .contains(value)) {
       return '額外特徵';
     }
-    return '外觀特徵';
+    return '額外特徵';
   }
 
   TagItem _createCharacterTraitOption(CatalogTagData trait) {
@@ -5193,9 +5195,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
-    if (groupSet.contains('外觀特徵')) {
-      addRandomFromGroup('外觀特徵', max: 3);
-    }
     if (groupSet.contains('眼睛')) {
       addRandomFromGroup('眼睛', max: 2);
     }
@@ -5245,7 +5244,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     const directlyHandledGroups = <String>{
-      '外觀特徵',
       '眼睛',
       '身體特徵',
       '額外特徵',
@@ -6101,7 +6099,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (confirmed != true) return;
 
     const characterGroups = <String>{
-      '外觀特徵',
       '身體特徵',
       '眼睛',
       '臉部特徵',
@@ -6848,7 +6845,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _persist();
     });
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓外觀特徵。')));
+        SnackBar(content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓角色特徵。')));
   }
 
   Widget _remoteAnimePanel(int index) {
@@ -7982,7 +7979,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       int rank(TagItem tag) {
         if (activeGroup == '髮型' && tag.group == '髮色') return 1;
         if (activeGroup == '眼睛') return _isColorPickerTag(tag) ? 0 : 1;
-        if (activeGroup == '外觀特徵' && _isEyeColorTag(tag)) return 1;
         return 0;
       }
 
@@ -9223,7 +9219,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
                   .where((tag) => [
-                        '外觀特徵',
                         '身體特徵',
                         '眼睛',
                         '額外特徵',
@@ -9241,7 +9236,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
           _stepPersonTagPicker([
-            '外觀特徵',
             '身體特徵',
             '眼睛',
             '額外特徵',
