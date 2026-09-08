@@ -3228,6 +3228,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return '$leading${values.last}';
   }
 
+  String _clothingSecondaryColorChinese(TagItem tag) {
+    final color = _clothingColorChinesePrefix(tag).trim();
+    if (color.isEmpty) return '';
+    final withoutColorSuffix = color.endsWith('色')
+        ? color.substring(0, color.length - 1)
+        : color;
+    return '${withoutColorSuffix}邊';
+  }
+
+  String _clothingChineseColorPrefixWithSecondary(
+      TagItem? mainColor, String? secondaryColor) {
+    final parts = <String>[
+      if (mainColor != null) _clothingColorChinesePrefix(mainColor),
+      if (secondaryColor != null && secondaryColor.trim().isNotEmpty)
+        secondaryColor,
+    ];
+    return parts.join();
+  }
+
   String _clothingModifierEnglish(TagItem tag) {
     final value = tag.en.trim();
     final scopedKind = _scopedClothingKind(tag.group);
@@ -3422,6 +3441,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           trimColor == null ? null : _betterWaifuTrimEnglish(trimColor);
       final trimColorPrefix = trimEnglish?.replaceFirst(
           RegExp(r'\s+trim$', caseSensitive: false), '');
+      // A secondary color describes the garment edge when no detail/material
+      // was selected. Keep the English tag explicit in that case so prompts
+      // say "red blue trim kimono" instead of the ambiguous "red blue kimono".
+      final secondaryEnglish = modifiers.isEmpty
+          ? trimEnglish
+          : trimColorPrefix;
+      final secondaryChinese = modifiers.isEmpty && trimColor != null
+          ? _clothingSecondaryColorChinese(trimColor)
+          : trimColor == null
+              ? null
+              : _clothingColorChinesePrefix(trimColor);
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
       final stripEmbeddedStyleColor = color != null;
       final effectiveColor = colorPrefix != null &&
@@ -3467,6 +3497,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           })
           .where((part) => part.trim().isNotEmpty)
           .toList();
+      final zhColorPrefix = modifiers.isEmpty
+          ? _clothingChineseColorPrefixWithSecondary(
+              effectiveColor != null && color != null ? color : null,
+              secondaryChinese,
+            )
+          : ((effectiveColor != null && color != null) || trimColor != null)
+              ? _clothingCombinedChineseColorPrefix([
+                  if (effectiveColor != null && color != null) color,
+                  if (trimColor != null) trimColor,
+                ])
+              : '';
       final englishBaseCoveredByStyle = baseLower.isNotEmpty &&
           enStyleModifiers.any((part) => RegExp(
                 r'(^|\s)' + RegExp.escape(baseLower) + r'(\s|$)',
@@ -3480,8 +3521,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : base.zh;
       final enParts = <String>[
         if (effectiveColor != null) effectiveColor,
-        if (trimColorPrefix != null && trimColorPrefix.isNotEmpty)
-          trimColorPrefix,
+        if (secondaryEnglish != null && secondaryEnglish.isNotEmpty)
+          secondaryEnglish,
         ...enStyleModifiers,
         ...enDetailModifiers,
         if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) base.en,
@@ -3490,11 +3531,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           accessoryPositionEnglish,
       ];
       final zhParts = <String>[
-        if ((effectiveColor != null && color != null) || trimColor != null)
-          _clothingCombinedChineseColorPrefix([
-            if (effectiveColor != null && color != null) color,
-            if (trimColor != null) trimColor,
-          ]),
+        if (zhColorPrefix.isNotEmpty) zhColorPrefix,
         ...zhStyleModifiers,
         ...zhDetailModifiers,
         if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
