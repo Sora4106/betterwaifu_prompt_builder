@@ -2002,6 +2002,8 @@ List<TagItem> _seedTags() => [
       _tag('pose_lying_on_side', '姿勢', '側躺', 'lying on side', 4),
       _tag('pose_lying_on_back', '姿勢', '仰躺', 'lying on back', 4),
       _tag('pose_squatting', '姿勢', '蹲姿', 'squatting', 4),
+      _tag('pose_knees_bent', '姿勢', '膝蓋微蹲', 'knees bent', 4,
+          conflictGroup: 'leg_detail'),
       _tag('pose_arms_up', '姿勢', '雙手舉起', 'arms up', 4),
       _tag('pose_hand_on_hip', '姿勢', '手放在腰上', 'hand on hip', 4),
       _tag('pose_leaning', '姿勢', '倚靠', 'leaning', 4),
