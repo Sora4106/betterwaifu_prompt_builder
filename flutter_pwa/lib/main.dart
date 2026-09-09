@@ -5093,6 +5093,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return 'onepiece_style';
     }
     if (tag.group == '服裝') return 'one_piece';
+    // Camera/framing tags are composable: for example, full body +
+    // low-angle view + from below can intentionally be used together.
+    if (tag.group == '畫面') return null;
     if (tag.group == '姿勢') {
       const basicPoses = {
         'standing',
@@ -5110,17 +5113,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (tag.group == '性姿勢') return 'sex_position';
     if (tag.group == '場景') return 'scene';
-    if (tag.group == '畫面') {
-      const framing = {
-        'portrait',
-        'full body',
-        'upper body',
-        'close-up',
-        'cowboy shot',
-        'wide shot',
-      };
-      return framing.contains(tag.en) ? 'framing' : 'camera';
-    }
     if (tag.group == '胸部' &&
         [
           'flat chest',
