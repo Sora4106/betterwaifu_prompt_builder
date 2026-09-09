@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.59",
-  "build": 61,
-  "label": "1.1.59+61",
+  "version": "1.1.60",
+  "build": 62,
+  "label": "1.1.60+62",
   "history": [
+    {
+      "version": "1.1.60",
+      "build": 62,
+      "label": "1.1.60+62",
+      "date": "2026-09-09",
+      "notes": "自動偵測：fix: allow composable camera framing tags"
+    },
     {
       "version": "1.1.59",
       "build": 61,

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.60+62 - 2026-09-09
+
+- 自動偵測：fix: allow composable camera framing tags
+
+
 ## 1.1.59+61 - 2026-09-08
 
 - 自動偵測：feat: add knees bent pose tag
