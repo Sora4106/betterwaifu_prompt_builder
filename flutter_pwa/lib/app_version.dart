@@ -1,7 +1,8 @@
-const appVersion = '1.1.60';
-const appBuildNumber = 62;
-const appVersionLabel = '1.1.60+62';
+﻿const appVersion = '1.1.61';
+const appBuildNumber = 63;
+const appVersionLabel = '1.1.61+63';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': 'feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: allow composable camera framing tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add knees bent pose tag'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add stackable ninja props'},

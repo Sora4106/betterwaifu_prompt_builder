@@ -1,4 +1,9 @@
-# 更新紀錄
+﻿# 更新紀錄
+
+## 1.1.61+63 - 2026-09-11
+
+- feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags
+
 
 ## 1.1.60+62 - 2026-09-09
 

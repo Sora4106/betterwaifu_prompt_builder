@@ -2526,6 +2526,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<int, String> _personTagQueries = <int, String>{};
   final Map<String, String> _personActiveGroups = <String, String>{};
   final List<TagItem> _customTags = <TagItem>[];
+  // Extra positive tags that the catalog does not know yet. Keep these in a
+  // separate local list so they can be reviewed and added to the catalog later.
+  final Set<String> _unregisteredPositiveTags = <String>{};
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
   final Map<int, List<_RemoteAnime>> _remoteAnimeResults =
       <int, List<_RemoteAnime>>{};
@@ -4072,6 +4075,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _showAdult = data['showAdult'] == true;
       _groupPeoplePrompt = data['groupPeoplePrompt'] != false;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
+      _unregisteredPositiveTags
+        ..clear()
+        ..addAll((data['unregisteredPositiveTags'] as List? ?? [])
+            .map((value) => _cleanTag('$value'))
+            .where((value) => value.isNotEmpty));
+      _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
@@ -4120,6 +4129,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'showAdult': _showAdult,
         'groupPeoplePrompt': _groupPeoplePrompt,
         'extraPositive': _extraPositive.text,
+        'unregisteredPositiveTags': _unregisteredPositiveTags.toList(),
         'reversePrompt': _reversePrompt.text,
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
@@ -4621,6 +4631,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .where((item) => item.isNotEmpty)
       .toList();
 
+  String _unknownPositiveKey(String value) {
+    final englishKey = _englishTagKey(value);
+    return englishKey.isEmpty ? _cleanTag(value).toLowerCase() : englishKey;
+  }
+
+  bool _isRegisteredPositiveTag(String value) {
+    final cleaned = _cleanTag(value);
+    if (cleaned.isEmpty) return true;
+    final englishKey = _englishTagKey(cleaned);
+    return _allTags.any((tag) =>
+        tag.zh.trim() == cleaned ||
+        (englishKey.isNotEmpty && _englishTagKey(tag.en) == englishKey));
+  }
+
+  void _collectUnknownExtraPositiveTags() {
+    for (final token in _extraTags(_extraPositive.text)) {
+      if (_isRegisteredPositiveTag(token)) continue;
+      final key = _unknownPositiveKey(token);
+      if (key.isEmpty) continue;
+      final alreadyStored = _unregisteredPositiveTags
+          .any((value) => _unknownPositiveKey(value) == key);
+      if (!alreadyStored) _unregisteredPositiveTags.add(token);
+    }
+    _unregisteredPositiveTags.removeWhere(_isRegisteredPositiveTag);
+  }
+
   String _positiveEnglishTag(String value) {
     final cleaned = _cleanTag(value);
     if (cleaned.isEmpty || !RegExp(r'[\u4e00-\u9fff]').hasMatch(cleaned)) {
@@ -5061,6 +5097,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  bool _isPoseCompositionTag(TagItem tag) =>
+      const {'姿勢', '性姿勢', '性行為', 'pose', 'sex_position'}
+          .contains(tag.group);
+
+  bool _isUnrestrictedCompositionTag(TagItem tag) =>
+      _isClothingGroup(tag.group) || _isPoseCompositionTag(tag);
+
   String? _conflictGroup(TagItem tag) {
     if (_isOnePieceStyleTag(tag)) return 'onepiece_style';
     if (_isLegacyClothingStyleTag(tag)) {
@@ -5129,6 +5172,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _tagsConflict(TagItem first, TagItem second) {
+    // Clothing and pose tags are intentionally composable. A character may
+    // wear multiple layers/details and combine several posture/action tags,
+    // so do not auto-replace these selections through conflict handling.
+    if (_isUnrestrictedCompositionTag(first) ||
+        _isUnrestrictedCompositionTag(second)) {
+      return false;
+    }
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
     if (firstGroup != null && firstGroup == secondGroup) {
@@ -5141,18 +5191,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             {'left_arm_pose', 'right_arm_pose'}.contains(secondGroup)) ||
         (secondGroup == 'arm_pose' &&
             {'left_arm_pose', 'right_arm_pose'}.contains(firstGroup))) {
-      return true;
-    }
-    final clothingLayers = {
-      'top',
-      'bottom',
-      'top_color',
-      'bottom_color',
-      'top_style',
-      'bottom_style'
-    };
-    if ((firstGroup == 'one_piece' && clothingLayers.contains(secondGroup)) ||
-        (secondGroup == 'one_piece' && clothingLayers.contains(firstGroup))) {
       return true;
     }
     final firstNude =
@@ -5547,13 +5585,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final currentTags = personIndex == null
         ? _selectedTags
         : _selectedTagsForPerson(personIndex);
-    if (personIndex != null &&
-        tag.group == '服裝顏色' &&
-        !currentTags.any((item) => _conflictGroup(item) == 'one_piece')) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('請先選擇連身裝，才可以設定連身裝顏色。')));
-      return;
-    }
     if (targetIds.contains(tag.id)) {
       setState(() {
         targetIds.remove(tag.id);
@@ -6037,6 +6068,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (existingKeys.add(_reverseExtraKey(token))) existingExtra.add(token);
       }
       _extraPositive.text = existingExtra.join(', ');
+      _collectUnknownExtraPositiveTags();
       _persist();
     });
 
@@ -6356,6 +6388,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clipSkip = '${data['clipSkip'] ?? _clipSkip}';
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
+      _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
@@ -9112,6 +9145,67 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _unregisteredPositiveTagsPanel() {
+    final tags = _unregisteredPositiveTags.toList();
+    if (tags.isEmpty) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(.35),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '待收錄標籤（${tags.length}）',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                tooltip: '複製待收錄標籤',
+                onPressed: () => _copy(tags.join(', '), '待收錄標籤'),
+                icon: const Icon(Icons.copy_outlined),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _unregisteredPositiveTags.clear();
+                    _persist();
+                  });
+                },
+                child: const Text('清除清單'),
+              ),
+            ],
+          ),
+          const Text('這些詞語目前不在系統標籤庫中，會保留在本機，之後可整理後加入內建標籤。'),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: tags
+                .map(
+                  (value) => InputChip(
+                    label: Text(value),
+                    onDeleted: () {
+                      setState(() {
+                        _unregisteredPositiveTags.remove(value);
+                        _persist();
+                      });
+                    },
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepFinal() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       TextField(
@@ -9125,9 +9219,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       TextField(
           controller: _extraPositive,
           maxLines: 2,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) {
+            _collectUnknownExtraPositiveTags();
+            _persist();
+            setState(() {});
+          },
           decoration: const InputDecoration(
               labelText: '額外正向標籤', hintText: '中文或英文，逗號/換行分隔')),
+      const SizedBox(height: 10),
+      _unregisteredPositiveTagsPanel(),
       const SizedBox(height: 10),
       TextField(
           controller: _reversePrompt,
@@ -9484,7 +9584,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             TextField(
               controller: _extraPositive,
               maxLines: 2,
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) {
+                _collectUnknownExtraPositiveTags();
+                _persist();
+                setState(() {});
+              },
               decoration: const InputDecoration(
                 labelText: '額外正向標籤',
                 hintText: '可輸入中文或英文；中文會自動轉成英文標籤',
@@ -9492,6 +9596,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 prefixIcon: Icon(Icons.add_circle_outline),
               ),
             ),
+            const SizedBox(height: 12),
+            _unregisteredPositiveTagsPanel(),
             const SizedBox(height: 12),
             TextField(
               controller: _negative,
