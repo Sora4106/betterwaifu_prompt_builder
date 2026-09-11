@@ -11,6 +11,9 @@ import 'expanded_tag_data.dart';
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _stepLayoutVersion = 3;
+const _expressionEyesGroup = '表情・眼睛';
+const _expressionMouthGroup = '表情・嘴巴';
+const _expressionOtherGroup = '表情・其他臉部';
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -669,6 +672,8 @@ List<TagItem> _createScopedClothingTags() {
     ['choker', '\u9805\u5708\u914D\u4EF6\u98A8\u683C', 'choker accessory'],
     ['hair', '\u9AEE\u98FE\u914D\u4EF6\u98A8\u683C', 'hair accessory'],
     ['jewelry', '\u73E0\u5BF6\u914D\u4EF6\u98A8\u683C', 'jewelry accessory'],
+    ['fluffy', '\u84EC\u9B06\u98A8\u683C', 'fluffy style accessory'],
+    ['lifelike', '\u64EC\u771F\u98A8\u683C', 'lifelike style accessory'],
   ]);
 
   const detailNames = [
@@ -2835,6 +2840,69 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isFaceExpressionTag(TagItem tag) =>
       tag.group == '臉部特徵' || tag.group == '表情';
 
+  bool _isExpressionPickerGroup(String group) => const {
+        _expressionEyesGroup,
+        _expressionMouthGroup,
+        _expressionOtherGroup,
+      }.contains(group);
+
+  String? _expressionSubgroupForTag(TagItem tag) {
+    if (!_isFaceExpressionTag(tag)) return null;
+
+    final conflict = tag.conflictGroup;
+    if (const {'eyes', 'expression_eyes'}.contains(conflict)) {
+      return _expressionEyesGroup;
+    }
+    if (const {'mouth', 'expression_mouth'}.contains(conflict)) {
+      return _expressionMouthGroup;
+    }
+
+    // Some imported/custom tags do not carry a conflict group.  Keep the
+    // classification stable by using the English Danbooru-style tag name.
+    final english = tag.en.toLowerCase();
+    const mouthTerms = <String>[
+      'mouth',
+      'smile',
+      'grin',
+      'smirk',
+      'pout',
+      'lip',
+      'tongue',
+      'fang',
+      'teeth',
+      'drool',
+      'saliva',
+      'exhaling',
+      'scream',
+      'shout',
+      'yawn',
+      'whistle',
+      'kiss',
+    ];
+    if (mouthTerms.any((term) => english.contains(term))) {
+      return _expressionMouthGroup;
+    }
+
+    const eyeTerms = <String>[
+      'eye',
+      'wink',
+      'tear',
+      'cry',
+      'gaze',
+      'look',
+      'glance',
+      'stare',
+      'pupil',
+      'brow',
+      'eyebrow',
+    ];
+    if (eyeTerms.any((term) => english.contains(term))) {
+      return _expressionEyesGroup;
+    }
+
+    return _expressionOtherGroup;
+  }
+
   bool _isScopedClothingColorGroup(String group) =>
       _isScopedClothingGroup(group) &&
       _scopedClothingKind(group) == 'detail_color';
@@ -3963,6 +4031,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where((group) => !_isScopedClothingGroup(group))
             .where((group) => group != '髮色' && group != '臉部特徵')
             .toSet(),
+        _expressionEyesGroup,
+        _expressionMouthGroup,
+        _expressionOtherGroup,
       ];
 
   @override
@@ -5332,6 +5403,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
     if (groups.contains(tag.group)) return true;
     if (groups.contains('表情') && _isFaceExpressionTag(tag)) return true;
+    if (groups.any(_isExpressionPickerGroup)) {
+      final subgroup = _expressionSubgroupForTag(tag);
+      if (subgroup != null && groups.contains(subgroup)) return true;
+    }
     return groups.contains('髮型') && tag.group == '髮色';
   }
 
@@ -5379,6 +5454,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    void addRandomFromExpressionGroup(String group,
+        {int min = 0, int max = 1}) {
+      final pool = _allTags
+          .where((tag) =>
+              _expressionSubgroupForTag(tag) == group &&
+              (_showAdult || !tag.adult))
+          .toList()
+        ..shuffle(random);
+      if (pool.isEmpty) return;
+      final count = min + random.nextInt(max - min + 1);
+      var addedCount = 0;
+      for (final tag in pool) {
+        if (added.length >= 12 || addedCount >= count) break;
+        if (add(tag)) addedCount++;
+      }
+    }
+
     if (groupSet.contains('眼睛')) {
       addRandomFromGroup('眼睛', max: 2);
     }
@@ -5400,6 +5492,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (groupSet.contains('表情')) {
       addRandomFromGroup('臉部特徵', max: 3);
       addRandomFromGroup('表情', max: 5);
+    }
+    if (groupSet.contains(_expressionEyesGroup)) {
+      addRandomFromExpressionGroup(_expressionEyesGroup, max: 3);
+    }
+    if (groupSet.contains(_expressionMouthGroup)) {
+      addRandomFromExpressionGroup(_expressionMouthGroup, max: 4);
+    }
+    if (groupSet.contains(_expressionOtherGroup)) {
+      addRandomFromExpressionGroup(_expressionOtherGroup, max: 3);
     }
     if (groupSet.contains('胸部')) {
       addRandomFromGroup('胸部', min: 1);
@@ -5437,6 +5538,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '髮長',
       '髮型',
       '表情',
+      _expressionEyesGroup,
+      _expressionMouthGroup,
+      _expressionOtherGroup,
       '胸部',
       '裸露',
       '姿勢',
@@ -8201,10 +8305,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           effectiveGroup == '表情' && tag.group == '臉部特徵';
+      final faceExpressionInSubgroup =
+          _expressionSubgroupForTag(tag) == group;
       final groupMatch = group == '全部' ||
           tag.group == effectiveGroup ||
           hairColorInHairGroup ||
-          faceExpressionInMergedGroup;
+          faceExpressionInMergedGroup ||
+          faceExpressionInSubgroup;
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -8426,15 +8533,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           activeGroup == '表情' && tag.group == '臉部特徵';
+      final faceExpressionInSubgroup =
+          _expressionSubgroupForTag(tag) == activeGroup;
       final inGroup = (groups.contains(tag.group) ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup) &&
+              faceExpressionInMergedGroup ||
+              faceExpressionInSubgroup) &&
           (activeGroup == null ||
               tag.group == activeGroup ||
               allClothingWear ||
               hairColorInHairGroup ||
-              faceExpressionInMergedGroup);
+              faceExpressionInMergedGroup ||
+              faceExpressionInSubgroup);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -9617,12 +9728,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '額外特徵顏色',
             '髮長',
             '髮型',
-            '表情',
+            _expressionEyesGroup,
+            _expressionMouthGroup,
+            _expressionOtherGroup,
             '胸部',
             '裸露',
           ],
               nextLabel: '下一步：服裝',
-               instruction: '請在每位人物自己的區塊內設定身體、眼睛、髮長、髮型、額外特徵與表情；髮色會在髮長與髮型分類中置於下方。'),
+               instruction: '請在每位人物自己的區塊內設定身體、眼睛、髮長、髮型、額外特徵，以及表情中的眼睛、嘴巴或其他臉部細節；髮色會在髮長與髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
