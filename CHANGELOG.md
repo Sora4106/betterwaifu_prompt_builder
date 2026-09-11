@@ -1,5 +1,10 @@
 ﻿# 更新紀錄
 
+## 1.1.62+64 - 2026-09-11
+
+- feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing
+
+
 ## 1.1.61+63 - 2026-09-11
 
 - feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags

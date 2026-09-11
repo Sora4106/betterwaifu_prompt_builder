@@ -1515,6 +1515,132 @@ List<TagItem> _hairColorShadeTags() {
       .toList();
 }
 
+List<TagItem> _expandedHairStyleTags() {
+  const definitions = <List<String>>[
+    ['hime_cut', '公主切', 'hime cut'],
+    ['wolf_cut', '狼尾剪', 'wolf cut'],
+    ['jellyfish_cut', '水母頭', 'jellyfish cut'],
+    ['asymmetrical_bob', '不對稱短髮', 'asymmetrical bob'],
+    ['blunt_bob', '齊切短髮', 'blunt bob'],
+    ['layered_long_hair', '層次長髮', 'layered long hair'],
+    ['feathered_hair', '羽毛剪', 'feathered hair'],
+    ['shaggy_hair', '碎剪長髮', 'shaggy hair'],
+    ['fluffy_long_hair', '蓬鬆長髮', 'fluffy long hair'],
+    ['fluffy_short_hair', '蓬鬆短髮', 'fluffy short hair'],
+    ['side_parted_hair', '側分長髮', 'side-parted hair'],
+    ['center_parted_hair', '中分長髮', 'center-parted hair'],
+    ['slicked_back_hair', '後梳髮', 'slicked-back hair'],
+    ['half_up_hair', '半扎髮', 'half-up hair'],
+    ['half_up_bun', '半丸子頭', 'half-up bun'],
+    ['half_ponytail', '半馬尾', 'half ponytail'],
+    ['half_up_half_down', '公主半扎髮', 'half-up half-down hair'],
+    ['double_side_buns', '雙側髮髻', 'double side buns'],
+    ['high_twintails', '高雙馬尾', 'high twintails'],
+    ['very_low_twintails', '超低雙馬尾', 'very low twintails'],
+    ['low_side_ponytail', '單側低馬尾', 'low side ponytail'],
+    ['bubble_ponytail', '泡泡馬尾', 'bubble ponytail'],
+    ['bubble_twintails', '雙泡泡馬尾', 'bubble twintails'],
+    ['braided_ponytail', '編織馬尾', 'braided ponytail'],
+    ['braided_twintails', '雙編織馬尾', 'braided twintails'],
+    ['crown_braid', '皇冠辮', 'crown braid'],
+    ['dutch_braid', '荷蘭辮', 'dutch braid'],
+    ['fishtail_braid', '魚骨辮', 'fishtail braid'],
+    ['waterfall_braid', '瀑布辮', 'waterfall braid'],
+    ['rope_braid', '麻花側辮', 'rope braid'],
+    ['halo_braid', '環狀辮', 'halo braid'],
+    ['braided_bun', '辮子髮髻', 'braided bun'],
+    ['double_braided_buns', '雙辮髮髻', 'double braided buns'],
+    ['side_swept_hair', '側梳長髮', 'side-swept hair'],
+    ['hair_over_one_eye', '單側遮眼髮', 'hair over one eye'],
+    ['hair_over_eyes', '遮雙眼瀏海', 'hair over eyes'],
+    ['long_sidelocks', '長鬢角', 'long sidelocks'],
+    ['short_sidelocks', '短鬢角', 'short sidelocks'],
+    ['antenna_hair', '天線髮', 'antenna hair'],
+    ['two_ahoge', '雙呆毛', 'two ahoge'],
+    ['flipped_out_hair', '外翹髮尾', 'flipped-out hair'],
+    ['inward_curled_hair', '內彎髮尾', 'inward curled hair'],
+    ['big_wavy_hair', '大波浪長髮', 'big wavy hair'],
+    ['spiral_curls', '螺旋捲長髮', 'spiral curls'],
+    ['loose_curls', '鬆散捲髮', 'loose curls'],
+    ['afro', '爆炸捲', 'afro'],
+    ['voluminous_curly_hair', '蓬鬆捲髮', 'voluminous curly hair'],
+    ['wet_hair', '濕髮感', 'wet hair'],
+    ['messy_long_hair', '凌亂長髮', 'messy long hair'],
+    ['hime_bob', '姬鮑伯', 'hime bob'],
+    ['bowl_cut', '蘑菇頭', 'bowl cut'],
+    ['pageboy_cut', '頁童頭', 'pageboy cut'],
+    ['a_line_bob', 'A字鮑伯', 'A-line bob'],
+    ['inverted_bob', '倒V鮑伯', 'inverted bob'],
+    ['long_bob', '長鮑伯', 'long bob'],
+    ['choppy_bob', '碎剪鮑伯', 'choppy bob'],
+    ['french_bob', '法式鮑伯', 'French bob'],
+    ['wolf_bob', '狼尾鮑伯', 'wolf bob'],
+    ['mullet', '現代狼尾／鯔魚頭', 'mullet'],
+    ['butterfly_cut', '蝴蝶層次剪', 'butterfly cut'],
+    ['octopus_cut', '章魚剪', 'octopus cut'],
+    ['shag_cut', '層次碎剪', 'shag cut'],
+    ['razor_cut', '刀削感層次髮', 'razor cut'],
+    ['v_cut_hair', 'V字長髮', 'V-cut hair'],
+    ['u_cut_hair', 'U字長髮', 'U-cut hair'],
+    ['princess_hair', '公主長髮', 'princess hair'],
+    ['bouffant_hair', '高蓬髮型', 'bouffant hair'],
+    ['beehive_hair', '蜂巢高髮髻', 'beehive hair'],
+    ['pompadour', '龐巴度髮型', 'pompadour'],
+    ['victory_rolls', '復古勝利捲', 'victory rolls'],
+    ['finger_waves', '手指波浪捲', 'finger waves'],
+    ['retro_curls', '復古大捲髮', 'retro curls'],
+    ['hollywood_waves', '好萊塢波浪髮', 'Hollywood waves'],
+    ['ringlets', '小螺旋捲', 'ringlets'],
+    ['sausage_curls', '大筒狀捲髮', 'sausage curls'],
+    ['twin_drills', '雙鑽頭捲', 'twin drills'],
+    ['side_drills', '側邊鑽頭捲', 'side drills'],
+    ['curled_sidelocks', '捲曲鬢髮', 'curled sidelocks'],
+    ['braided_bangs', '編辮瀏海', 'braided bangs'],
+    ['twisted_bangs', '扭轉瀏海', 'twisted bangs'],
+    ['side_swept_bangs', '側掃瀏海', 'side-swept bangs'],
+    ['curtain_bangs', '八字／窗簾瀏海', 'curtain bangs'],
+    ['see_through_bangs', '空氣瀏海', 'see-through bangs'],
+    ['wispy_bangs', '碎薄瀏海', 'wispy bangs'],
+    ['blunt_bangs', '厚齊瀏海', 'blunt bangs'],
+    ['arched_bangs', '弧形瀏海', 'arched bangs'],
+    ['asymmetrical_bangs', '不對稱瀏海', 'asymmetrical bangs'],
+    ['long_bangs', '長瀏海', 'long bangs'],
+    ['short_bangs', '短瀏海', 'short bangs'],
+    ['baby_bangs', '超短瀏海', 'baby bangs'],
+    ['braided_headband', '辮子髮箍', 'braided headband'],
+    ['milkmaid_braid', '牛奶女工辮', 'milkmaid braid'],
+    ['gibson_tuck', '吉布森盤髮', 'Gibson tuck'],
+    ['french_twist', '法式盤髮', 'French twist'],
+    ['chignon', '低盤髮', 'chignon'],
+    ['side_chignon', '側邊盤髮', 'side chignon'],
+    ['messy_bun', '凌亂丸子頭', 'messy bun'],
+    ['space_buns', '雙太空包頭', 'space buns'],
+    ['heart_shaped_buns', '愛心雙髮髻', 'heart-shaped buns'],
+    ['bow_shaped_hair', '蝴蝶結髮型', 'bow-shaped hair'],
+    ['looped_ponytail', '環狀馬尾', 'looped ponytail'],
+    ['looped_twintails', '環狀雙馬尾', 'looped twintails'],
+    ['segmented_ponytail', '分節馬尾', 'segmented ponytail'],
+    ['side_loop_braid', '側邊環狀辮', 'side loop braid'],
+    ['four_strand_braid', '四股辮', 'four-strand braid'],
+    ['five_strand_braid', '五股辮', 'five-strand braid'],
+    ['lace_braid', '蕾絲辮', 'lace braid'],
+    ['snake_braid', '蛇形辮', 'snake braid'],
+    ['micro_braids', '細小辮髮', 'micro braids'],
+    ['multiple_braids', '多股辮髮', 'multiple braids'],
+    ['side_cornrows', '側邊貼頭辮', 'side cornrows'],
+    ['crimped_hair', '玉米鬚波浪髮', 'crimped hair'],
+    ['zigzag_part', '鋸齒分線', 'zigzag part'],
+    ['deep_side_part', '深側分', 'deep side part'],
+    ['no_bangs', '無瀏海', 'no bangs'],
+    ['forehead_exposed', '露額髮型', 'forehead exposed'],
+  ];
+  return definitions.asMap().entries.map((entry) {
+    final definition = entry.value;
+    return _tag('hair_style_${definition[0]}', '髮型', definition[1],
+        definition[2], entry.key + 2, conflictGroup: 'hair_style');
+  }).toList();
+}
+
 List<TagItem> _seedTags() => [
       // Role and character basics.
       _tag('role_girl', '角色類型', '女性角色', '1girl', 0),
@@ -1530,9 +1656,9 @@ List<TagItem> _seedTags() => [
       _tag('role_tomboy', '角色類型', '假小子', 'tomboy', 0),
 
       // Appearance and body.
-      _tag('trait_long_hair', '髮型', '長髮', 'long hair', 1,
+      _tag('trait_long_hair', '髮長', '長髮', 'long hair', 1,
           conflictGroup: 'hair_length'),
-      _tag('trait_short_hair', '髮型', '短髮', 'short hair', 1,
+      _tag('trait_short_hair', '髮長', '短髮', 'short hair', 1,
           conflictGroup: 'hair_length'),
       _tag('trait_hair_between_eyes', '髮型', '瀏海遮眼', 'hair between eyes', 1),
       _tag('trait_blonde_hair', '髮色', '金髮', 'blonde hair', 1,
@@ -1630,15 +1756,17 @@ List<TagItem> _seedTags() => [
       _tag('trait_tattoo', '額外特徵', '刺青', 'tattoo', 1),
       _tag('trait_nail_polish', '額外特徵', '指甲油', 'nail polish', 1),
 
+      // Hair length.
+      _tag('hair_very_short', '髮長', '極短髮', 'very short hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_medium', '髮長', '中長髮', 'medium hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_very_long', '髮長', '超長髮', 'very long hair', 1,
+          conflictGroup: 'hair_length'),
+      _tag('hair_waist_length', '髮長', '及腰長髮', 'waist-length hair', 1,
+          conflictGroup: 'hair_length'),
+
       // Hairstyle types.
-      _tag('hair_very_short', '髮型', '極短髮', 'very short hair', 1,
-          conflictGroup: 'hair_length'),
-      _tag('hair_medium', '髮型', '中長髮', 'medium hair', 1,
-          conflictGroup: 'hair_length'),
-      _tag('hair_very_long', '髮型', '超長髮', 'very long hair', 1,
-          conflictGroup: 'hair_length'),
-      _tag('hair_waist_length', '髮型', '及腰長髮', 'waist-length hair', 1,
-          conflictGroup: 'hair_length'),
       _tag('hair_bob_cut', '髮型', '鮑伯頭', 'bob cut', 1,
           conflictGroup: 'hair_style'),
       _tag('hair_pixie_cut', '髮型', '精靈短髮', 'pixie cut', 1,
@@ -1684,6 +1812,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_style'),
       _tag('hair_drill', '髮型', '鑽頭捲', 'drill hair', 1,
           conflictGroup: 'hair_style'),
+      _tag('hair_long_straight', '髮型', '長直髮', 'long straight hair', 1),
+      ..._expandedHairStyleTags(),
 
       // Clothing, intentionally split into practical sub-groups.
       _tag('clothing_top', '上衣', '上衣', 'top', 2),
@@ -2497,24 +2627,7 @@ class PromptBuilderApp extends StatefulWidget {
 }
 
 class _PromptBuilderAppState extends State<PromptBuilderApp> {
-  final List<TagItem> _builtIns = _seedTags().map((tag) {
-    const mergedHairIds = {
-      'trait_long_hair',
-      'trait_short_hair',
-      'trait_hair_between_eyes',
-    };
-    if (!mergedHairIds.contains(tag.id)) return tag;
-    return TagItem(
-      id: tag.id,
-      group: '髮型',
-      zh: tag.zh,
-      en: tag.en,
-      order: tag.order,
-      adult: tag.adult,
-      builtIn: tag.builtIn,
-      conflictGroup: tag.conflictGroup,
-    );
-  }).toList();
+  final List<TagItem> _builtIns = _seedTags();
   final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expandedPromptTags,
@@ -2611,7 +2724,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '胸部': 14,
       '裸露': 15,
       '髮色': 16,
-      '髮型': 17,
+      '髮長': 17,
+      '髮型': 18,
       '服裝': 20,
       '角色扮演': 21,
       '服裝顏色': 22,
@@ -3598,8 +3712,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isHairStyleTag(TagItem tag) =>
-      tag.group == '髮型' ||
-      tag.id.startsWith('hair_') ||
+      (tag.group == '髮型' && _hairLengthTag(tag.en) == null) ||
+      (tag.id.startsWith('hair_') && _hairLengthTag(tag.en) == null) ||
       _traitOverrideGroups(tag.en).contains('hair_style');
 
   String _hairColorChinese(TagItem tag) {
@@ -4209,6 +4323,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final color = value.substring(0, value.length - ' hair'.length).trim();
       if (_clothingColorNames.contains(color)) return '髮色';
     }
+    if (_hairLengthTag(value) != null) return '髮長';
     if (value.contains('hair')) return '髮型';
     if (RegExp(r'\b(?:[a-z-]+\s+)?eyes?\b').hasMatch(value) ||
         RegExp(r'\b(?:pupils?|sclera|sharingan|rinnegan|byakugan|tenseigan|jougan|ketsuryugan)\b')
@@ -5275,6 +5390,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addRandomFromGroup('額外特徵位置');
       addRandomFromGroup('額外特徵顏色');
     }
+    if (groupSet.contains('髮長')) {
+      addRandomFromGroup('髮長', min: 1);
+    }
     if (groupSet.contains('髮型')) {
       addRandomFromGroup('髮色', min: 1);
       addRandomFromGroup('髮型', min: 1, max: 2);
@@ -5316,6 +5434,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '眼睛',
       '身體特徵',
       '額外特徵',
+      '髮長',
       '髮型',
       '表情',
       '胸部',
@@ -5715,6 +5834,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .showSnackBar(SnackBar(content: Text('$label已複製')));
   }
 
+  void _downloadUnregisteredPositiveTags() {
+    final tags = _unregisteredPositiveTags.toList();
+    if (tags.isEmpty) return;
+    final blob = html.Blob([tags.join('\r\n')], 'text/plain;charset=utf-8');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', 'betterwaifu-unregistered-positive-tags.txt')
+      ..click();
+    html.Url.revokeObjectUrl(url);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('未加入標籤清單已下載')));
+  }
+
   String _compactReverseKey(String value) =>
       _englishTagKey(value).replaceAll(' ', '');
 
@@ -5843,7 +5975,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (hairColors.isNotEmpty) hair.add(hairColors.first);
     final hairSuffixes = _allTags
         .where((tag) =>
-            (tag.group == '髮型' || _hairLengthTag(tag.en) != null) &&
+            (tag.group == '髮型' || tag.group == '髮長' ||
+                _hairLengthTag(tag.en) != null) &&
             key.endsWith(_englishTagKey(tag.en)))
         .toList()
       ..sort((a, b) =>
@@ -6169,6 +6302,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '額外特徵',
       '額外特徵位置',
       '額外特徵顏色',
+      '髮長',
       '髮型',
       '髮色',
       '胸部',
@@ -6275,6 +6409,81 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('已清除「$title」')));
+  }
+
+  String? _clothingScopeForPickerGroup(String group) {
+    if (_isScopedClothingGroup(group)) return _scopedClothingSlot(group);
+    return switch (group) {
+      '服裝' || _cosplayGroup || '服裝顏色' || '服裝邊線色' => 'onepiece',
+      '上衣' || '上衣風格' || '上衣顏色' || '上衣邊線色' => 'top',
+      '褲子' => 'pants',
+      '裙子' => 'skirt',
+      '下身風格' || '下身顏色' || '下身邊線色' => 'bottom',
+      '內衣' || '內衣顏色' || '內衣邊線色' => 'underwear',
+      '胸罩' || '胸罩顏色' || '胸罩邊線色' => 'bra',
+      '內褲' || '內褲顏色' || '內褲邊線色' => 'panties',
+      '襪子' || '襪子顏色' || '襪子邊線色' => 'socks',
+      '鞋子' || '鞋子顏色' || '鞋子邊線色' => 'shoes',
+      '配件' || '配件顏色' || '配件邊線色' || '配件位置' => 'accessory',
+      _ => null,
+    };
+  }
+
+  Future<void> _clearPersonPickerGroup(int personIndex, String group) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final selected = _selectedTagsForPerson(personIndex);
+    final clothingScope = _clothingScopeForPickerGroup(group);
+    final isClothingBase = const {
+      '上衣',
+      '褲子',
+      '裙子',
+      '內衣',
+      '胸罩',
+      '內褲',
+      '襪子',
+      '鞋子',
+      '服裝',
+      _cosplayGroup,
+      '配件',
+    }.contains(group);
+    final tags = selected.where((tag) {
+      if (isClothingBase && clothingScope != null) {
+        final tagScope = _clothingScopeForPickerGroup(tag.group) ??
+            _clothingScopeForTag(tag);
+        return tagScope == clothingScope;
+      }
+      return tag.group == group;
+    }).toList();
+    if (tags.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('目前分類沒有已選取的標籤')));
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('清除目前分類？'),
+        content: Text(
+            '只會移除「${_wizardGroupLabel(group)}」中的 ${tags.length} 個標籤，不會影響其他服裝、姿勢或人物。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('清除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() {
+      _personTagIds(personIndex).removeAll(tags.map((tag) => tag.id));
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已清除「${_wizardGroupLabel(group)}」')));
   }
 
   void _downloadBackup() {
@@ -7814,6 +8023,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '身體特徵',
                     '眼睛',
                     '額外特徵',
+                    '髮長',
                     '髮色',
                     '髮型',
                     '上衣',
@@ -7922,6 +8132,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '身體特徵',
                     '眼睛',
                     '額外特徵',
+                    '髮長',
                     '髮色',
                     '髮型',
                     '上衣',
@@ -7986,7 +8197,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             : group;
     final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
     final tags = _allTags.where((tag) {
-      final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
+      final hairColorInHairGroup =
+          effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           effectiveGroup == '表情' && tag.group == '臉部特徵';
       final groupMatch = group == '全部' ||
@@ -8210,7 +8422,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _scopedClothingKind(tag.group) == 'wear' &&
           (personIndex == null ||
               selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
-      final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
+      final hairColorInHairGroup =
+          activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           activeGroup == '表情' && tag.group == '臉部特徵';
       final inGroup = (groups.contains(tag.group) ||
@@ -8240,7 +8453,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _stepTagPicker(List<String> groups,
-      {required String nextLabel, int? personIndex, bool showNext = true}) {
+      {required String nextLabel,
+      int? personIndex,
+      bool showNext = true,
+      bool showGroupClear = false}) {
     if (groups.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
@@ -8332,6 +8548,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             }).toList(),
           ),
         ),
+        if (showGroupClear && personIndex != null) ...[
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () =>
+                  _clearPersonPickerGroup(personIndex, currentGroup),
+              icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+              label: const Text('清除目前分類'),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         if (visible.isEmpty)
           const Text('此分類沒有符合的標籤，可以先完成此步驟或新增自訂標籤。')
@@ -8552,6 +8780,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     nextLabel: nextLabel,
                     personIndex: index,
                     showNext: false,
+                    showGroupClear: true,
                   ),
                 ],
               ),
@@ -8726,7 +8955,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   _stepTagPicker(styles,
-                      nextLabel: '下一步', personIndex: index, showNext: false),
+                      nextLabel: '下一步',
+                      personIndex: index,
+                      showNext: false,
+                      showGroupClear: true),
                   if (adaptiveWear.isNotEmpty) ...[
                     const Divider(height: 26),
                     const Text(
@@ -8737,14 +8969,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _stepTagPicker(adaptiveWear,
                         nextLabel: '\u4E0B\u4E00\u6B65',
                         personIndex: index,
-                        showNext: false),
+                        showNext: false,
+                        showGroupClear: true),
                   ],
                   const Divider(height: 26),
                   const Text('風格、顏色與服裝細節（可多選）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   _stepTagPicker(adaptiveDetails,
-                      nextLabel: '下一步', personIndex: index, showNext: false),
+                      nextLabel: '下一步',
+                      personIndex: index,
+                      showNext: false,
+                      showGroupClear: true),
                 ],
               ),
             ),
@@ -9158,18 +9394,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Text(
+            '待收錄標籤（${tags.length}）',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
             children: [
-              Expanded(
-                child: Text(
-                  '待收錄標籤（${tags.length}）',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              IconButton(
-                tooltip: '複製待收錄標籤',
-                onPressed: () => _copy(tags.join(', '), '待收錄標籤'),
+              TextButton.icon(
+                onPressed: () => _copy(tags.join(', '), '未加入標籤'),
                 icon: const Icon(Icons.copy_outlined),
+                label: const Text('複製全部'),
+              ),
+              TextButton.icon(
+                onPressed: _downloadUnregisteredPositiveTags,
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('下載清單'),
               ),
               TextButton(
                 onPressed: () {
@@ -9355,6 +9597,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         '額外特徵',
                         '額外特徵位置',
                         '額外特徵顏色',
+                        '髮長',
                         '髮色',
                         '髮型',
                         '臉部特徵',
@@ -9372,13 +9615,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
+            '髮長',
             '髮型',
             '表情',
             '胸部',
             '裸露',
           ],
               nextLabel: '下一步：服裝',
-               instruction: '請在每位人物自己的區塊內設定外觀、身體、眼睛、額外特徵、髮型與表情；髮色位於髮型分類最下方。'),
+               instruction: '請在每位人物自己的區塊內設定身體、眼睛、髮長、髮型、額外特徵與表情；髮色會在髮長與髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,

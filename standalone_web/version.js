@@ -1,8 +1,15 @@
 ﻿window.BETTERWAIFU_VERSION = Object.freeze({
-    "version":  "1.1.61",
-    "build":  63,
-    "label":  "1.1.61+63",
+    "version":  "1.1.62",
+    "build":  64,
+    "label":  "1.1.62+64",
     "history":  [
+                    {
+                        "version":  "1.1.62",
+                        "build":  64,
+                        "label":  "1.1.62+64",
+                        "date":  "2026-09-11",
+                        "notes":  "feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing"
+                    },
                     {
                         "version":  "1.1.61",
                         "build":  63,
