@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'app_version.dart';
 import 'catalog_data.dart';
+import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
@@ -312,7 +313,10 @@ TagItem _tag(
 const _clothingGroupOnePiece = '\u670D\u88DD';
 const _clothingGroupTop = '\u4E0A\u8863';
 const _clothingGroupPants = '\u8932\u5B50';
+const _clothingGroupShorts = '短褲';
 const _clothingGroupSkirt = '\u88D9\u5B50';
+const _clothingGroupOuterwear = '外套';
+const _clothingGroupCostume = '特殊服裝';
 const _clothingGroupUnderwear = '\u5167\u8863';
 const _clothingGroupBra = '\u80F8\u7F69';
 const _clothingGroupPanties = '\u5167\u8932';
@@ -326,6 +330,10 @@ const _legacyClothingWearGroup = '\u7A7F\u812B\u72C0\u614B';
 const _scopedClothingPrefix = 'clothing_scope_';
 // UI-only group: all selected clothing wear-state tags are shown together.
 const _allClothingWearGroup = 'clothing_all_wear';
+const _outfitMainStyleGroup = '服裝・主要風格';
+const _outfitSubStyleGroup = '服裝・子風格';
+const _outfitMoodGroup = '服裝・氣質';
+const _outfitOccasionGroup = '服裝・場合';
 
 String _scopedClothingGroup(String slot, String kind) =>
     '$_scopedClothingPrefix${slot}_$kind';
@@ -336,23 +344,53 @@ bool _isScopedClothingGroup(String group) =>
 String? _scopedClothingSlot(String group) {
   if (!_isScopedClothingGroup(group)) return null;
   final value = group.substring(_scopedClothingPrefix.length);
-  final separator = value.lastIndexOf('_');
-  return separator < 1 ? null : value.substring(0, separator);
+  for (final kind in const [
+    'detail_color',
+    'material',
+    'pattern',
+    'length',
+    'detail',
+    'style',
+    'wear',
+    'fit',
+    'cut',
+  ]) {
+    final suffix = '_$kind';
+    if (value.endsWith(suffix)) {
+      return value.substring(0, value.length - suffix.length);
+    }
+  }
+  return null;
 }
 
 String? _scopedClothingKind(String group) {
   if (!_isScopedClothingGroup(group)) return null;
   final value = group.substring(_scopedClothingPrefix.length);
-  final separator = value.lastIndexOf('_');
-  return separator < 1 ? null : value.substring(separator + 1);
+  for (final kind in const [
+    'detail_color',
+    'material',
+    'pattern',
+    'length',
+    'detail',
+    'style',
+    'wear',
+    'fit',
+    'cut',
+  ]) {
+    if (value.endsWith('_$kind')) return kind;
+  }
+  return null;
 }
 
 String _clothingScopeNoun(String slot) =>
     const {
       'top': 'top',
       'pants': 'pants',
+      'shorts': 'shorts',
       'skirt': 'skirt',
       'onepiece': 'one-piece',
+      'outerwear': 'outerwear',
+      'costume': 'costume',
       'underwear': 'underwear',
       'bra': 'bra',
       'panties': 'panties',
@@ -366,8 +404,11 @@ String _clothingScopeLabel(String slot) =>
     const {
       'top': '\u4E0A\u8863',
       'pants': '\u8932\u5B50',
+      'shorts': '短褲',
       'skirt': '\u88D9\u5B50',
       'onepiece': '\u9023\u8EAB\u88DD',
+      'outerwear': '外套',
+      'costume': '特殊服裝',
       'underwear': '\u5167\u8863',
       'bra': '\u80F8\u7F69',
       'panties': '\u5167\u8932',
@@ -380,9 +421,13 @@ String _clothingScopeLabel(String slot) =>
 String _clothingScopedKindLabel(String kind) =>
     const {
       'style': '\u98A8\u683C',
-      'detail': '\u7D30\u7BC0',
+      'cut': '剪裁',
+      'fit': '版型',
+      'length': '長度',
+      'detail': '裝飾／細節',
       'material': '\u6750\u8CEA',
-      'detail_color': '\u7D30\u7BC0\u984F\u8272',
+      'pattern': '圖案',
+      'detail_color': '裝飾色',
       'wear': '\u7A7F\u812B\u72C0\u614B',
     }[kind] ??
     kind;
@@ -797,8 +842,11 @@ List<TagItem> _createScopedClothingTags() {
   const slots = [
     'top',
     'pants',
+    'shorts',
     'skirt',
     'onepiece',
+    'outerwear',
+    'costume',
     'underwear',
     'bra',
     'panties',
@@ -1996,6 +2044,8 @@ List<TagItem> _seedTags() => [
           'socks_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
       ..._clothingColorTags(
           'shoes_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+      ..._clothingColorTags(
+          'outerwear_color', '外套顏色', '外套', 'outerwear', 'outerwear_color'),
       ..._clothingColorTags('clothing_detail_color', '服裝細節顏色', '細節', 'detail',
           'clothing_detail_color'),
 
@@ -2018,6 +2068,8 @@ List<TagItem> _seedTags() => [
           'socks_shade_color', '襪子顏色', '襪子', 'socks', 'legwear_color'),
       ..._clothingColorShadeTags(
           'shoes_shade_color', '鞋子顏色', '鞋子', 'shoes', 'footwear_color'),
+      ..._clothingColorShadeTags('outerwear_shade_color', '外套顏色', '外套',
+          'outerwear', 'outerwear_color'),
       ..._clothingColorShadeTags('clothing_detail_shade_color', '服裝細節顏色', '細節',
           'detail', 'clothing_detail_color'),
       ..._clothingColorShadeTags('accessory_shade_color', '配件顏色', '配件',
@@ -2038,6 +2090,8 @@ List<TagItem> _seedTags() => [
           'socks_trim_color', '襪子邊線色', '邊線', 'socks_trim_color'),
       ..._clothingTrimColorTags(
           'shoes_trim_color', '鞋子邊線色', '邊線', 'shoes_trim_color'),
+      ..._clothingTrimColorTags(
+          'outerwear_trim_color', '外套邊線色', '邊線', 'outerwear_trim_color'),
       ..._clothingTrimColorTags(
           'accessory_trim_color', '配件邊線色', '邊線', 'accessory_trim_color'),
       ..._extraFeaturePositionTags(),
@@ -2632,6 +2686,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expandedPromptTags,
+    ...clothingTaxonomyTags,
+    ...clothingDimensionTags,
+    ...clothingOverallTags,
   ].map(_catalogTag).toList();
   final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
@@ -2696,9 +2753,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // The same prompt word (for example "black trim") is valid for every
       // clothing slot, so color groups must not be deduplicated together.
       final preserveClothingColorGroup = _isClothingColorGroup(tag.group);
+      final preserveTaxonomyGarment =
+          tag.id.startsWith('taxonomy_') && _isClothingBaseGroup(tag.group);
       final key = englishKey.isEmpty
           ? 'id:${tag.id}'
-          : (_isScopedClothingGroup(tag.group) || preserveClothingColorGroup)
+          : (_isScopedClothingGroup(tag.group) ||
+                  preserveClothingColorGroup ||
+                  preserveTaxonomyGarment)
               ? 'en:$englishKey:${tag.group}'
               : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
@@ -2734,6 +2795,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '上衣風格': 24,
       '上衣顏色': 25,
       '褲子': 26,
+      '短褲': 26,
       '裙子': 26,
       '下身風格': 27,
       '下身顏色': 28,
@@ -2749,6 +2811,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '鞋子顏色': 35,
       '配件': 35,
       '配件顏色': 36,
+      '外套': 29,
+      '外套顏色': 30,
+      '特殊服裝': 21,
+      _outfitMainStyleGroup: 37,
+      _outfitSubStyleGroup: 37,
+      _outfitMoodGroup: 38,
+      _outfitOccasionGroup: 39,
       '服裝細節': 37,
       '服裝細節顏色': 38,
       '服裝材質': 38,
@@ -2799,7 +2868,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '上衣',
         '上衣風格',
         '褲子',
+        '短褲',
         '裙子',
+        '外套',
+        '特殊服裝',
         '下身風格',
         '內衣',
         '胸罩',
@@ -2814,6 +2886,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '內褲顏色',
         '襪子顏色',
         '鞋子顏色',
+        '外套顏色',
         '服裝顏色',
         '上衣顏色',
         '下身顏色',
@@ -2825,11 +2898,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '內褲邊線色',
         '襪子邊線色',
         '鞋子邊線色',
+        '外套邊線色',
         '配件邊線色',
         '服裝細節',
         '服裝細節顏色',
         '服裝材質',
         '穿脫狀態',
+        _outfitMainStyleGroup,
+        _outfitSubStyleGroup,
+        _outfitMoodGroup,
+        _outfitOccasionGroup,
       }.contains(group) ||
       group.endsWith('邊線色');
 
@@ -2916,6 +2994,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '內褲顏色',
         '襪子顏色',
         '鞋子顏色',
+        '外套顏色',
         '配件顏色',
         '服裝細節顏色',
       }.contains(group) ||
@@ -2926,7 +3005,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '服裝',
         '上衣',
         '褲子',
+        '短褲',
         '裙子',
+        '外套',
+        '特殊服裝',
         '內衣',
         '胸罩',
         '內褲',
@@ -2972,6 +3054,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return !styleOnlyIds.contains(tagKey);
   }
 
+  String _clothingBaseDisplayGroup(TagItem tag) {
+    if (tag.group == _clothingGroupShorts ||
+        (tag.group == _clothingGroupPants &&
+            RegExp(r'\b(shorts|hot pants|bloomers)\b', caseSensitive: false)
+                .hasMatch(tag.en))) {
+      return _clothingGroupShorts;
+    }
+    if (tag.group == _clothingGroupOuterwear ||
+        ((tag.group == _clothingGroupTop ||
+                tag.group == _clothingGroupOnePiece) &&
+            RegExp(
+              r'\b(jacket|coat|blazer|cape|cloak|shawl|raincoat|lab coat)\b',
+              caseSensitive: false,
+            ).hasMatch(tag.en))) {
+      return _clothingGroupOuterwear;
+    }
+    if (tag.group == _clothingGroupCostume ||
+        tag.group == _cosplayGroup ||
+        (tag.group == _clothingGroupOnePiece &&
+            RegExp(
+              r'\b(uniform|kimono|yukata|hakama|kyudo|miko|ninja|maid|nurse|police|military|cheerleading|gymnastics|swimsuit|bikini|wedding dress)\b',
+              caseSensitive: false,
+            ).hasMatch(tag.en))) {
+      return _clothingGroupCostume;
+    }
+    return tag.group;
+  }
+
   bool _isLegacyClothingStyleTag(TagItem tag) => const {
         'bra_underwire',
         'bra_push_up',
@@ -3012,15 +3122,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _isCosplayTag(tag);
 
   String? _clothingScopeForBase(TagItem tag) {
-    if (_isCosplayTag(tag)) return 'onepiece';
+    final displayGroup = _clothingBaseDisplayGroup(tag);
+    if (displayGroup == _clothingGroupShorts) return 'shorts';
+    if (displayGroup == _clothingGroupOuterwear) return 'outerwear';
+    if (displayGroup == _clothingGroupCostume) return 'costume';
     final scopedKind = _scopedClothingKind(tag.group);
     if (scopedKind == 'style') return _scopedClothingSlot(tag.group);
     if (!_isClothingBaseTag(tag) && !_isLegacyClothingStyleTag(tag))
       return null;
     if (tag.group == _clothingGroupTop) return 'top';
     if (tag.group == _clothingGroupPants) return 'pants';
+    if (tag.group == _clothingGroupShorts) return 'shorts';
     if (tag.group == _clothingGroupSkirt) return 'skirt';
     if (tag.group == _clothingGroupOnePiece) return 'onepiece';
+    if (tag.group == _clothingGroupOuterwear) return 'outerwear';
+    if (tag.group == _clothingGroupCostume) return 'costume';
     if (tag.group == _clothingGroupUnderwear) return 'underwear';
     if (tag.group == _clothingGroupBra) return 'bra';
     if (tag.group == _clothingGroupPanties) return 'panties';
@@ -3056,6 +3172,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_isScopedClothingGroup(tag.group)) {
       return _scopedClothingSlot(tag.group);
     }
+    if (_isClothingBaseTag(tag) || _isLegacyClothingStyleTag(tag)) {
+      return _clothingScopeForBase(tag);
+    }
+    if (_isCosplayTag(tag)) return 'costume';
     if (_isOnePieceStyleTag(tag)) return 'onepiece';
     if (tag.group == _legacyClothingDetailGroup ||
         tag.group == _legacyClothingMaterialGroup ||
@@ -3064,8 +3184,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (tag.group == _clothingGroupTop) return 'top';
     if (tag.group == _clothingGroupPants) return 'pants';
+    if (tag.group == _clothingGroupShorts) return 'shorts';
     if (tag.group == _clothingGroupSkirt) return 'skirt';
     if (tag.group == _clothingGroupOnePiece) return 'onepiece';
+    if (tag.group == _clothingGroupOuterwear) return 'outerwear';
+    if (tag.group == _clothingGroupCostume) return 'costume';
     if (tag.group == _clothingGroupUnderwear) return 'underwear';
     if (tag.group == _clothingGroupBra) return 'bra';
     if (tag.group == _clothingGroupPanties) return 'panties';
@@ -3083,7 +3206,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (scope == 'pants' || scope == 'skirt') {
       groups.add('\u4E0B\u8EAB\u98A8\u683C');
     }
-    if (scope == 'onepiece') {
+    if (scope == 'onepiece' || scope == 'costume') {
       groups.add(_cosplayGroup);
     }
     return groups;
@@ -3093,13 +3216,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final scope = _clothingScopeForBase(base);
     if (scope == null) return const <String>[];
     final groups = <String>[
-      ..._clothingStyleGroupsForBase(base),
-      _scopedClothingGroup(scope, 'detail'),
+      _scopedClothingGroup(scope, 'cut'),
+      _scopedClothingGroup(scope, 'fit'),
+      _scopedClothingGroup(scope, 'length'),
       _scopedClothingGroup(scope, 'material'),
+      _scopedClothingGroup(scope, 'detail'),
       _scopedClothingGroup(scope, 'detail_color'),
+      _scopedClothingGroup(scope, 'pattern'),
     ];
-    final colorGroup = _clothingColorGroup(base.group);
-    final trimColorGroup = _clothingTrimColorGroup(base.group);
+    final colorGroup = _clothingColorGroupForBase(base);
+    final trimColorGroup = _clothingTrimColorGroupForBase(base);
     if (colorGroup != null) groups.add(colorGroup);
     if (trimColorGroup != null) groups.add(trimColorGroup);
     return groups;
@@ -3118,7 +3244,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (scopedSlot) {
         'onepiece' => '服裝顏色',
         'top' => '上衣顏色',
-        'pants' || 'skirt' => '下身顏色',
+        'pants' || 'shorts' || 'skirt' => '下身顏色',
+        'outerwear' => '外套顏色',
+        'costume' => '服裝顏色',
         'underwear' => '內衣顏色',
         'bra' => '胸罩顏色',
         'panties' => '內褲顏色',
@@ -3128,11 +3256,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _ => null,
       };
     }
-    if (group == '服裝' || group == _cosplayGroup) {
+    if (group == '服裝' || group == _cosplayGroup || group == '特殊服裝') {
       return '服裝顏色';
     }
     if (group == '上衣') return '上衣顏色';
-    if (group == '褲子' || group == '裙子') return '下身顏色';
+    if (group == '褲子' || group == '短褲' || group == '裙子') {
+      return '下身顏色';
+    }
+    if (group == '外套') return '外套顏色';
     if (group == '內衣') return '內衣顏色';
     if (group == '胸罩') return '胸罩顏色';
     if (group == '內褲') return '內褲顏色';
@@ -3148,7 +3279,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (scopedSlot) {
         'onepiece' => '服裝邊線色',
         'top' => '上衣邊線色',
-        'pants' || 'skirt' => '下身邊線色',
+        'pants' || 'shorts' || 'skirt' => '下身邊線色',
+        'outerwear' => '外套邊線色',
+        'costume' => '服裝邊線色',
         'underwear' => '內衣邊線色',
         'bra' => '胸罩邊線色',
         'panties' => '內褲邊線色',
@@ -3158,9 +3291,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _ => null,
       };
     }
-    if (group == '服裝' || group == _cosplayGroup) return '服裝邊線色';
+    if (group == '服裝' || group == _cosplayGroup || group == '特殊服裝') {
+      return '服裝邊線色';
+    }
     if (group == '上衣') return '上衣邊線色';
-    if (group == '褲子' || group == '裙子') return '下身邊線色';
+    if (group == '褲子' || group == '短褲' || group == '裙子') {
+      return '下身邊線色';
+    }
+    if (group == '外套') return '外套邊線色';
     if (group == '內衣') return '內衣邊線色';
     if (group == '胸罩') return '胸罩邊線色';
     if (group == '內褲') return '內褲邊線色';
@@ -3169,6 +3307,36 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == '配件') return '配件邊線色';
     return null;
   }
+
+  String? _clothingColorGroupForBase(TagItem base) =>
+      switch (_clothingScopeForBase(base)) {
+        'onepiece' || 'costume' => '服裝顏色',
+        'top' => '上衣顏色',
+        'pants' || 'shorts' || 'skirt' => '下身顏色',
+        'outerwear' => '外套顏色',
+        'underwear' => '內衣顏色',
+        'bra' => '胸罩顏色',
+        'panties' => '內褲顏色',
+        'socks' => '襪子顏色',
+        'shoes' => '鞋子顏色',
+        'accessory' => '配件顏色',
+        _ => _clothingColorGroup(base.group),
+      };
+
+  String? _clothingTrimColorGroupForBase(TagItem base) =>
+      switch (_clothingScopeForBase(base)) {
+        'onepiece' || 'costume' => '服裝邊線色',
+        'top' => '上衣邊線色',
+        'pants' || 'shorts' || 'skirt' => '下身邊線色',
+        'outerwear' => '外套邊線色',
+        'underwear' => '內衣邊線色',
+        'bra' => '胸罩邊線色',
+        'panties' => '內褲邊線色',
+        'socks' => '襪子邊線色',
+        'shoes' => '鞋子邊線色',
+        'accessory' => '配件邊線色',
+        _ => _clothingTrimColorGroup(base.group),
+      };
 
   String _betterWaifuTrimEnglish(TagItem tag) {
     // BetterWaifu's animal-content check can interpret the color word
@@ -3558,23 +3726,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final scope = _clothingScopeForBase(base);
       if (scope == null) continue;
       final related = <TagItem>[base];
-      final colorGroup = _clothingColorGroup(base.group);
-      final color = colorGroup == null
+      final colorGroup = _clothingColorGroupForBase(base);
+      final mainColor = colorGroup == null
           ? null
           : selected.cast<TagItem?>().firstWhere(
                 (tag) => tag?.group == colorGroup,
                 orElse: () => null,
               );
-      if (color != null) related.add(color);
+      if (mainColor != null) related.add(mainColor);
 
-      final trimColorGroup = _clothingTrimColorGroup(base.group);
-      final trimColor = trimColorGroup == null
+      final trimColorGroup = _clothingTrimColorGroupForBase(base);
+      final secondaryColor = trimColorGroup == null
           ? null
           : selected.cast<TagItem?>().firstWhere(
                 (tag) => tag?.group == trimColorGroup,
                 orElse: () => null,
               );
-      if (trimColor != null) related.add(trimColor);
+      if (secondaryColor != null) related.add(secondaryColor);
 
       final accessoryPositionGroup = _accessoryPositionGroup(base.group);
       final accessoryPosition = accessoryPositionGroup == null
@@ -3586,23 +3754,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (accessoryPosition != null) related.add(accessoryPosition);
 
       final styleGroups = _clothingStyleGroupsForBase(base);
-      final styles = selected
+      final legacyStyles = selected
           .where((tag) =>
               tag.id != base.id &&
               (styleGroups.contains(tag.group) ||
                   (_isLegacyClothingStyleTag(tag) &&
                       _clothingScopeForTag(tag) == scope)))
           .toList();
-      related.addAll(styles);
+      related.addAll(legacyStyles);
 
-      final modifiers = selected
-          .where((tag) => tag.group == '服裝細節' || tag.group == '服裝材質')
+      List<TagItem> dimension(String kind) => selected
+          .where((tag) => tag.group == _scopedClothingGroup(scope, kind))
           .toList();
-      modifiers.addAll(selected.where((tag) =>
-          tag.group == _scopedClothingGroup(scope, 'detail') ||
-          tag.group == _scopedClothingGroup(scope, 'material')));
-      related.addAll(modifiers);
-      final detailColor = selected.cast<TagItem?>().firstWhere(
+
+      final cuts = dimension('cut');
+      final fits = dimension('fit');
+      final lengths = dimension('length');
+      final materials = <TagItem>[
+        ...selected.where((tag) => tag.group == _legacyClothingMaterialGroup),
+        ...dimension('material'),
+      ];
+      final details = <TagItem>[
+        ...selected.where((tag) => tag.group == _legacyClothingDetailGroup),
+        ...dimension('detail'),
+      ];
+      final patterns = dimension('pattern');
+      related.addAll([
+        ...cuts,
+        ...fits,
+        ...lengths,
+        ...materials,
+        ...details,
+        ...patterns,
+      ]);
+
+      final legacyDetailColor = selected.cast<TagItem?>().firstWhere(
             (tag) => tag?.group == '服裝細節顏色',
             orElse: () => null,
           );
@@ -3610,42 +3796,43 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             (tag) => tag?.group == _scopedClothingGroup(scope, 'detail_color'),
             orElse: () => null,
           );
-      final effectiveDetailColor = scopedDetailColor ?? detailColor;
-      if (effectiveDetailColor != null && modifiers.isNotEmpty) {
+      final effectiveDetailColor = scopedDetailColor ??
+          legacyDetailColor ??
+          (details.isNotEmpty ? secondaryColor : null);
+      if (effectiveDetailColor != null && details.isNotEmpty) {
         related.add(effectiveDetailColor);
       }
+
       final baseLower = base.en.toLowerCase();
-      final colorPrefix = color == null ? null : _clothingColorPrefix(color);
+      final colorPrefix =
+          mainColor == null ? null : _clothingColorPrefix(mainColor);
       final detailColorPrefix = effectiveDetailColor == null
           ? null
           : _clothingColorPrefix(effectiveDetailColor);
-      final trimEnglish =
-          trimColor == null ? null : _betterWaifuTrimEnglish(trimColor);
-      final trimColorPrefix = trimEnglish?.replaceFirst(
-          RegExp(r'\s+trim$', caseSensitive: false), '');
-      // A secondary color describes the garment edge when no detail/material
-      // was selected. Keep the English tag explicit in that case so prompts
-      // say "red blue trim kimono" instead of the ambiguous "red blue kimono".
-      final secondaryEnglish =
-          modifiers.isEmpty ? trimEnglish : trimColorPrefix;
-      final secondaryChinese = modifiers.isEmpty && trimColor != null
-          ? _clothingSecondaryColorChinese(trimColor)
-          : trimColor == null
-              ? null
-              : _clothingColorChinesePrefix(trimColor);
+      final secondaryEnglish = secondaryColor == null
+          ? null
+          : _betterWaifuTrimEnglish(secondaryColor);
+      final secondaryChinese = secondaryColor == null
+          ? null
+          : _clothingSecondaryColorChinese(secondaryColor);
       final accessoryPositionEnglish = accessoryPosition?.en.trim();
-      final stripEmbeddedStyleColor = color != null;
+      final stripEmbeddedStyleColor = mainColor != null;
       final effectiveColor = colorPrefix != null &&
               colorPrefix.isNotEmpty &&
               !baseLower.startsWith('$colorPrefix ')
           ? colorPrefix
           : null;
-      final enStyleModifiers = styles
+      final enStyleModifiers = legacyStyles
           .map((tag) => _clothingStyleModifierEnglish(tag,
               stripEmbeddedColor: stripEmbeddedStyleColor))
           .where((part) => part.trim().isNotEmpty)
           .toList();
-      final enDetailModifiers = modifiers
+      List<String> englishModifiers(Iterable<TagItem> tags) => tags
+          .map(_clothingModifierEnglish)
+          .where((part) => part.trim().isNotEmpty)
+          .toList();
+
+      final enDetailModifiers = details
           .map((tag) {
             final modifier = _clothingModifierEnglish(tag);
             final prefixes = <String>[];
@@ -3660,12 +3847,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           })
           .where((part) => part.trim().isNotEmpty)
           .toList();
-      final zhStyleModifiers = styles
+      final zhStyleModifiers = legacyStyles
           .map((tag) => _clothingStyleModifierChinese(tag,
               stripEmbeddedColor: stripEmbeddedStyleColor))
           .where((part) => part.trim().isNotEmpty)
           .toList();
-      final zhDetailModifiers = modifiers
+      List<String> chineseModifiers(Iterable<TagItem> tags) => tags
+          .map(_clothingModifierChinese)
+          .where((part) => part.trim().isNotEmpty)
+          .toList();
+
+      final zhDetailModifiers = details
           .map((tag) {
             final modifier = _clothingModifierChinese(tag);
             final prefixes = <String>[];
@@ -3678,17 +3870,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           })
           .where((part) => part.trim().isNotEmpty)
           .toList();
-      final zhColorPrefix = modifiers.isEmpty
-          ? _clothingChineseColorPrefixWithSecondary(
-              effectiveColor != null && color != null ? color : null,
-              secondaryChinese,
-            )
-          : ((effectiveColor != null && color != null) || trimColor != null)
-              ? _clothingCombinedChineseColorPrefix([
-                  if (effectiveColor != null && color != null) color,
-                  if (trimColor != null) trimColor,
-                ])
-              : '';
+      final secondaryUsedByDetail = details.isNotEmpty &&
+          scopedDetailColor == null &&
+          legacyDetailColor == null &&
+          secondaryColor != null;
+      final zhColorPrefix = _clothingChineseColorPrefixWithSecondary(
+        effectiveColor != null && mainColor != null ? mainColor : null,
+        secondaryUsedByDetail ? null : secondaryChinese,
+      );
       final englishBaseCoveredByStyle = baseLower.isNotEmpty &&
           enStyleModifiers.any((part) => RegExp(
                 r'(^|\s)' + RegExp.escape(baseLower) + r'(\s|$)',
@@ -3696,34 +3885,68 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ).hasMatch(part));
       final chineseBaseCoveredByStyle = base.zh.isNotEmpty &&
           zhStyleModifiers.any((part) => part.contains(base.zh));
-      final cosplayCoversOnePiece = styles.any(_isCosplayTag);
+      final cosplayCoversOnePiece = legacyStyles.any(_isCosplayTag);
       final baseChinese = _scopedClothingKind(base.group) == 'style'
           ? _clothingModifierChinese(base)
           : base.zh;
+      final baseEnglish = _scopedClothingKind(base.group) == 'style'
+          ? _clothingModifierEnglish(base)
+          : base.en;
+      final detailUsesSecondary = effectiveDetailColor == secondaryColor;
       final enParts = <String>[
         if (effectiveColor != null) effectiveColor,
-        if (secondaryEnglish != null && secondaryEnglish.isNotEmpty)
-          secondaryEnglish,
+        ...englishModifiers(cuts),
+        ...englishModifiers(fits),
+        ...englishModifiers(lengths),
+        ...englishModifiers(materials),
         ...enStyleModifiers,
+        if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) baseEnglish,
         ...enDetailModifiers,
-        if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) base.en,
+        ...englishModifiers(patterns),
+        if (secondaryEnglish != null &&
+            secondaryEnglish.isNotEmpty &&
+            !detailUsesSecondary)
+          'with $secondaryEnglish',
         if (accessoryPositionEnglish != null &&
             accessoryPositionEnglish.isNotEmpty)
           accessoryPositionEnglish,
       ];
       final zhParts = <String>[
         if (zhColorPrefix.isNotEmpty) zhColorPrefix,
+        ...chineseModifiers(cuts),
+        ...chineseModifiers(fits),
+        ...chineseModifiers(lengths),
+        ...chineseModifiers(materials),
         ...zhStyleModifiers,
-        ...zhDetailModifiers,
         if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
+        ...zhDetailModifiers,
+        ...chineseModifiers(patterns),
         if (accessoryPosition != null) accessoryPosition.zh,
       ];
-      final ids = related.map((tag) => tag.id).toList();
+      final ids = related.map((tag) => tag.id).toSet().toList();
       consumed.addAll(ids);
       result.add(_GeneratedOutputTag(
         zh: zhParts.join(),
         en: enParts.where((part) => part.trim().isNotEmpty).join(' '),
         tagIds: ids,
+        personIndex: personIndex,
+      ));
+    }
+
+    const overallGroups = {
+      _outfitMainStyleGroup,
+      _outfitSubStyleGroup,
+      _outfitMoodGroup,
+      _outfitOccasionGroup,
+    };
+    for (final tag
+        in selected.where((tag) => overallGroups.contains(tag.group))) {
+      consumed.add(tag.id);
+      result.add(_GeneratedOutputTag(
+        zh: tag.zh,
+        en: tag.en,
+        tagId: tag.id,
+        tagIds: [tag.id],
         personIndex: personIndex,
       ));
     }
@@ -6101,7 +6324,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     final base = bases.first;
     final result = <TagItem>[base];
-    final colorGroup = _clothingColorGroup(base.group);
+    final colorGroup = _clothingColorGroupForBase(base);
     if (colorGroup != null) {
       final colors =
           _allTags.where((tag) => tag.group == colorGroup).where((tag) {
@@ -6120,7 +6343,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             });
       if (colors.isNotEmpty) result.add(colors.first);
     }
-    final trimColorGroup = _clothingTrimColorGroup(base.group);
+    final trimColorGroup = _clothingTrimColorGroupForBase(base);
     final trimColors = trimColorGroup == null
         ? const <TagItem>[]
         : _allTags.where((tag) => tag.group == trimColorGroup).where((tag) {
@@ -6137,7 +6360,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _legacyClothingMaterialGroup,
       ..._clothingDetailGroupsForBase(base).where((group) {
         final kind = _scopedClothingKind(group);
-        return kind == 'detail' || kind == 'material';
+        return const {'cut', 'fit', 'length', 'material', 'detail', 'pattern'}
+            .contains(kind);
       }),
     };
     for (final tag
@@ -6524,8 +6748,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝' || _cosplayGroup || '服裝顏色' || '服裝邊線色' => 'onepiece',
       '上衣' || '上衣風格' || '上衣顏色' || '上衣邊線色' => 'top',
       '褲子' => 'pants',
+      '短褲' => 'shorts',
       '裙子' => 'skirt',
       '下身風格' || '下身顏色' || '下身邊線色' => 'bottom',
+      '外套' || '外套顏色' || '外套邊線色' => 'outerwear',
+      '特殊服裝' => 'costume',
       '內衣' || '內衣顏色' || '內衣邊線色' => 'underwear',
       '胸罩' || '胸罩顏色' || '胸罩邊線色' => 'bra',
       '內褲' || '內褲顏色' || '內褲邊線色' => 'panties',
@@ -6543,7 +6770,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final isClothingBase = const {
       '上衣',
       '褲子',
+      '短褲',
       '裙子',
+      '外套',
+      '特殊服裝',
       '內衣',
       '胸罩',
       '內褲',
@@ -6562,8 +6792,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             tag.group == _legacyClothingWearGroup;
       }
       if (isClothingBase && clothingScope != null) {
-        final tagScope = _clothingScopeForPickerGroup(tag.group) ??
-            _clothingScopeForTag(tag);
+        final tagScope = _clothingScopeForTag(tag) ??
+            _clothingScopeForPickerGroup(tag.group);
         return tagScope == clothingScope;
       }
       return tag.group == group;
@@ -8310,7 +8540,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ? '表情'
             : group;
     final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
-    final tags = _allTags.where((tag) {
+    final availableTags = _allTags;
+    final tags = availableTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           effectiveGroup == '表情' && tag.group == '臉部特徵';
@@ -8386,6 +8617,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return 190;
   }
 
+  Color _pickerLayerTone(String group) {
+    final kind = _scopedClothingKind(group);
+    if (_isClothingBaseGroup(group) || group == _cosplayGroup) {
+      return const Color(0xffffb454);
+    }
+    if (kind == 'cut') return const Color(0xff60a5fa);
+    if (kind == 'fit') return const Color(0xff2dd4bf);
+    if (kind == 'length') return const Color(0xff38bdf8);
+    if (kind == 'material' || group == _legacyClothingMaterialGroup) {
+      return const Color(0xffc084fc);
+    }
+    if (kind == 'detail' || group == _legacyClothingDetailGroup) {
+      return const Color(0xfff472b6);
+    }
+    if (kind == 'detail_color') return const Color(0xfffb7185);
+    if (kind == 'pattern') return const Color(0xfffb923c);
+    if (kind == 'wear' ||
+        group == _allClothingWearGroup ||
+        group == _legacyClothingWearGroup) {
+      return const Color(0xfff87171);
+    }
+    if (group.endsWith('邊線色')) return const Color(0xfff472b6);
+    if (_isClothingColorGroup(group)) return const Color(0xff818cf8);
+    if (group == _outfitMainStyleGroup || group == _outfitSubStyleGroup) {
+      return const Color(0xffa78bfa);
+    }
+    if (group == _outfitMoodGroup) return const Color(0xfff472b6);
+    if (group == _outfitOccasionGroup) return const Color(0xff4ade80);
+    if (group == '配件位置') return const Color(0xfffacc15);
+    return const Color(0xffa78bfa);
+  }
+
+  Color _pickerLayerSurface(Color tone, {required bool selected}) =>
+      Color.alphaBlend(
+        tone.withOpacity(selected ? .9 : .18),
+        selected ? const Color(0xff171326) : _buttonSurface,
+      );
+
+  Color _pickerLayerText(Color tone, {required bool selected}) {
+    if (!selected) return Colors.white;
+    return tone.computeLuminance() > .42
+        ? const Color(0xff171326)
+        : Colors.white;
+  }
+
   Widget _tagChip(TagItem tag, {int? personIndex}) {
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
@@ -8393,6 +8669,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_isColorPickerTag(tag)) {
       return _colorTagChip(tag, personIndex: personIndex, selected: selected);
     }
+    final tone = _pickerLayerTone(tag.group);
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
@@ -8403,23 +8680,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           '${tag.zh}  ·  ${tag.en}',
           softWrap: true,
           style: TextStyle(
-            color: selected ? _buttonSelectedText : Colors.white,
+            color: _pickerLayerText(tone, selected: selected),
             fontWeight: FontWeight.w600,
           ),
         ),
         avatar: tag.adult
             ? Icon(Icons.eighteen_mp,
                 size: 15,
-                color: selected ? _buttonSelectedText : const Color(0xffffa7b7))
+                color: selected
+                    ? _pickerLayerText(tone, selected: true)
+                    : const Color(0xffffa7b7))
             : null,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         labelPadding: EdgeInsets.zero,
         visualDensity: VisualDensity.standard,
-        backgroundColor: _buttonSurface,
-        selectedColor: _buttonSelectedSurface,
-        checkmarkColor: _buttonSelectedText,
+        backgroundColor: _pickerLayerSurface(tone, selected: false),
+        selectedColor: _pickerLayerSurface(tone, selected: true),
+        checkmarkColor: _pickerLayerText(tone, selected: true),
         side: BorderSide(
-          color: selected ? const Color(0xfff0eaff) : _buttonBorder,
+          color: selected ? tone : tone.withOpacity(.7),
         ),
         onSelected: (_) => _toggle(tag, personIndex: personIndex),
       ),
@@ -8429,6 +8708,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _colorTagChip(TagItem tag,
       {required int? personIndex, required bool selected}) {
     final colorWord = _clothingColorWord(tag);
+    final tone = _pickerLayerTone(tag.group);
     final swatch = Container(
       width: 28,
       height: 28,
@@ -8465,11 +8745,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           label: swatch,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           labelPadding: EdgeInsets.zero,
-          backgroundColor: _buttonSurface,
-          selectedColor: _buttonSelectedSurface,
+          backgroundColor: _pickerLayerSurface(tone, selected: false),
+          selectedColor: _pickerLayerSurface(tone, selected: true),
           checkmarkColor: Colors.transparent,
           side: BorderSide(
-            color: selected ? const Color(0xfff0eaff) : _buttonBorder,
+            color: selected ? Colors.white : tone.withOpacity(.72),
           ),
           onSelected: (_) => _toggle(tag, personIndex: personIndex),
         ),
@@ -8487,6 +8767,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '內褲顏色': '內褲主色',
       '襪子顏色': '襪子主色',
       '鞋子顏色': '鞋子主色',
+      '外套顏色': '外套主色',
       '配件顏色': '配件主色',
       '服裝邊線色': '連身裝次色',
       '上衣邊線色': '上衣次色',
@@ -8496,6 +8777,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '內褲邊線色': '內褲次色',
       '襪子邊線色': '襪子次色',
       '鞋子邊線色': '鞋子次色',
+      '外套邊線色': '外套次色',
       '配件邊線色': '配件次色',
     };
     final clothingColorLabel = clothingColorLabels[group];
@@ -8503,7 +8785,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
     if (group == '褲子') return '下身／褲子';
-    if (group == '服裝') return '連身裙／整套服裝';
+    if (group == '短褲') return '下身／短褲';
+    if (group == '服裝') return '連身裙／洋裝';
+    if (group == '特殊服裝') return '特殊服裝／制服';
     if (group == '服裝顏色') return '連身裝顏色';
     final scopedSlot = _scopedClothingSlot(group);
     final scopedKind = _scopedClothingKind(group);
@@ -8532,7 +8816,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map(_clothingScopeForBase)
             .whereType<String>()
             .toSet();
-    final tags = _allTags.where((tag) {
+    final availableTags = _allTags;
+    final tags = availableTags.where((tag) {
       final allClothingWear = activeGroup == _allClothingWearGroup &&
           _scopedClothingKind(tag.group) == 'wear' &&
           (personIndex == null ||
@@ -8542,13 +8827,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           activeGroup == '表情' && tag.group == '臉部特徵';
       final faceExpressionInSubgroup =
           _expressionSubgroupForTag(tag) == activeGroup;
+      final usesClothingBaseDisplayGroup = const {
+        _clothingGroupTop,
+        _clothingGroupPants,
+        _clothingGroupShorts,
+        _clothingGroupSkirt,
+        _clothingGroupOnePiece,
+        _clothingGroupOuterwear,
+        _clothingGroupCostume,
+        _clothingGroupUnderwear,
+        _clothingGroupBra,
+        _clothingGroupPanties,
+        _clothingGroupSocks,
+        _clothingGroupShoes,
+        _clothingGroupAccessory,
+      }.contains(activeGroup);
+      final clothingBaseDisplayMatch = usesClothingBaseDisplayGroup &&
+          _isClothingBaseTag(tag) &&
+          _clothingBaseDisplayGroup(tag) == activeGroup;
+      final directActiveGroupMatch = usesClothingBaseDisplayGroup
+          ? clothingBaseDisplayMatch
+          : tag.group == activeGroup;
       final inGroup = (groups.contains(tag.group) ||
+              clothingBaseDisplayMatch ||
               allClothingWear ||
               hairColorInHairGroup ||
               faceExpressionInMergedGroup ||
               faceExpressionInSubgroup) &&
           (activeGroup == null ||
-              tag.group == activeGroup ||
+              directActiveGroupMatch ||
               allClothingWear ||
               hairColorInHairGroup ||
               faceExpressionInMergedGroup ||
@@ -8565,7 +8872,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ? true
               : selectedFamily == _colorFamilyForTag(tag) ||
                   (query.isNotEmpty && queryMatch);
-      return inGroup && adultMatch && queryMatch && colorMatch;
+      final scopedKind = _scopedClothingKind(tag.group);
+      final hiddenLegacyScopedDesign =
+          tag.id.startsWith(_scopedClothingPrefix) &&
+              const {'style', 'detail', 'material'}.contains(scopedKind);
+      final hiddenTaxonomyDuplicate = tag.id.startsWith('taxonomy_') &&
+          _isClothingBaseTag(tag) &&
+          availableTags.any((other) =>
+              other.id != tag.id &&
+              !other.id.startsWith('taxonomy_') &&
+              _isClothingBaseTag(other) &&
+              _englishTagKey(other.en) == _englishTagKey(tag.en) &&
+              _clothingBaseDisplayGroup(other) ==
+                  _clothingBaseDisplayGroup(tag));
+      return inGroup &&
+          adultMatch &&
+          queryMatch &&
+          colorMatch &&
+          !hiddenLegacyScopedDesign &&
+          !hiddenTaxonomyDuplicate;
     }).toList();
     return _sortPickerTags(tags, pickerGroup);
   }
@@ -8632,6 +8957,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             runSpacing: 6,
             children: groups.map((group) {
               final selectedCount = selectedCountForGroup(group);
+              final tone = _pickerLayerTone(group);
+              final isActive = group == currentGroup;
               final width = _wizardGroupChipWidth(group, constraints.maxWidth) +
                   (selectedCount > 0 ? 30 : 0);
               return ConstrainedBox(
@@ -8647,19 +8974,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       maxLines: 2,
                       overflow: TextOverflow.clip,
                       style: TextStyle(
-                        color: group == currentGroup
-                            ? _buttonSelectedText
-                            : Colors.white,
+                        color: _pickerLayerText(tone, selected: isActive),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    selected: group == currentGroup,
-                    backgroundColor: _buttonSurface,
-                    selectedColor: _buttonSelectedSurface,
+                    selected: isActive,
+                    backgroundColor: _pickerLayerSurface(tone, selected: false),
+                    selectedColor: _pickerLayerSurface(tone, selected: true),
                     side: BorderSide(
-                      color: group == currentGroup
-                          ? const Color(0xfff0eaff)
-                          : _buttonBorder,
+                      color: isActive ? tone : tone.withOpacity(.72),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     onSelected: (_) => setState(() {
@@ -8682,10 +9005,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.32),
+            color: _pickerLayerSurface(_pickerLayerTone(currentGroup),
+                selected: false),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _buttonBorder.withOpacity(.55)),
+            border: Border.all(
+              color: _pickerLayerTone(currentGroup).withOpacity(.7),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -8731,6 +9056,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           child: InputChip(
                             label: Text(tag.zh),
                             visualDensity: VisualDensity.compact,
+                            backgroundColor: _pickerLayerSurface(
+                              _pickerLayerTone(currentGroup),
+                              selected: false,
+                            ),
+                            side: BorderSide(
+                              color: _pickerLayerTone(currentGroup)
+                                  .withOpacity(.75),
+                            ),
                             onDeleted: () =>
                                 _toggle(tag, personIndex: personIndex),
                           ),
@@ -9075,7 +9408,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝' => 'onepiece',
       '上衣' => 'top',
       '褲子' => 'pants',
+      '短褲' => 'shorts',
       '裙子' => 'skirt',
+      '外套' => 'outerwear',
+      '特殊服裝' => 'costume',
       '內衣' => 'underwear',
       '胸罩' => 'bra',
       '內褲' => 'panties',
@@ -9086,14 +9422,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     return bases
         .where((base) =>
-            base.group == activeGroup ||
+            _clothingBaseDisplayGroup(base) == activeGroup ||
             (activeScope != null && _clothingScopeForBase(base) == activeScope))
         .toList();
   }
 
   List<String> _clothingDetailGroups(int personIndex, {String? activeGroup}) {
     final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
-    return bases.expand(_clothingDetailGroupsForBase).toSet().toList();
+    return bases
+        .expand(_clothingDetailGroupsForBase)
+        .toSet()
+        .where((group) => _allTags.any((tag) => tag.group == group))
+        .toList();
   }
 
   List<String> _clothingWearGroups(int personIndex, {String? activeGroup}) {
@@ -9102,7 +9442,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return <String>[
       _legacyClothingWearGroup,
       ...bases.expand(_clothingWearGroupsForBase).toSet(),
-    ];
+    ].where((group) => _allTags.any((tag) => tag.group == group)).toList();
   }
 
   // ignore: unused_element
@@ -9144,6 +9484,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required IconData icon,
     required String title,
     required String description,
+    required Color tone,
     required Widget child,
   }) {
     return Container(
@@ -9151,9 +9492,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(.5),
+        color: Color.alphaBlend(
+          tone.withOpacity(.08),
+          Theme.of(context).colorScheme.surface.withOpacity(.78),
+        ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _buttonBorder.withOpacity(.55)),
+        border: Border.all(color: tone.withOpacity(.62)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -9165,10 +9509,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: _buttonSelectedSurface,
+                  color: tone,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 19, color: _buttonSelectedText),
+                child: Icon(
+                  icon,
+                  size: 19,
+                  color: _pickerLayerText(tone, selected: true),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -9198,30 +9546,137 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _clothingLayerLegend() {
+    const layers = <(String, Color)>[
+      ('衣種', Color(0xffffb454)),
+      ('剪裁', Color(0xff60a5fa)),
+      ('版型', Color(0xff2dd4bf)),
+      ('長度', Color(0xff38bdf8)),
+      ('材質', Color(0xffc084fc)),
+      ('裝飾', Color(0xfff472b6)),
+      ('圖案', Color(0xfffb923c)),
+      ('顏色', Color(0xff818cf8)),
+      ('整體描述', Color(0xffa78bfa)),
+      ('穿脫', Color(0xfff87171)),
+    ];
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: layers
+          .map(
+            (layer) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              decoration: BoxDecoration(
+                color: _pickerLayerSurface(layer.$2, selected: false),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: layer.$2.withOpacity(.75)),
+              ),
+              child: Text(
+                layer.$1,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _clothingCompatibilityStatus(int personIndex, String activeGroup) {
+    final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
+    if (bases.isEmpty) return const SizedBox.shrink();
+    final scope = _clothingScopeForBase(bases.first);
+    if (scope == null) return const SizedBox.shrink();
+    final selected = _selectedTagsForPerson(personIndex);
+    int count(String kind) => selected
+        .where((tag) => tag.group == _scopedClothingGroup(scope, kind))
+        .length;
+    final unusual = count('fit') > 1 ||
+        count('length') > 1 ||
+        count('cut') > 2 ||
+        count('material') > 2 ||
+        count('pattern') > 2;
+    final configured = const [
+      'cut',
+      'fit',
+      'length',
+      'material',
+      'detail',
+      'pattern'
+    ].any((kind) => count(kind) > 0);
+    final tone = unusual
+        ? const Color(0xfffbbf24)
+        : configured
+            ? const Color(0xff4ade80)
+            : const Color(0xff60a5fa);
+    final label = unusual
+        ? '少見搭配（仍允許）'
+        : configured
+            ? '可搭配'
+            : '基本組合';
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      decoration: BoxDecoration(
+        color: _pickerLayerSurface(tone, selected: false),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tone.withOpacity(.7)),
+      ),
+      child: Row(
+        children: [
+          Icon(unusual ? Icons.info_outline : Icons.check_circle_outline,
+              size: 18, color: tone),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$label：相容性只提供提醒，不會限制或移除你的選擇。',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepClothing() {
-    const styles = [
+    const garmentGroups = [
       '上衣',
       '褲子',
+      '短褲',
       '裙子',
+      '服裝',
+      '外套',
       '內衣',
       '胸罩',
       '內褲',
       '襪子',
       '鞋子',
-      '服裝',
+      '特殊服裝',
       '配件',
+    ];
+    const overallGroups = [
+      _outfitMainStyleGroup,
+      _outfitSubStyleGroup,
+      _outfitMoodGroup,
+      _outfitOccasionGroup,
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-            '先選服裝大項目與樣式，再用色塊與服裝細節組合完整名詞；例如黑色＋蕾絲＋大腿襪會輸出 black lace thighhighs。每位人物的服裝會分開保存。'),
+        const Text('服裝已改為多維度設計：先選衣種，再分別控制剪裁、版型、長度、材質、裝飾、圖案與顏色。每位人物的服裝會分開保存。'),
+        const SizedBox(height: 8),
+        _clothingLayerLegend(),
         const SizedBox(height: 12),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
           final slot = entry.value;
           final characterNames = _characterChineseForSlot(slot, index);
-          final activeClothingGroup = _activePersonPickerGroup(index, styles);
+          final activeClothingGroup =
+              _activePersonPickerGroup(index, garmentGroups);
           final adaptiveDetails =
               _clothingDetailGroups(index, activeGroup: activeClothingGroup);
           final adaptiveWear =
@@ -9275,10 +9730,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   _pickerStage(
                     icon: Icons.checkroom_outlined,
+                    tone: const Color(0xffffb454),
                     title: '1. 選擇服裝部位與款式',
                     description: '切換部位只會隱藏其他設定，已選標籤會保留；可同時搭配外衣與內搭。',
                     child: _stepTagPicker(
-                      styles,
+                      garmentGroups,
                       nextLabel: '下一步',
                       personIndex: index,
                       showNext: false,
@@ -9288,8 +9744,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   if (adaptiveDetails.isNotEmpty)
                     _pickerStage(
                       icon: Icons.palette_outlined,
-                      title: '2. $activeClothingLabel：風格與外觀',
-                      description: '依序設定風格、主色、次色、細節、細節顏色與材質；只顯示目前部位。',
+                      tone: const Color(0xff60a5fa),
+                      title: '2. $activeClothingLabel：多維度設計',
+                      description: '剪裁、版型、長度、材質、細節、裝飾色、圖案、主色與次色彼此獨立；只顯示目前部位。',
                       child: _stepTagPicker(
                         adaptiveDetails,
                         nextLabel: '下一步',
@@ -9298,10 +9755,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         showGroupClear: true,
                       ),
                     ),
+                  _clothingCompatibilityStatus(index, activeClothingGroup),
+                  _pickerStage(
+                    icon: Icons.auto_awesome_outlined,
+                    tone: const Color(0xffa78bfa),
+                    title: '3. 整體風格、氣質與場合',
+                    description: '這些描述作用於整套穿搭，不會取代上方已選的服裝種類與細節。',
+                    child: _stepTagPicker(
+                      overallGroups,
+                      nextLabel: '下一步',
+                      personIndex: index,
+                      showNext: false,
+                      showGroupClear: true,
+                    ),
+                  ),
                   if (adaptiveWear.isNotEmpty)
                     _pickerStage(
                       icon: Icons.dry_cleaning_outlined,
-                      title: '3. $activeClothingLabel：穿脫與衣物狀態',
+                      tone: const Color(0xfff87171),
+                      title: '4. $activeClothingLabel：穿脫與衣物狀態',
                       description: '通用動作只保留一份；可再切換至目前服裝部位的專用狀態。',
                       child: _stepTagPicker(
                         adaptiveWear,
