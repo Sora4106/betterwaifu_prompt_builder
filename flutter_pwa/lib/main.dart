@@ -2049,8 +2049,9 @@ List<TagItem> _seedTags() => [
 
       // Face tags and expressions.
       _tag('face_smile', '表情', '微笑', 'smile', 3),
-      _tag('face_grin', '表情', '咧嘴笑', 'grin', 3),
+      _tag('face_grin', '表情', '露齒笑', 'grin', 3),
       _tag('face_open_mouth', '表情', '張嘴', 'open mouth', 3),
+      _tag('face_teeth', '表情', '露出牙齒', 'teeth', 3),
       _tag('face_blush', '表情', '臉紅', 'blush', 3),
       _tag('face_looking_at_viewer', '表情', '看向觀眾', 'looking at viewer', 3),
       _tag('face_closed_eyes', '表情', '閉眼', 'closed eyes', 3),
@@ -2058,8 +2059,8 @@ List<TagItem> _seedTags() => [
       _tag('face_sweatdrop', '表情', '汗滴', 'sweatdrop', 3),
       _tag('face_tears', '表情', '眼淚', 'tears', 3),
       _tag('face_surprised', '表情', '驚訝', 'surprised', 3),
-      _tag('face_embarrassed', '表情', '害羞', 'embarrassed', 3),
-      _tag('expr_shy', '表情', '害羞（shy）', 'shy', 3,
+      _tag('face_embarrassed', '表情', '難為情／尷尬', 'embarrassed', 3),
+      _tag('expr_shy', '表情', '靦腆害羞', 'shy', 3,
           conflictGroup: 'expression_mood'),
       _tag('face_serious', '表情', '嚴肅', 'serious', 3),
       _tag('face_angry', '表情', '生氣', 'angry', 3),
