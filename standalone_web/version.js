@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.64",
-  "build": 66,
-  "label": "1.1.64+66",
+  "version": "1.1.65",
+  "build": 67,
+  "label": "1.1.65+67",
   "history": [
+    {
+      "version": "1.1.65",
+      "build": 67,
+      "label": "1.1.65+67",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: reorganize pose and clothing tag pickers"
+    },
     {
       "version": "1.1.64",
       "build": 66,

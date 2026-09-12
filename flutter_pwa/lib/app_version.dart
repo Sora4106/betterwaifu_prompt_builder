@@ -1,7 +1,8 @@
-const appVersion = '1.1.64';
-const appBuildNumber = 66;
-const appVersionLabel = '1.1.64+66';
+const appVersion = '1.1.65';
+const appBuildNumber = 67;
+const appVersionLabel = '1.1.65+67';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: reorganize pose and clothing tag pickers'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: refine mouth expressions'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add kyudo prompt catalog'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': 'feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing'},

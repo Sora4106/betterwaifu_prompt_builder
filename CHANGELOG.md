@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.65+67 - 2026-09-12
+
+- 自動偵測：feat: reorganize pose and clothing tag pickers
+
+
 ## 1.1.64+66 - 2026-09-12
 
 - 自動偵測：feat: refine mouth expressions
