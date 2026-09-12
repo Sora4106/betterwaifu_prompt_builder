@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.65",
-  "build": 67,
-  "label": "1.1.65+67",
+  "version": "1.1.66",
+  "build": 68,
+  "label": "1.1.66+68",
   "history": [
+    {
+      "version": "1.1.66",
+      "build": 68,
+      "label": "1.1.66+68",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: rebuild clothing taxonomy and visual layers"
+    },
     {
       "version": "1.1.65",
       "build": 67,

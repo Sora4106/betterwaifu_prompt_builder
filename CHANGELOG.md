@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.66+68 - 2026-09-12
+
+- 自動偵測：feat: rebuild clothing taxonomy and visual layers
+
+
 ## 1.1.65+67 - 2026-09-12
 
 - 自動偵測：feat: reorganize pose and clothing tag pickers
