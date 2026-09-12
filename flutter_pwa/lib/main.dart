@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:math';
@@ -2697,6 +2698,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<int, String> _personTagQueries = <int, String>{};
   final Map<String, String> _personActiveGroups = <String, String>{};
   final List<TagItem> _customTags = <TagItem>[];
+  List<TagItem>? _allTagsCache;
+  Map<String, TagItem>? _tagByIdCache;
+  Map<String, TagItem>? _tagByEnglishCache;
+  Map<String, List<TagItem>>? _tagsByGroupCache;
+  Map<String, List<TagItem>>? _clothingBasesByDisplayGroupCache;
+  Set<String>? _hiddenTaxonomyDuplicateIdsCache;
+  List<TagItem>? _allClothingWearTagsCache;
   // Extra positive tags that the catalog does not know yet. Keep these in a
   // separate local list so they can be reviewed and added to the catalog later.
   final Set<String> _unregisteredPositiveTags = <String>{};
@@ -2727,6 +2735,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final TextEditingController _preprompt = TextEditingController(
     text: 'masterpiece, best quality, newest, absurdres, highres',
   );
+  Timer? _searchDebounce;
 
   String _activeGroup = '全部';
   String _gender = '女性';
@@ -2742,6 +2751,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _showInfo = true;
 
   List<TagItem> get _allTags {
+    final cached = _allTagsCache;
+    if (cached != null) return cached;
     final unique = <String, TagItem>{};
     for (final tag in [
       ..._builtIns,
@@ -2764,7 +2775,113 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
     }
-    return unique.values.toList();
+    final tags = List<TagItem>.unmodifiable(unique.values);
+    final byId = <String, TagItem>{};
+    final byEnglish = <String, TagItem>{};
+    final byGroup = <String, List<TagItem>>{};
+    final clothingByDisplayGroup = <String, List<TagItem>>{};
+    final allWear = <TagItem>[];
+    final legacyClothingKeys = <String>{};
+
+    for (final tag in tags) {
+      byId.putIfAbsent(tag.id, () => tag);
+      final englishKey = _englishTagKey(tag.en);
+      if (englishKey.isNotEmpty) byEnglish.putIfAbsent(englishKey, () => tag);
+      byGroup.putIfAbsent(tag.group, () => <TagItem>[]).add(tag);
+      if (_isClothingBaseTag(tag)) {
+        final displayGroup = _clothingBaseDisplayGroup(tag);
+        clothingByDisplayGroup
+            .putIfAbsent(displayGroup, () => <TagItem>[])
+            .add(tag);
+        if (!tag.id.startsWith('taxonomy_')) {
+          legacyClothingKeys.add('$displayGroup:$englishKey');
+        }
+      }
+      if (_scopedClothingKind(tag.group) == 'wear' ||
+          tag.group == _legacyClothingWearGroup) {
+        allWear.add(tag);
+      }
+    }
+
+    _allTagsCache = tags;
+    _tagByIdCache = byId;
+    _tagByEnglishCache = byEnglish;
+    _tagsByGroupCache = byGroup;
+    _clothingBasesByDisplayGroupCache = clothingByDisplayGroup;
+    _allClothingWearTagsCache = allWear;
+    _hiddenTaxonomyDuplicateIdsCache = tags
+        .where((tag) =>
+            tag.id.startsWith('taxonomy_') &&
+            _isClothingBaseTag(tag) &&
+            legacyClothingKeys.contains(
+                '${_clothingBaseDisplayGroup(tag)}:${_englishTagKey(tag.en)}'))
+        .map((tag) => tag.id)
+        .toSet();
+    return tags;
+  }
+
+  void _invalidateTagCaches() {
+    _allTagsCache = null;
+    _tagByIdCache = null;
+    _tagByEnglishCache = null;
+    _tagsByGroupCache = null;
+    _clothingBasesByDisplayGroupCache = null;
+    _hiddenTaxonomyDuplicateIdsCache = null;
+    _allClothingWearTagsCache = null;
+  }
+
+  Map<String, TagItem> get _tagsById {
+    _allTags;
+    return _tagByIdCache!;
+  }
+
+  Map<String, List<TagItem>> get _tagsByGroup {
+    _allTags;
+    return _tagsByGroupCache!;
+  }
+
+  List<TagItem> _tagsForPickerGroup(String group) {
+    _allTags;
+    const clothingBaseGroups = {
+      _clothingGroupTop,
+      _clothingGroupPants,
+      _clothingGroupShorts,
+      _clothingGroupSkirt,
+      _clothingGroupOnePiece,
+      _clothingGroupOuterwear,
+      _clothingGroupCostume,
+      _clothingGroupUnderwear,
+      _clothingGroupBra,
+      _clothingGroupPanties,
+      _clothingGroupSocks,
+      _clothingGroupShoes,
+      _clothingGroupAccessory,
+    };
+    if (clothingBaseGroups.contains(group)) {
+      return _clothingBasesByDisplayGroupCache![group] ?? const <TagItem>[];
+    }
+    if (group == _allClothingWearGroup) {
+      return _allClothingWearTagsCache!;
+    }
+    if (group == '髮型') {
+      return <TagItem>[
+        ...?_tagsByGroupCache!['髮型'],
+        ...?_tagsByGroupCache!['髮色'],
+      ];
+    }
+    if (group == '表情') {
+      return <TagItem>[
+        ...?_tagsByGroupCache!['表情'],
+        ...?_tagsByGroupCache!['臉部特徵'],
+      ];
+    }
+    if (_isExpressionPickerGroup(group)) {
+      return <TagItem>[
+        ...?_tagsByGroupCache!['表情'],
+        ...?_tagsByGroupCache!['臉部特徵'],
+      ].where((tag) => _expressionSubgroupForTag(tag) == group).toList();
+    }
+    return _tagsByGroupCache![group] ?? const <TagItem>[];
   }
 
   List<CatalogCharacter> get _allCharacters =>
@@ -2772,7 +2889,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> get _selectedTags {
     final tags =
-        _allTags.where((tag) => _selectedIds.contains(tag.id)).toList();
+        _selectedIds.map((id) => _tagsById[id]).whereType<TagItem>().toList();
     tags.sort(_compareOutputTags);
     return tags;
   }
@@ -2855,7 +2972,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _selectedTagsForPerson(int index) {
     final ids = _personTagIds(index);
-    final tags = _allTags.where((tag) => ids.contains(tag.id)).toList();
+    final tags = ids.map((id) => _tagsById[id]).whereType<TagItem>().toList();
     tags.sort(_compareOutputTags);
     return tags;
   }
@@ -3502,10 +3619,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String? _selectedColorFamily(String pickerGroup, Set<String> selectedIds) {
     final colorGroup = _colorPickerGroup(pickerGroup);
     if (colorGroup == null) return null;
-    for (final tag in _allTags) {
-      if (!selectedIds.contains(tag.id) ||
-          tag.group != colorGroup ||
-          !_isColorPickerTag(tag)) continue;
+    for (final id in selectedIds) {
+      final tag = _tagsById[id];
+      if (tag == null || tag.group != colorGroup || !_isColorPickerTag(tag)) {
+        continue;
+      }
       final family = _colorFamilyForTag(tag);
       if (family != null) return family;
     }
@@ -4258,11 +4376,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     super.initState();
     _restore();
     _checkForVersionUpdate();
-    _search.addListener(() => setState(() {}));
+    _search.addListener(_scheduleSearchRefresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() {});
       _scrollToStep(_stepIndex);
+    });
+  }
+
+  void _scheduleSearchRefresh() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 160), () {
+      if (mounted) setState(() {});
     });
   }
 
@@ -4330,6 +4455,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _search.removeListener(_scheduleSearchRefresh);
     _search.dispose();
     _extraPositive.dispose();
     _reversePrompt.dispose();
@@ -4361,6 +4488,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (raw == null) return;
     try {
       final data = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      _invalidateTagCaches();
       _customTags.addAll(
         (data['customTags'] as List? ?? []).map(
           (item) => TagItem.fromJson(Map<String, dynamic>.from(item as Map)),
@@ -4602,10 +4730,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   TagItem? _tagByEnglish(String english) {
     final key = _englishTagKey(english);
-    for (final tag in _allTags) {
-      if (_englishTagKey(tag.en) == key) return tag;
-    }
-    return null;
+    _allTags;
+    return _tagByEnglishCache![key];
   }
 
   String _characterTraitGroup(CatalogTagData trait) {
@@ -4651,6 +4777,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       conflictGroup: trait.conflictGroup,
     );
     _customTags.add(option);
+    _invalidateTagCaches();
     return option;
   }
 
@@ -6859,6 +6986,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _personCombinationIds.clear();
             _removedCharacterTags.clear();
             _customTags.clear();
+            _invalidateTagCaches();
             _presets.clear();
             _combinations.clear();
             _restore();
@@ -6968,6 +7096,98 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _peopleCount = count;
       _persist();
     });
+  }
+
+  Future<void> _removePersonAt(int index) async {
+    if (_personSlots.length <= 1 || index < 0 || index >= _personSlots.length) {
+      return;
+    }
+    final characterNames = _characterChineseForSlot(_personSlots[index], index);
+    final label = characterNames.isEmpty
+        ? '人物 ${index + 1}'
+        : '人物 ${index + 1}・${characterNames.first}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('刪除此人物？'),
+        content: Text(
+          '將刪除「$label」以及此人物的特徵、服裝、表情、姿勢和組合設定。其他人物會自動往前遞補編號。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('確認刪除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    void shiftMap<T>(Map<int, T> source) {
+      final shifted = <int, T>{};
+      for (final entry in source.entries) {
+        if (entry.key == index) continue;
+        shifted[entry.key > index ? entry.key - 1 : entry.key] = entry.value;
+      }
+      source
+        ..clear()
+        ..addAll(shifted);
+    }
+
+    setState(() {
+      _personSlots.removeAt(index);
+      shiftMap(_personSelectedIds);
+      shiftMap(_personCombinationIds);
+      shiftMap(_removedCharacterTags);
+      shiftMap(_personTagQueries);
+      shiftMap(_remoteAnimeResults);
+      shiftMap(_remoteAnimeSelection);
+      shiftMap(_remoteCharacters);
+      shiftMap(_remoteLookupErrors);
+
+      final shiftedLoading = _remoteLookupLoading
+          .where((personIndex) => personIndex != index)
+          .map((personIndex) =>
+              personIndex > index ? personIndex - 1 : personIndex)
+          .toSet();
+      _remoteLookupLoading
+        ..clear()
+        ..addAll(shiftedLoading);
+
+      final shiftedActiveGroups = <String, String>{};
+      for (final entry in _personActiveGroups.entries) {
+        final separator = entry.key.indexOf(':');
+        final personIndex = separator < 0
+            ? null
+            : int.tryParse(entry.key.substring(0, separator));
+        if (personIndex == null) {
+          shiftedActiveGroups[entry.key] = entry.value;
+          continue;
+        }
+        if (personIndex == index) continue;
+        final shiftedIndex =
+            personIndex > index ? personIndex - 1 : personIndex;
+        shiftedActiveGroups['$shiftedIndex${entry.key.substring(separator)}'] =
+            entry.value;
+      }
+      _personActiveGroups
+        ..clear()
+        ..addAll(shiftedActiveGroups);
+
+      for (final controller in _personSearchControllers.values) {
+        controller.dispose();
+      }
+      _personSearchControllers.clear();
+      _peopleCount = _personSlots.length;
+      _persist();
+    });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('已刪除「$label」')));
   }
 
   List<CatalogCharacter> _matchingAnime(PersonSlot slot) {
@@ -8465,6 +8685,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 );
                 setState(() {
                   _customTags.add(tag);
+                  _invalidateTagCaches();
                   const personalGroups = {
                     '內衣顏色',
                     '胸罩顏色',
@@ -8540,8 +8761,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ? '表情'
             : group;
     final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
-    final availableTags = _allTags;
-    final tags = availableTags.where((tag) {
+    final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
           effectiveGroup == '表情' && tag.group == '臉部特徵';
@@ -8816,8 +9036,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map(_clothingScopeForBase)
             .whereType<String>()
             .toSet();
-    final availableTags = _allTags;
-    final tags = availableTags.where((tag) {
+    _allTags;
+    final hiddenTaxonomyIds = _hiddenTaxonomyDuplicateIdsCache!;
+    final tags = _tagsForPickerGroup(pickerGroup).where((tag) {
       final allClothingWear = activeGroup == _allClothingWearGroup &&
           _scopedClothingKind(tag.group) == 'wear' &&
           (personIndex == null ||
@@ -8876,15 +9097,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final hiddenLegacyScopedDesign =
           tag.id.startsWith(_scopedClothingPrefix) &&
               const {'style', 'detail', 'material'}.contains(scopedKind);
-      final hiddenTaxonomyDuplicate = tag.id.startsWith('taxonomy_') &&
-          _isClothingBaseTag(tag) &&
-          availableTags.any((other) =>
-              other.id != tag.id &&
-              !other.id.startsWith('taxonomy_') &&
-              _isClothingBaseTag(other) &&
-              _englishTagKey(other.en) == _englishTagKey(tag.en) &&
-              _clothingBaseDisplayGroup(other) ==
-                  _clothingBaseDisplayGroup(tag));
+      final hiddenTaxonomyDuplicate = hiddenTaxonomyIds.contains(tag.id);
       return inGroup &&
           adultMatch &&
           queryMatch &&
@@ -9096,8 +9309,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       icon: const Icon(Icons.clear))),
           onChanged: personIndex == null
               ? null
-              : (value) =>
-                  setState(() => _personTagQueries[personIndex] = value),
+              : (value) {
+                  _personTagQueries[personIndex] = value;
+                  _scheduleSearchRefresh();
+                },
         ),
         const SizedBox(height: 10),
         Row(
@@ -9432,7 +9647,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return bases
         .expand(_clothingDetailGroupsForBase)
         .toSet()
-        .where((group) => _allTags.any((tag) => tag.group == group))
+        .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
         .toList();
   }
 
@@ -9442,7 +9657,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return <String>[
       _legacyClothingWearGroup,
       ...bases.expand(_clothingWearGroupsForBase).toSet(),
-    ].where((group) => _allTags.any((tag) => tag.group == group)).toList();
+    ]
+        .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
+        .toList();
   }
 
   // ignore: unused_element
@@ -9995,31 +10212,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     Row(children: [
                       Text('人物 ${index + 1}',
                           style: const TextStyle(fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                          width: 130,
-                          child: DropdownButtonFormField<String>(
-                              value: slot.gender,
-                              decoration:
-                                  const InputDecoration(labelText: '性別/類型'),
-                              items: const ['女性', '男性', '其他/異種']
-                                  .map((value) => DropdownMenuItem(
-                                      value: value, child: Text(value)))
-                                  .toList(),
-                              onChanged: (value) => setState(() {
-                                    slot.gender = value ?? slot.gender;
-                                    _persist();
-                                  }))),
                       const Spacer(),
-                      Switch(
-                          value: slot.detailed,
-                          onChanged: (value) => setState(() {
-                                slot.detailed = value;
-                                if (value) _syncCharacterTraitsForSlot(index);
-                                _persist();
-                              })),
-                      const Text('需要細節')
+                      IconButton(
+                        tooltip: _personSlots.length <= 1
+                            ? '至少需要保留一位人物'
+                            : '刪除人物 ${index + 1}',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: _personSlots.length <= 1
+                            ? null
+                            : () => _removePersonAt(index),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
                     ]),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        SizedBox(
+                            width: 150,
+                            child: DropdownButtonFormField<String>(
+                                value: slot.gender,
+                                decoration:
+                                    const InputDecoration(labelText: '性別/類型'),
+                                items: const ['女性', '男性', '其他/異種']
+                                    .map((value) => DropdownMenuItem(
+                                        value: value, child: Text(value)))
+                                    .toList(),
+                                onChanged: (value) => setState(() {
+                                      slot.gender = value ?? slot.gender;
+                                      _persist();
+                                    }))),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Switch(
+                                value: slot.detailed,
+                                onChanged: (value) => setState(() {
+                                      slot.detailed = value;
+                                      if (value) {
+                                        _syncCharacterTraitsForSlot(index);
+                                      }
+                                      _persist();
+                                    })),
+                            const Text('需要細節'),
+                          ],
+                        ),
+                      ],
+                    ),
                     if (!slot.detailed)
                       const Padding(
                           padding: EdgeInsets.only(top: 8),
