@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.67+69 - 2026-09-12
+
+- 自動偵測：feat: add direct person removal and optimize tag loading
+
+
 ## 1.1.66+68 - 2026-09-12
 
 - 自動偵測：feat: rebuild clothing taxonomy and visual layers
