@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.64+66 - 2026-09-12
+
+- 自動偵測：feat: refine mouth expressions
+
+
 ## 1.1.63+65 - 2026-09-11
 
 - 自動偵測：feat: add kyudo prompt catalog

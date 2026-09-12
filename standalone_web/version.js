@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.63",
-  "build": 65,
-  "label": "1.1.63+65",
+  "version": "1.1.64",
+  "build": 66,
+  "label": "1.1.64+66",
   "history": [
+    {
+      "version": "1.1.64",
+      "build": 66,
+      "label": "1.1.64+66",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: refine mouth expressions"
+    },
     {
       "version": "1.1.63",
       "build": 65,
